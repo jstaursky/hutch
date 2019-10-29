@@ -51,8 +51,7 @@ SLGH_COMP_COLLATE := $(addsuffix .cc,        \
 	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(SLEIGH_CMPLR))))
 
 $(SLGH_COMP_COLLATE): | $(BUILD_DIR) $(addsuffix .cc, $(PARSING_FILES))
-# Do not add actions to $(SLGH_COMP_COLLATE) targer. 
-# Not even a printf--messes up build.
+# No actions for $(SLGH_COMP_COLLATE) target. Messes up build process.
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
