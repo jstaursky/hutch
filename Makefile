@@ -2,7 +2,7 @@ CC       = gcc
 CXX      = g++
 CXXFLAGS = -O2  -Wall  -Wno-sign-compare
 
-PARSER_TOOLS	= parser-tools
+PARSER_TOOLS	        = parser-tools
 BUILD_DIR		= src/build
 PUB_INCLUDE_DIR = include
 SRC_DIR			= src
@@ -15,7 +15,7 @@ CORE := address  float  globalcontext  opcodes  pcoderaw  space  translate  xml
 
 # Files used for any project that use the sleigh decoder
 SLEIGH := context  filemanage  pcodecompile    pcodeparse   semantics   \
-		  sleigh   sleighbase  slghpatexpress  slghpattern  slghsymbol
+          sleigh   sleighbase  slghpatexpress  slghpattern  slghsymbol
 
 # Files specific to the sleigh compiler
 SLEIGH_CMPLR := slgh_compile  slghparse  slghscan
