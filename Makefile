@@ -65,3 +65,5 @@ sleigh-compile: $(SLGH_COMP_COLLATE)
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR)/ -I$(SRC_DIR)/ \
 	$(BUILD_DIR)/*.cc -o $(BIN_DIR)/$@
 
+# Useful for debugging. To find out value of variable, type 'make print-VARIABLE'
+print-%  : ; @echo $* = $($*)
