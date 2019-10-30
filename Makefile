@@ -4,12 +4,12 @@ CC       = gcc
 CXX      = g++
 CXXFLAGS = -O2  -Wall  -Wno-sign-compare
 
-PARSER_TOOLS	= parser-tools
-BUILD_DIR		= src/build
-PUB_INCLUDE_DIR = include
-SRC_DIR			= src
-LIB_DIR			= lib
-BIN_DIR			= bin
+PARSER_TOOLS	 = parser-tools
+BUILD_DIR	 = src/build
+PUB_INCLUDE_DIR  = include
+SRC_DIR		 = src
+LIB_DIR		 = lib
+BIN_DIR		 = bin
 
 
 # Core source files used in all projects
