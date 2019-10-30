@@ -2,7 +2,7 @@ CC       = gcc
 CXX      = g++
 CXXFLAGS = -O2  -Wall  -Wno-sign-compare
 
-PARSER_TOOLS	        = parser-tools
+PARSER_TOOLS	= parser-tools
 BUILD_DIR		= src/build
 PUB_INCLUDE_DIR = include
 SRC_DIR			= src
@@ -18,7 +18,7 @@ SLEIGH := context  filemanage  pcodecompile    pcodeparse   semantics   \
           sleigh   sleighbase  slghpatexpress  slghpattern  slghsymbol
 
 # Files specific to the sleigh compiler
-SLEIGH_CMPLR := slgh_compile  slghparse  slghscan
+SLEIGH_COMP := slgh_compile  slghparse  slghscan
 
 
 # Parsing + Lexing
@@ -28,42 +28,49 @@ YACC = bison
 PARSING_FILES = xml  slghparse  pcodeparse  slghscan
 
 # PARSING ######################################################################
-xml.cc:  xml.y
-	$(YACC) -p xml -o $(SRC_DIR)/build/$@ $<
+xml.o: xml.cc
+	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+xml.cc: xml.y
+	$(YACC) -p xml -o $(BUILD_DIR)/$@ $<
 
+slghparse.o: slghparse.cc
+	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 slghparse.cc: slghparse.y
-	$(YACC) -d -o $(SRC_DIR)/build/$@ $<
-	mv $(SRC_DIR)/build/slghparse.hh $(SRC_DIR)/build/slghparse.tab.hh
+	$(YACC) -d -o $(BUILD_DIR)/$@ $<
+	mv $(BUILD_DIR)/slghparse.hh $(BUILD_DIR)/slghparse.tab.hh
 
+pcodeparse.o: pcodeparse.cc
+	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 pcodeparse.cc: pcodeparse.y
-	$(YACC) -p pcode -o $(SRC_DIR)/build/$@ $<
+	$(YACC) -p pcode -o $(BUILD_DIR)/$@ $<
 
 # LEXING #######################################################################
-slghscan.cc:  slghscan.l
-	$(LEX) -o $(SRC_DIR)/build/$@ $<
+slghscan.o: slghscan.cc
+	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+slghscan.cc: slghscan.l
+	$(LEX) -o $(BUILD_DIR)/$@ $<
 
-# BUILDING SLEIGH COMPILER #####################################################
+# BUILD SLEIGH COMPILER RECIPE #################################################
 
-# Collect all the requisite .cc files, less the parsing ones as those are
-# handled separately.
-SLGH_COMP_COLLATE := $(addsuffix .cc,        \
-	$(addprefix $(BUILD_DIR)/,   			 \
-	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(SLEIGH_CMPLR))))
+# Collect all the requisite .o files, less the parsing ones. Those are handled
+# separately.
+SLEIGH_COMP_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/,       \
+	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(SLEIGH_COMP))))
 
-$(SLGH_COMP_COLLATE): | $(BUILD_DIR) $(addsuffix .cc, $(PARSING_FILES))
-# No actions for $(SLGH_COMP_COLLATE) target. Messes up build process.
+$(SLEIGH_COMP_OBJS): | $(BUILD_DIR) $(addsuffix .o, $(PARSING_FILES))
+# No actions for $(SLEIGH_COMP_OBJS) target. Messes up build process.
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-# Begin collating the relevant .cc files into the build directory.
-$(BUILD_DIR)/%.cc: %.cc
-	cp $< $@
+$(BUILD_DIR)/%.o: %.cc
+	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
 
 
-sleigh-compile: $(SLGH_COMP_COLLATE)
-	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR)/ -I$(SRC_DIR)/ \
-	$(BUILD_DIR)/*.cc -o $(BIN_DIR)/$@
+sleigh-compile: $(SLEIGH_COMP_OBJS)
+	$(CXX) $(CXXFLAGS) -I$(BUILD_DIR) $(BUILD_DIR)/*.o -o $(BIN_DIR)/$@
 
-# Useful for debugging. To find out value of variable, type 'make print-VARIABLE'
+
+# Useful for debugging. To find out value of variable, type 'make
+# print-VARIABLE'
 print-%  : ; @echo $* = $($*)
