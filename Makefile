@@ -1,3 +1,5 @@
+VPATH = parser-tools include src src/build
+
 CC       = gcc
 CXX      = g++
 CXXFLAGS = -O2  -Wall  -Wno-sign-compare
@@ -6,9 +8,9 @@ PARSER_TOOLS	= parser-tools
 BUILD_DIR		= src/build
 PUB_INCLUDE_DIR = include
 SRC_DIR			= src
+LIB_DIR			= lib
 BIN_DIR			= bin
 
-VPATH = parser-tools include src src/build
 
 # Core source files used in all projects
 CORE := address  float  globalcontext  opcodes  pcoderaw  space  translate  xml
@@ -16,9 +18,6 @@ CORE := address  float  globalcontext  opcodes  pcoderaw  space  translate  xml
 # Files used for any project that use the sleigh decoder
 SLEIGH := context  filemanage  pcodecompile    pcodeparse   semantics   \
           sleigh   sleighbase  slghpatexpress  slghpattern  slghsymbol
-
-# Files specific to the sleigh compiler
-SLEIGH_COMP := slgh_compile  slghparse  slghscan
 
 
 # Parsing + Lexing
@@ -50,7 +49,20 @@ slghscan.o: slghscan.cc
 slghscan.cc: slghscan.l
 	$(LEX) -o $(BUILD_DIR)/$@ $<
 
+
+# RECIPE SHARED ACROSS TARGETS #################################################
+
+$(BUILD_DIR):
+	mkdir -p $(BUILD_DIR)
+
+$(BUILD_DIR)/%.o: %.cc
+	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
+
+
 # BUILD SLEIGH COMPILER RECIPE #################################################
+
+# Files specific to the sleigh compiler
+SLEIGH_COMP := slgh_compile  slghparse  slghscan
 
 # Collect all the requisite .o files, less the parsing ones. Those are handled
 # separately.
@@ -60,17 +72,30 @@ SLEIGH_COMP_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/,       \
 $(SLEIGH_COMP_OBJS): | $(BUILD_DIR) $(addsuffix .o, $(PARSING_FILES))
 # No actions for $(SLEIGH_COMP_OBJS) target. Messes up build process.
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
-$(BUILD_DIR)/%.o: %.cc
-	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
-
 
 sleigh-compile: $(SLEIGH_COMP_OBJS)
 	$(CXX) $(CXXFLAGS) -I$(BUILD_DIR) $(BUILD_DIR)/*.o -o $(BIN_DIR)/$@
 
 
+# BUILD LIBSLA.A RECIPE ########################################################
+
+LIBSLA := emulate  memstate  opbehavior  slghparse  slghscan
+
+LIBSLA_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/,       \
+	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(LIBSLA))))
+
+$(LIBSLA_OBJS): | $(BUILD_DIR) $(addsuffix .o, $(PARSING_FILES))
+# No actions for $(SLEIGH_COMP_OBJS) target. Messes up build process.
+
+
+# Create static library.
+libsla.a: $(LIBSLA_OBJS)
+	rm -rf $(LIB_DIR)/$@
+	ar rcs $(LIB_DIR)/$@ $^
+
+
 # Useful for debugging. To find out value of variable, type 'make
 # print-VARIABLE'
 print-%  : ; @echo $* = $($*)
+
+
