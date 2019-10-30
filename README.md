@@ -5,7 +5,7 @@ Separate the sleigh compiler from Ghidra, rewritten Makefile
 Assuming your running under an mingw-w64-x86_64 style environment, after installing `bison` and `flex` (and `g++` + `binutils` + etc.), 
 execute `make sleigh-compile`, 
 
-This will get you 95% of the way but then gets trapt in an infinite loop.
+This will get you 95% of the way but then gets trapped in an infinite loop.
 Hit Ctrl+C to interupt the loop and finish the build with
 
 `g++ -D__linux__ -D__x86_64__ -Wno-sign-compare -Isrc -Iinclude src/build/*.cc -o sleigh-compile`
