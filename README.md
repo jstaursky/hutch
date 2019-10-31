@@ -3,7 +3,7 @@ Separate the sleigh compiler from Ghidra, rewritten Makefile.
 
 I had trouble with the existing Makefile in the repository and after debugging
 it, decided there are probably others like myself. So I cleaned(i.e., rewrote) it, and built
-(IMO) a better folder structure for use as a library. This is a work in progress.
+(IMO) a better folder structure for use as a library.
 
 # WINDOWS BUILDING
 Assuming your running under an mingw-w64-x86_64 style environment, after installing `bison` and `flex` (and `g++` + `binutils` + etc.), 
