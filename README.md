@@ -1,9 +1,9 @@
-# byte-slide
-Separate the sleigh compiler from Ghidra, rewritten Makefile.
+# byte-slide (powered by sleigh!)
+Separate the sleigh compiler from Ghidra, a rewritten Makefile.
 
-I had trouble with the existing Makefile in the repository and after debugging
-it, decided there are probably others like myself. So I cleaned(i.e., rewrote) it, and built
-(IMO) a better folder structure for use as a library.
+I had trouble with the existing Makefile in the repository and so after some trial and error to get a successful build, I decided there are probably others like myself. So I rewrote the Makefile, and built (IMO) a better folder structure for use as a library.
+
+The intent is not to be in 1-1 sync with the sleigh code-base found in ghidra, I will be making my own modifications--Hence the name change. 
 
 # WINDOWS BUILDING
 Assuming your running under an mingw-w64-x86_64 style environment, after installing `bison` and `flex` (and `g++` + `binutils` + etc.), 
