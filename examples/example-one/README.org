@@ -1,0 +1,55 @@
+#+TITLE: EXAMPLE-ONE TUTORIAL
+Begin in the root directory =sleigh-lite= and enter:
+#+begin_src sh
+make sleigh-compile
+#+end_src
+This will build =sleigh-compile= in the =sleigh-lite/bin= folder. A compiler of =.slaspec=
+(=sleigh= specification) files. This is a necessary prerequisite if you plan on
+doing anything at all--with =pcode= or otherwise. The =.slaspec= file you compile
+is a specification of the cpu you are interested in, as well as how the
+intermediate representation (=pcode=) is described. 
+
+Next, run the following:
+#+begin_src sh
+  ./bin/sleigh-compile -a processors/x86/languages
+#+end_src
+This will build the =.sla= file needed for interfacing with the =sleigh=
+library.  
+
+Follow this up with:
+#+begin_src sh
+  make libsla.a
+#+end_src
+To build the =libsla= static library in the =sleigh-lite/lib= folder. After this we
+are now ready to build the first example program.
+
+Now, move into the directory =sleigh-lite/examples/example-one=. Here is where
+we will build our first program that uses the =sleigh= library. The example I
+have provided is more or less the one provided in the Ghidra repository but
+tweaked so you can pipe arbitrary binary data into it for analysis. This is
+useful if you want to see how the pcode might look for arbitrary binary
+sequences. Anyway, more on that later. Lets begin the build.
+
+enter:
+#+begin_src sh
+  make example-one
+#+end_src
+This should result in the binary =example-one= to appear in the present
+directory (=sleigh-light/examples/example-one=). Let me show you what it can do.
+
+
+Suppose you have a byte sequence such as =b800000000= and want to know what the
+corresponding x86 assembly is for this op-code. Well, even better, now we have
+two ways of looking at it: (1) in regular assembly and (2) as pcode! With the
+compiled example program enter the following for the regular disassembly:
+#+begin_src sh
+./example-one =(echo -n $'\xb8\x00\x00\x00\x00') disassemble
+#+end_src
+(NOTE: this assumes you are under a unix/linux environment AND using
+zsh; I'll provide another example later that is more cross platform, this is
+just the quickest and easiest)
+
+To view the same result but as pcode enter:
+#+begin_src sh
+./example-one =(echo -n $'\xb8\x00\x00\x00\x00') pcode
+#+end_src
