@@ -7,7 +7,10 @@ The intent is not to be in 1-1 sync with the sleigh code-base found in ghidra, I
 
 # BUILDING
 To build the sleigh compiler type: `make sleigh-compile`
-Follow this up with: `./bin/sleigh-compile -a processors/x86/languages`
+Follow this up with:
+
+`./bin/sleigh-compile -a processors/x86/languages`
+
 which compiles `x86.sla`.
 
 Next type: `make libsla.a` to build the library.
