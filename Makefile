@@ -79,7 +79,7 @@ sleigh-compile: $(SLEIGH_COMP_OBJS)
 
 # BUILD LIBSLA.A RECIPE ########################################################
 
-LIBSLA := emulate  memstate  opbehavior  slghparse  slghscan
+LIBSLA := loadimage emulate  memstate  opbehavior  slghparse  slghscan
 
 LIBSLA_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/,       \
 	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(LIBSLA))))
@@ -91,7 +91,7 @@ $(LIBSLA_OBJS): | $(BUILD_DIR) $(addsuffix .o, $(PARSING_FILES))
 # Create static library.
 libsla.a: $(LIBSLA_OBJS)
 	rm -rf $(LIB_DIR)/$@
-	ar rcs $(LIB_DIR)/$@ $^
+	ar rcs $(LIB_DIR)/$@ $^ $(addprefix $(BUILD_DIR)/, xml.o pcodeparse.o)
 
 
 # Useful for debugging. To find out value of variable, type 'make
