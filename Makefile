@@ -70,7 +70,7 @@ SLEIGH_COMP_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/,       \
 	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(SLEIGH_COMP))))
 
 $(SLEIGH_COMP_OBJS): | $(BUILD_DIR) $(addsuffix .o, $(PARSING_FILES))
-# No actions for $(SLEIGH_COMP_OBJS) target. Messes up build process.
+# No actions. Messes up build process.
 
 
 sleigh-compile: $(SLEIGH_COMP_OBJS)
@@ -85,7 +85,7 @@ LIBSLA_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/,       \
 	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(LIBSLA))))
 
 $(LIBSLA_OBJS): | $(BUILD_DIR) $(addsuffix .o, $(PARSING_FILES))
-# No actions for $(SLEIGH_COMP_OBJS) target. Messes up build process.
+# No actions
 
 
 # Create static library.
