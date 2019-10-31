@@ -1,4 +1,4 @@
-# sleigh-lite
+# byte-slide
 Separate the sleigh compiler from Ghidra, rewritten Makefile.
 
 I had trouble with the existing Makefile in the repository and after debugging
