@@ -1,3 +1,4 @@
+[[file:windows-build-process.gif]]
 #+TITLE: EXAMPLE-ONE TUTORIAL
 Begin in the root directory =byte-slide= and enter:
 #+begin_src sh
