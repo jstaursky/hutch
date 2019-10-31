@@ -3,7 +3,8 @@
  * IP: GHIDRA
  * NOTE: mentions GNU libbfd, the hard-coded binary is a toy function that generates primes
  *
- * Modifications copyright (C) 2019 Joe Staursky, no rights reserved (edits are public domain).
+ * Modifications:
+ * copyright (C) 2019 Joe Staursky, no rights reserved (edits are public domain).
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
