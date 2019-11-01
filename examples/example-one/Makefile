@@ -9,7 +9,8 @@ DBG_CXXFLAGS=-g -Wall -Wno-sign-compare
 OPT_CXXFLAGS=-O2 -Wall -Wno-sign-compare
 
 # libraries
-INCLUDES=-I../../include -I../../src
+INCLUDES=-I../../include
+#-I../../src
 
 LNK=../../lib/libsla.a
 
