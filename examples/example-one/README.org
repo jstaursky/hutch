@@ -1,5 +1,6 @@
+#+CAPTION: GIF was made while project was called "byte-slide".
 [[file:windows-build-process.gif]]
-GIF was made while project was called "byte-slide".
+
 #+TITLE: EXAMPLE-ONE TUTORIAL
 Begin in the root directory =hutch= and enter:
 #+begin_src sh
