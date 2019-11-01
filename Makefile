@@ -1,4 +1,4 @@
-VPATH = parser-tools include src src/build
+VPATH = parser-tools include src src/build processors/x86/languages
 
 CC       = gcc
 CXX      = g++
@@ -21,7 +21,15 @@ SLEIGH := context  filemanage  pcodecompile    pcodeparse   semantics   \
           sleigh   sleighbase  slghpatexpress  slghpattern  slghsymbol
 
 
-# Parsing + Lexing
+# BUILD EVERYTHING #############################################################
+all: sleigh-compile x86.sla libsla.a
+	$(MAKE) -C examples/example-one
+
+x86.sla: x86.slaspec
+	./bin/sleigh-compile -a processors/x86/languages
+
+
+# Parsing + Lexing #############################################################
 LEX  = flex
 YACC = bison
 
@@ -44,6 +52,7 @@ pcodeparse.o: pcodeparse.cc
 pcodeparse.cc: pcodeparse.y
 	$(YACC) -p pcode -o $(BUILD_DIR)/$@ $<
 
+
 # LEXING #######################################################################
 slghscan.o: slghscan.cc
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
@@ -52,7 +61,6 @@ slghscan.cc: slghscan.l
 
 
 # RECIPE SHARED ACROSS TARGETS #################################################
-
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
@@ -61,7 +69,6 @@ $(BUILD_DIR)/%.o: %.cc
 
 
 # BUILD SLEIGH COMPILER RECIPE #################################################
-
 # Files specific to the sleigh compiler
 SLEIGH_COMP := slgh_compile  slghparse  slghscan
 
@@ -94,6 +101,15 @@ libsla.a: $(LIBSLA_OBJS)
 	rm -rf $(LIB_DIR)/$@
 	ar rcs $(LIB_DIR)/$@ $^ $(addprefix $(BUILD_DIR)/, xml.o pcodeparse.o)
 
+
+# CLEANUP ######################################################################
+clean:
+	rm -rf src/build
+	rm -f bin/sleigh-compile
+	rm -f lib/libsla.a
+	rm -f processors/x86/languages/x86.sla
+	rm -f examples/example-one/example-one
+	rm -f examples/example-one/*.o
 
 # Useful for debugging. To find out value of variable, type 'make
 # print-VARIABLE'

@@ -14,11 +14,11 @@ INCLUDES=-I../../include
 
 LNK=../../lib/libsla.a
 
-example-one.o:	example-one.cpp
-	$(CXX) -c $(DBG_CXXFLAGS) $(INCLUDES) $< -o $@
-
 example-one:	example-one.o
 	$(CXX) $(DBG_CXXFLAGS) -o example-one example-one.o $(LNK)
+
+example-one.o:	example-one.cpp
+	$(CXX) -c $(DBG_CXXFLAGS) $(INCLUDES) $< -o $@
 
 clean:
 	rm -rf *.o example-one
