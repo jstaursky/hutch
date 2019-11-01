@@ -1,4 +1,4 @@
-# byte-slide (a sleigh library derivative)
+# hutch (a sleigh library derivative)
 Separate the sleigh compiler from Ghidra, a rewritten Makefile.
 
 I had trouble with the existing Makefile in the repository and so after some trial and error to get a successful build, I decided to rewrite it. So I rewrote the Makefile, and built (IMO) a better folder structure for using sleigh as a library.
