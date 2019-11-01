@@ -6,7 +6,8 @@ CXXFLAGS = -O2  -Wall  -Wno-sign-compare
 
 PARSER_TOOLS	 = parser-tools
 BUILD_DIR	 = src/build
-PUB_INCLUDE_DIR  = include
+PUB_INCLUDE_DIR = include # Plan to eventually separate headers into public and
+				  		  # private headers. Where private headers reside in src
 SRC_DIR		 = src
 LIB_DIR		 = lib
 BIN_DIR		 = bin
@@ -28,24 +29,24 @@ PARSING_FILES = xml  slghparse  pcodeparse  slghscan
 
 # PARSING ######################################################################
 xml.o: xml.cc
-	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 xml.cc: xml.y
 	$(YACC) -p xml -o $(BUILD_DIR)/$@ $<
 
 slghparse.o: slghparse.cc
-	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 slghparse.cc: slghparse.y
 	$(YACC) -d -o $(BUILD_DIR)/$@ $<
 	mv $(BUILD_DIR)/slghparse.hh $(BUILD_DIR)/slghparse.tab.hh
 
 pcodeparse.o: pcodeparse.cc
-	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 pcodeparse.cc: pcodeparse.y
 	$(YACC) -p pcode -o $(BUILD_DIR)/$@ $<
 
 # LEXING #######################################################################
 slghscan.o: slghscan.cc
-	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 slghscan.cc: slghscan.l
 	$(LEX) -o $(BUILD_DIR)/$@ $<
 
