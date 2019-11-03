@@ -1,4 +1,4 @@
-VPATH = parser-tools include src src/build processors/x86/languages
+VPATH = parser-tools include src src/build processors/x86/languages processors/8085/languages
 
 CC       = gcc
 CXX      = g++
@@ -22,12 +22,16 @@ SLEIGH := context  filemanage  pcodecompile    pcodeparse   semantics   \
 
 
 # BUILD EVERYTHING #############################################################
-all: sleigh-compile x86.sla libsla.a
+all: sleigh-compile x86.sla 8085.sla libsla.a
 	$(MAKE) -C examples/example-one
+	$(MAKE) -C examples/example-two
+
 
 x86.sla: x86.slaspec
 	./bin/sleigh-compile -a processors/x86/languages
 
+8085.sla: 8085.slaspec
+	./bin/sleigh-compile -a processors/8085/languages
 
 # Parsing + Lexing #############################################################
 LEX  = flex
@@ -108,8 +112,12 @@ clean:
 	rm -f bin/sleigh-compile
 	rm -f lib/libsla.a
 	rm -f processors/x86/languages/x86.sla
+	rm -f processors/8085/languages/8085.sla
 	rm -f examples/example-one/example-one
 	rm -f examples/example-one/*.o
+	rm -f examples/example-two/example-two
+	rm -f examples/example-two/*.o
+
 
 # Useful for debugging. To find out value of variable, type 'make
 # print-VARIABLE'
