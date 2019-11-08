@@ -2,12 +2,15 @@
  * IP: GHIDRA
  * NOTE: flex skeletons are NOT bound by flex's BSD license
  *
+ * Modifications:
+ * copyright (C) 2019 Joe Staursky
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -28,455 +31,454 @@ static int isatty (int fildes) { return 0; }
 #endif
 
 struct FileStreamState {
-  YY_BUFFER_STATE lastbuffer;	// Last lex buffer corresponding to the stream
-  FILE *file;                   // The NEW file stream
+    YY_BUFFER_STATE lastbuffer; // Last lex buffer corresponding to the stream
+    FILE* file; // The NEW file stream
 };
 
-extern SleighCompile *slgh;
-int4 last_preproc;   // lex state before last preprocessing erasure
-int4 actionon;       // whether '&' '|' and '^' are treated as actionon in pattern section
-int4 withsection = 0; // whether we are between the 'with' keyword and its open brace '{'
+extern SleighCompile* slgh;
+int4 last_preproc; // lex state before last preprocessing erasure
+int4 actionon; // whether '&' '|' and '^' are treated as actionon in pattern section
+int4 withsection =
+    0; // whether we are between the 'with' keyword and its open brace '{'
 vector<FileStreamState> filebuffers;
 vector<int4> ifstack;
 int4 negative_if = -1;
 
-void preproc_error(const string &err)
+void preproc_error (const string& err)
 
 {
-  slgh->reportError(err,true);
-  cerr << "Terminating due to error in preprocessing" << endl;
-  exit(1);
+    slgh->reportError (err, true);
+    cerr << "Terminating due to error in preprocessing" << endl;
+    exit (1);
 }
 
-void check_to_endofline(istream &s)
+void check_to_endofline (istream & s)
 
 { // Make sure there is nothing to the end of the line
-  s >> ws;
-  if (!s.eof())
-    if (s.peek() != '#')
-      preproc_error("Extra characters in preprocessor directive"); 
-}
-
-string read_identifier(istream &s)
-
-{  // Read a proper identifier from the stream
-  s >> ws;   // Skip any whitespace
-  string res;
-  while(!s.eof()) {
-    char tok = s.peek();
-    if (isalnum(tok) || (tok == '_')) {
-      s >> tok;
-      res += tok;
-    }
-    else
-      break;
-  }
-  return res;
-}
-
-void preprocess_string(istream &s,string &res)
-
-{  // Grab string surrounded by double quotes from stream or call preprocess_error
-  int4 val;
-  
-  s >> ws;   // Skip any whitespace
-  val = s.get();
-  if (val != '\"')
-    preproc_error("Expecting double quoted string");
-  val = s.get();
-  while((val != '\"')&&(val>=0)) {
-    res += (char)val;
-    val = s.get();
-  }
-  if (val != '\"')
-    preproc_error("Missing terminating double quote");
-}
-
-extern int4 preprocess_if(istream &s); // Forward declaration for recursion
-
-int4 read_defined_operator(istream &s)
-
-{  // We have seen a -defined- keyword in an if or elif
-   // Read macro name used as input, return 1 if it is defined
-  char tok = ' ';
-  string macroname;
-  
-  s >> ws >> tok;
-  if (tok != '(')
-    preproc_error("Badly formed \"defined\" operator");
-  macroname = read_identifier(s);
-  int4 res = slgh->getPreprocValue(macroname,macroname) ? 1 : 0;
-  s >> ws >> tok;
-  if (tok != ')')
-    preproc_error("Badly formed \"defined\" operator");
-  return res;
-}
-
-int4 read_boolean_clause(istream &s)
-
-{				// We have seen an if or elif
-				// return 1 if condition is true or else 0
-  s >> ws;
-  if (s.peek()=='(') {		// Parenthetical expression spawns recursion
-    int4 val = s.get();
-    int4 res = preprocess_if(s);
     s >> ws;
-    val = s.get();
-    if (val != ')')
-      preproc_error("Unbalanced parentheses");
+    if (!s.eof ())
+        if (s.peek () != '#')
+            preproc_error ("Extra characters in preprocessor directive");
+}
+
+string read_identifier (istream & s)
+
+{ // Read a proper identifier from the stream
+    s >> ws; // Skip any whitespace
+    string res;
+    while (!s.eof ()) {
+        char tok = s.peek ();
+        if (isalnum (tok) || (tok == '_')) {
+            s >> tok;
+            res += tok;
+        } else
+            break;
+    }
     return res;
-  }
-				// Otherwise we must have a normal comparison operator
-  string lhs,rhs,comp;
-
-  if (s.peek()=='\"')		// Read left-hand side string
-    preprocess_string(s,lhs);
-  else {
-    lhs = read_identifier(s);
-    if (lhs == "defined")
-      return read_defined_operator(s);
-    if (!slgh->getPreprocValue(lhs,lhs))
-      preproc_error("Could not find preprocessor macro "+lhs);
-  }
-
-  char tok;
-  s >> tok;       // Read comparison symbol
-  comp += tok;
-  s >> tok;
-  comp += tok;
-    
-  s >> ws;
-  if (s.peek()=='\"')            // Read right-hand side string
-    preprocess_string(s,rhs);
-  else {
-    rhs = read_identifier(s);
-    if (!slgh->getPreprocValue(rhs,rhs))
-      preproc_error("Could not find preprocessor macro "+rhs);
-  }
-
-  if (comp == "==")
-    return (lhs == rhs) ? 1 : 0;
-  else if (comp=="!=")
-    return (lhs != rhs) ? 1 : 0;
-  else
-    preproc_error("Syntax error in condition");
-  return 0;
 }
 
-int4 preprocess_if(istream &s)
+void preprocess_string (istream & s, string & res)
 
-{
-  int4 res = read_boolean_clause(s);
-  s >> ws;
-  while((!s.eof())&&(s.peek()!=')')) {
-    string boolop;
-    char tok;
-    s >> tok;
-    boolop += tok;
-    s >> tok;
-    boolop += tok;
-    int4 res2 = read_boolean_clause(s);
-    if (boolop == "&&")
-      res = res & res2;
-    else if (boolop == "||")
-      res = res | res2;
-    else if (boolop == "^^")
-      res = res ^ res2;
-    else
-      preproc_error("Syntax error in expression");
+{ // Grab string surrounded by double quotes from stream or call preprocess_error
+    int4 val;
+
+    s >> ws; // Skip any whitespace
+    val = s.get ();
+    if (val != '\"')
+        preproc_error ("Expecting double quoted string");
+    val = s.get ();
+    while ((val != '\"') && (val >= 0)) {
+        res += (char)val;
+        val = s.get ();
+    }
+    if (val != '\"')
+        preproc_error ("Missing terminating double quote");
+}
+
+extern int4 preprocess_if (istream &
+                           s); // Forward declaration for recursion
+
+int4 read_defined_operator (istream & s)
+
+{ // We have seen a -defined- keyword in an if or elif
+    // Read macro name used as input, return 1 if it is defined
+    char tok = ' ';
+    string macroname;
+
+    s >> ws >> tok;
+    if (tok != '(')
+        preproc_error ("Badly formed \"defined\" operator");
+    macroname = read_identifier (s);
+    int4 res = slgh->getPreprocValue (macroname, macroname) ? 1 : 0;
+    s >> ws >> tok;
+    if (tok != ')')
+        preproc_error ("Badly formed \"defined\" operator");
+    return res;
+}
+
+int4 read_boolean_clause (istream & s)
+
+{ // We have seen an if or elif
+    // return 1 if condition is true or else 0
     s >> ws;
-  }
-  return res;
-}
-
-void expand_preprocmacros(string &str)
-
-{
-  string::size_type pos;
-  string::size_type lastpos = 0;
-  pos = str.find("$(",lastpos);
-  if (pos == string::npos)
-    return;
-  string res;
-  for(;;) {
-    if (pos == string::npos) {
-      res += str.substr(lastpos);
-      str = res;
-      return;
+    if (s.peek () == '(') { // Parenthetical expression spawns recursion
+        int4 val = s.get ();
+        int4 res = preprocess_if (s);
+        s >> ws;
+        val = s.get ();
+        if (val != ')')
+            preproc_error ("Unbalanced parentheses");
+        return res;
     }
+    // Otherwise we must have a normal comparison operator
+    string lhs, rhs, comp;
+
+    if (s.peek () == '\"') // Read left-hand side string
+        preprocess_string (s, lhs);
     else {
-      res += str.substr(lastpos,(pos-lastpos));
-      string::size_type endpos = str.find(')',pos+2);
-      if (endpos == string::npos) {
-	preproc_error("Unterminated macro in string");
-	break;
-      }
-      string macro = str.substr(pos+2, endpos - (pos+2));
-      string value;
-      if (!slgh->getPreprocValue(macro,value)) {
-	preproc_error("Unknown preprocessing macro "+macro);
-	break;
-      }
-      res += value;
-      lastpos = endpos + 1;
+        lhs = read_identifier (s);
+        if (lhs == "defined")
+            return read_defined_operator (s);
+        if (!slgh->getPreprocValue (lhs, lhs))
+            preproc_error ("Could not find preprocessor macro " + lhs);
     }
-    pos = str.find("$(",lastpos);
-  }
-}
 
-int4 preprocess(int4 cur_state,int4 blank_state)
+    char tok;
+    s >> tok; // Read comparison symbol
+    comp += tok;
+    s >> tok;
+    comp += tok;
 
-{
-  string str(yytext);
-  string::size_type pos = str.find('#');
-  if (pos != string::npos)
-    str.erase(pos);
-  istringstream s(str);
-  string type;
-
-  if (cur_state != blank_state)
-    last_preproc = cur_state;
-
-  s.get();   // Skip the preprocessor marker
-  s >> type;
-  if (type == "include") {
-    if (negative_if == -1) {  // Not in the middle of a false if clause
-      filebuffers.push_back(FileStreamState());   // Save state of current file
-      filebuffers.back().lastbuffer = YY_CURRENT_BUFFER;
-      filebuffers.back().file = (FILE *)0;
-      s >> ws;
-      string fname;
-      preprocess_string(s,fname);
-      expand_preprocmacros(fname);
-      slgh->parseFromNewFile(fname);
-      fname = slgh->grabCurrentFilePath();
-      yyin = fopen(fname.c_str(),"r");
-      if (yyin == (FILE *)0)
-        preproc_error("Could not open included file "+fname);
-      filebuffers.back().file = yyin;
-      yy_switch_to_buffer( yy_create_buffer(yyin, YY_BUF_SIZE) );
-      check_to_endofline(s);
-    }
-  }
-  else if (type == "define") {
-    if (negative_if == -1) {
-      string varname;
-      string value;
-      varname = read_identifier(s);   // Get name of variable being defined
-      s >> ws;
-      if (s.peek() == '\"')
-        preprocess_string(s,value);
-      else
-        value = read_identifier(s);
-      if (varname.size()==0)
-        preproc_error("Error in preprocessor definition");
-      slgh->setPreprocValue(varname,value);
-      check_to_endofline(s);
-    }
-  }
-  else if (type == "undef") {
-    if (negative_if == -1) {
-      string varname;
-      varname = read_identifier(s);		// Name of variable to undefine
-      if (varname.size()==0)
-        preproc_error("Error in preprocessor undef");
-      slgh->undefinePreprocValue(varname);
-      check_to_endofline(s);
-    }
-  }
-  else if (type=="ifdef") {
-    string varname;
-    varname = read_identifier(s);
-    if (varname.size()==0)
-      preproc_error("Error in preprocessor ifdef");
-    string value;
-    int4 truth = (slgh->getPreprocValue(varname,value)) ? 1 : 0;
-    ifstack.push_back(truth);
-    check_to_endofline(s);
-  }
-  else if (type=="ifndef") {
-    string varname;
-    varname = read_identifier(s);
-    if (varname.size()==0)
-      preproc_error("Error in preprocessor ifndef");
-    string value;
-    int4 truth = (slgh->getPreprocValue(varname,value)) ? 0 : 1;	// flipped from ifdef
-    ifstack.push_back(truth);
-    check_to_endofline(s);
-  }
-  else if (type=="if") {
-    int4 truth = preprocess_if(s);
-    if (!s.eof())
-      preproc_error("Unbalanced parentheses");
-    ifstack.push_back(truth);
-  }
-  else if (type=="elif") {
-    if (ifstack.empty())
-      preproc_error("elif without preceding if");
-    if ((ifstack.back()&2)!=0)		// We have already seen an else clause
-      preproc_error("elif follows else");
-    if ((ifstack.back()&4)!=0)          // We have already seen a true elif clause
-      ifstack.back() = 4;               // don't include any other elif clause
-    else if ((ifstack.back()&1)!=0)     // Last clause was a true if
-      ifstack.back() = 4;               // don't include this elif
+    s >> ws;
+    if (s.peek () == '\"') // Read right-hand side string
+        preprocess_string (s, rhs);
     else {
-      int4 truth = preprocess_if(s);
-      if (!s.eof())
-        preproc_error("Unbalanced parentheses");
-      if (truth==0)
-        ifstack.back() = 0;
-      else
-        ifstack.back() = 5;
+        rhs = read_identifier (s);
+        if (!slgh->getPreprocValue (rhs, rhs))
+            preproc_error ("Could not find preprocessor macro " + rhs);
     }
-  }
-  else if (type=="endif") {
-    if (ifstack.empty())
-      preproc_error("preprocessing endif without matching if");
-    ifstack.pop_back();
-    check_to_endofline(s);
-  }
-  else if (type=="else") {
-    if (ifstack.empty())
-      preproc_error("preprocessing else without matching if");
-    if ((ifstack.back()&2)!=0)
-      preproc_error("second else for one if");
-    if ((ifstack.back()&4)!=0)       // Seen a true elif clause before
-      ifstack.back() = 6;
-    else if (ifstack.back()==0)
-      ifstack.back() = 3;
+
+    if (comp == "==")
+        return (lhs == rhs) ? 1 : 0;
+    else if (comp == "!=")
+        return (lhs != rhs) ? 1 : 0;
     else
-      ifstack.back() = 2;
-    check_to_endofline(s);
-  }
-  else
-    preproc_error("Unknown preprocessing directive: "+type);
-
-  if (negative_if >= 0) {  // We were in a false state
-    if (negative_if+1 < ifstack.size())
-      return blank_state;  // false state is still deep in stack
-    else                   // false state is popped off or is current and changed
-      negative_if = -1;
-  }
-  if (ifstack.empty()) return last_preproc;
-  if ((ifstack.back()&1)==0) {
-    negative_if = ifstack.size()-1;
-    return blank_state;
-  }
-  return last_preproc;
+        preproc_error ("Syntax error in condition");
+    return 0;
 }
 
-void preproc_macroexpand(void)
+int4 preprocess_if (istream & s)
 
 {
-  filebuffers.push_back(FileStreamState());
-  filebuffers.back().lastbuffer = YY_CURRENT_BUFFER;
-  filebuffers.back().file = (FILE *)0;
-  string macro(yytext);
-  macro.erase(0,2);
-  macro.erase(macro.size()-1,1);
-  string value;
-  if (!slgh->getPreprocValue(macro,value))
-    preproc_error("Unknown preprocessing macro "+macro);
-  yy_switch_to_buffer( yy_scan_string( value.c_str() ) );
-  slgh->parsePreprocMacro();
-}
-
-int4 find_symbol(void) {
-  string * newstring = new string(yytext);
-  SleighSymbol *sym = slgh->findSymbol(*newstring);
-  if (sym == (SleighSymbol *)0) {
-    yylval.str = newstring;
-    return STRING;
-  }
-  delete newstring;
-  switch(sym->getType()) {
-  case SleighSymbol::section_symbol:
-    yylval.sectionsym = (SectionSymbol *)sym;
-    return SECTIONSYM;
-  case SleighSymbol::space_symbol:
-    yylval.spacesym = (SpaceSymbol *)sym;
-    return SPACESYM;
-  case SleighSymbol::token_symbol:
-    yylval.tokensym = (TokenSymbol *)sym;
-    return TOKENSYM;
-  case SleighSymbol::userop_symbol:
-    yylval.useropsym = (UserOpSymbol *)sym;
-    return USEROPSYM;
-  case SleighSymbol::value_symbol:
-    yylval.valuesym = (ValueSymbol *)sym;
-    return VALUESYM;
-  case SleighSymbol::valuemap_symbol:
-    yylval.valuemapsym = (ValueMapSymbol *)sym;
-    return VALUEMAPSYM;
-  case SleighSymbol::name_symbol:
-    yylval.namesym = (NameSymbol *)sym;
-    return NAMESYM;
-  case SleighSymbol::varnode_symbol:
-    yylval.varsym = (VarnodeSymbol *)sym;
-    return VARSYM;
-  case SleighSymbol::bitrange_symbol:
-    yylval.bitsym = (BitrangeSymbol *)sym;
-    return BITSYM;
-  case SleighSymbol::varnodelist_symbol:
-    yylval.varlistsym = (VarnodeListSymbol *)sym;
-    return VARLISTSYM;
-  case SleighSymbol::operand_symbol:
-    yylval.operandsym = (OperandSymbol *)sym;
-    return OPERANDSYM;
-  case SleighSymbol::start_symbol:
-    yylval.startsym = (StartSymbol *)sym;
-    return STARTSYM;
-  case SleighSymbol::end_symbol:
-    yylval.endsym = (EndSymbol *)sym;
-    return ENDSYM;
-  case SleighSymbol::subtable_symbol:
-    yylval.subtablesym = (SubtableSymbol *)sym;
-    return SUBTABLESYM;
-  case SleighSymbol::macro_symbol:
-    yylval.macrosym = (MacroSymbol *)sym;
-    return MACROSYM;
-  case SleighSymbol::label_symbol:
-    yylval.labelsym = (LabelSymbol *)sym;
-    return LABELSYM;
-  case SleighSymbol::epsilon_symbol:
-    yylval.specsym = (SpecificSymbol *)sym;
-    return SPECSYM;
-  case SleighSymbol::context_symbol:
-    yylval.contextsym = (ContextSymbol *)sym;
-    return CONTEXTSYM;
-  case SleighSymbol::dummy_symbol:
-    break;
-  }
-  return -1;   // Should never reach here
-}
-
-int4 scan_number(char *numtext,YYSTYPE *lval,bool signednum)
-
-{
-  uintb val;
-  if (numtext[0] == '0' && numtext[1] == 'b') {
-    val = 0;
-    numtext += 2;
-    while ((*numtext) != 0) {
-      val <<= 1;
-      if (*numtext == '1') {
-        val |= 1;
-      }
-      ++numtext;
+    int4 res = read_boolean_clause (s);
+    s >> ws;
+    while ((!s.eof ()) && (s.peek () != ')')) {
+        string boolop;
+        char tok;
+        s >> tok;
+        boolop += tok;
+        s >> tok;
+        boolop += tok;
+        int4 res2 = read_boolean_clause (s);
+        if (boolop == "&&")
+            res = res & res2;
+        else if (boolop == "||")
+            res = res | res2;
+        else if (boolop == "^^")
+            res = res ^ res2;
+        else
+            preproc_error ("Syntax error in expression");
+        s >> ws;
     }
-  } else {
-    istringstream s(numtext);
-    s.unsetf(ios::dec | ios::hex | ios::oct);
-    s >> val;
-    if (!s)
-      return BADINTEGER;
-  }
-  if (signednum) {
-    lval->big = new intb(val);
-    return INTB;
-  }
-  lval->i = new uintb(val);
-  return INTEGER;
+    return res;
+}
+
+void expand_preprocmacros (string & str)
+
+{
+    string::size_type pos;
+    string::size_type lastpos = 0;
+    pos = str.find ("$(", lastpos);
+    if (pos == string::npos)
+        return;
+    string res;
+    for (;;) {
+        if (pos == string::npos) {
+            res += str.substr (lastpos);
+            str = res;
+            return;
+        } else {
+            res += str.substr (lastpos, (pos - lastpos));
+            string::size_type endpos = str.find (')', pos + 2);
+            if (endpos == string::npos) {
+                preproc_error ("Unterminated macro in string");
+                break;
+            }
+            string macro = str.substr (pos + 2, endpos - (pos + 2));
+            string value;
+            if (!slgh->getPreprocValue (macro, value)) {
+                preproc_error ("Unknown preprocessing macro " + macro);
+                break;
+            }
+            res += value;
+            lastpos = endpos + 1;
+        }
+        pos = str.find ("$(", lastpos);
+    }
+}
+
+int4 preprocess (int4 cur_state, int4 blank_state)
+
+{
+    string str (yytext);
+    string::size_type pos = str.find ('#');
+    if (pos != string::npos)
+        str.erase (pos);
+    istringstream s (str);
+    string type;
+
+    if (cur_state != blank_state)
+        last_preproc = cur_state;
+
+    s.get (); // Skip the preprocessor marker
+    s >> type;
+    if (type == "include") {
+        if (negative_if == -1) { // Not in the middle of a false if clause
+            filebuffers.push_back (
+                FileStreamState ()); // Save state of current file
+            filebuffers.back ().lastbuffer = YY_CURRENT_BUFFER;
+            filebuffers.back ().file = (FILE*)0;
+            s >> ws;
+            string fname;
+            preprocess_string (s, fname);
+            expand_preprocmacros (fname);
+            slgh->parseFromNewFile (fname);
+            fname = slgh->grabCurrentFilePath ();
+            yyin = fopen (fname.c_str (), "r");
+            if (yyin == (FILE*)0)
+                preproc_error ("Could not open included file " + fname);
+            filebuffers.back ().file = yyin;
+            yy_switch_to_buffer (yy_create_buffer (yyin, YY_BUF_SIZE));
+            check_to_endofline (s);
+        }
+    } else if (type == "define") {
+        if (negative_if == -1) {
+            string varname;
+            string value;
+            varname =
+                read_identifier (s); // Get name of variable being defined
+            s >> ws;
+            if (s.peek () == '\"')
+                preprocess_string (s, value);
+            else
+                value = read_identifier (s);
+            if (varname.size () == 0)
+                preproc_error ("Error in preprocessor definition");
+            slgh->setPreprocValue (varname, value);
+            check_to_endofline (s);
+        }
+    } else if (type == "undef") {
+        if (negative_if == -1) {
+            string varname;
+            varname = read_identifier (s); // Name of variable to undefine
+            if (varname.size () == 0)
+                preproc_error ("Error in preprocessor undef");
+            slgh->undefinePreprocValue (varname);
+            check_to_endofline (s);
+        }
+    } else if (type == "ifdef") {
+        string varname;
+        varname = read_identifier (s);
+        if (varname.size () == 0)
+            preproc_error ("Error in preprocessor ifdef");
+        string value;
+        int4 truth = (slgh->getPreprocValue (varname, value)) ? 1 : 0;
+        ifstack.push_back (truth);
+        check_to_endofline (s);
+    } else if (type == "ifndef") {
+        string varname;
+        varname = read_identifier (s);
+        if (varname.size () == 0)
+            preproc_error ("Error in preprocessor ifndef");
+        string value;
+        int4 truth = (slgh->getPreprocValue (varname, value)) ?
+                         0 :
+                         1; // flipped from ifdef
+        ifstack.push_back (truth);
+        check_to_endofline (s);
+    } else if (type == "if") {
+        int4 truth = preprocess_if (s);
+        if (!s.eof ())
+            preproc_error ("Unbalanced parentheses");
+        ifstack.push_back (truth);
+    } else if (type == "elif") {
+        if (ifstack.empty ())
+            preproc_error ("elif without preceding if");
+        if ((ifstack.back () & 2) !=
+            0) // We have already seen an else clause
+            preproc_error ("elif follows else");
+        if ((ifstack.back () & 4) !=
+            0) // We have already seen a true elif clause
+            ifstack.back () = 4; // don't include any other elif clause
+        else if ((ifstack.back () & 1) != 0) // Last clause was a true if
+            ifstack.back () = 4; // don't include this elif
+        else {
+            int4 truth = preprocess_if (s);
+            if (!s.eof ())
+                preproc_error ("Unbalanced parentheses");
+            if (truth == 0)
+                ifstack.back () = 0;
+            else
+                ifstack.back () = 5;
+        }
+    } else if (type == "endif") {
+        if (ifstack.empty ())
+            preproc_error ("preprocessing endif without matching if");
+        ifstack.pop_back ();
+        check_to_endofline (s);
+    } else if (type == "else") {
+        if (ifstack.empty ())
+            preproc_error ("preprocessing else without matching if");
+        if ((ifstack.back () & 2) != 0)
+            preproc_error ("second else for one if");
+        if ((ifstack.back () & 4) != 0) // Seen a true elif clause before
+            ifstack.back () = 6;
+        else if (ifstack.back () == 0)
+            ifstack.back () = 3;
+        else
+            ifstack.back () = 2;
+        check_to_endofline (s);
+    } else
+        preproc_error ("Unknown preprocessing directive: " + type);
+
+    if (negative_if >= 0) { // We were in a false state
+        if (negative_if + 1 < ifstack.size ())
+            return blank_state; // false state is still deep in stack
+        else // false state is popped off or is current and changed
+            negative_if = -1;
+    }
+    if (ifstack.empty ())
+        return last_preproc;
+    if ((ifstack.back () & 1) == 0) {
+        negative_if = ifstack.size () - 1;
+        return blank_state;
+    }
+    return last_preproc;
+}
+
+void preproc_macroexpand (void)
+
+{
+    filebuffers.push_back (FileStreamState ());
+    filebuffers.back ().lastbuffer = YY_CURRENT_BUFFER;
+    filebuffers.back ().file = (FILE*)0;
+    string macro (yytext);
+    macro.erase (0, 2);
+    macro.erase (macro.size () - 1, 1);
+    string value;
+    if (!slgh->getPreprocValue (macro, value))
+        preproc_error ("Unknown preprocessing macro " + macro);
+    yy_switch_to_buffer (yy_scan_string (value.c_str ()));
+    slgh->parsePreprocMacro ();
+}
+
+int4 find_symbol (void)
+{
+    string* newstring = new string (yytext);
+    SleighSymbol* sym = slgh->findSymbol (*newstring);
+    if (sym == (SleighSymbol*)0) {
+        yylval.str = newstring;
+        return STRING;
+    }
+    delete newstring;
+    switch (sym->getType ()) {
+    case SleighSymbol::section_symbol:
+        yylval.sectionsym = (SectionSymbol*)sym;
+        return SECTIONSYM;
+    case SleighSymbol::space_symbol:
+        yylval.spacesym = (SpaceSymbol*)sym;
+        return SPACESYM;
+    case SleighSymbol::token_symbol:
+        yylval.tokensym = (TokenSymbol*)sym;
+        return TOKENSYM;
+    case SleighSymbol::userop_symbol:
+        yylval.useropsym = (UserOpSymbol*)sym;
+        return USEROPSYM;
+    case SleighSymbol::value_symbol:
+        yylval.valuesym = (ValueSymbol*)sym;
+        return VALUESYM;
+    case SleighSymbol::valuemap_symbol:
+        yylval.valuemapsym = (ValueMapSymbol*)sym;
+        return VALUEMAPSYM;
+    case SleighSymbol::name_symbol:
+        yylval.namesym = (NameSymbol*)sym;
+        return NAMESYM;
+    case SleighSymbol::varnode_symbol:
+        yylval.varsym = (VarnodeSymbol*)sym;
+        return VARSYM;
+    case SleighSymbol::bitrange_symbol:
+        yylval.bitsym = (BitrangeSymbol*)sym;
+        return BITSYM;
+    case SleighSymbol::varnodelist_symbol:
+        yylval.varlistsym = (VarnodeListSymbol*)sym;
+        return VARLISTSYM;
+    case SleighSymbol::operand_symbol:
+        yylval.operandsym = (OperandSymbol*)sym;
+        return OPERANDSYM;
+    case SleighSymbol::start_symbol:
+        yylval.startsym = (StartSymbol*)sym;
+        return STARTSYM;
+    case SleighSymbol::end_symbol:
+        yylval.endsym = (EndSymbol*)sym;
+        return ENDSYM;
+    case SleighSymbol::subtable_symbol:
+        yylval.subtablesym = (SubtableSymbol*)sym;
+        return SUBTABLESYM;
+    case SleighSymbol::macro_symbol:
+        yylval.macrosym = (MacroSymbol*)sym;
+        return MACROSYM;
+    case SleighSymbol::label_symbol:
+        yylval.labelsym = (LabelSymbol*)sym;
+        return LABELSYM;
+    case SleighSymbol::epsilon_symbol:
+        yylval.specsym = (SpecificSymbol*)sym;
+        return SPECSYM;
+    case SleighSymbol::context_symbol:
+        yylval.contextsym = (ContextSymbol*)sym;
+        return CONTEXTSYM;
+    case SleighSymbol::dummy_symbol:
+        break;
+    }
+    return -1; // Should never reach here
+}
+
+int4 scan_number (char* numtext, YYSTYPE* lval, bool signednum)
+
+{
+    uintb val;
+    if (numtext[0] == '0' && numtext[1] == 'b') {
+        val = 0;
+        numtext += 2;
+        while ((*numtext) != 0) {
+            val <<= 1;
+            if (*numtext == '1') {
+                val |= 1;
+            }
+            ++numtext;
+        }
+    } else {
+        istringstream s (numtext);
+        s.unsetf (ios::dec | ios::hex | ios::oct);
+        s >> val;
+        if (!s)
+            return BADINTEGER;
+    }
+    if (signednum) {
+        lval->big = new intb (val);
+        return INTB;
+    }
+    lval->i = new uintb (val);
+    return INTEGER;
 }
 
 %}
@@ -661,12 +663,11 @@ with   { BEGIN(pattern); withsection = 1; slgh->calcContextLayout(); return WITH
 
 <<EOF>> { yy_delete_buffer( YY_CURRENT_BUFFER );
           if (filebuffers.empty())
-            yyterminate(); 
+            yyterminate();
           yy_switch_to_buffer( filebuffers.back().lastbuffer );
-	  FILE *curfile = filebuffers.back().file;
-	  if (curfile != (FILE *)0)
-	    fclose(curfile);
+      FILE *curfile = filebuffers.back().file;
+      if (curfile != (FILE *)0)
+        fclose(curfile);
           filebuffers.pop_back();
           slgh->parseFileFinished();
         }
-
