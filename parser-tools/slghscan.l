@@ -20,26 +20,28 @@
 %{
 #include "slgh_compile.hh"
 #include "slghparse.tab.hh"
-#define yywrap() 1
+#define yywrap() 1              // Do not call yywrap.
 #define YY_SKIP_YYWRAP
 
 /* If we are building don't include unistd.h */
 /* flex provides us with this macro for turning it off */
 #ifdef _WIN32
 #define YY_NO_UNISTD_H
-static int isatty (int fildes) { return 0; }
+static int isatty (int fildes) { return 0; } // Set input to read from stdin.
 #endif
 
 struct FileStreamState {
     YY_BUFFER_STATE lastbuffer; // Last lex buffer corresponding to the stream
-    FILE* file; // The NEW file stream
+    FILE* file;                 // The NEW file stream
 };
 
 extern SleighCompile* slgh;
-int4 last_preproc; // lex state before last preprocessing erasure
-int4 actionon; // whether '&' '|' and '^' are treated as actionon in pattern section
+int4 last_preproc;              // lex state before last preprocessing erasure
+int4 actionon;                  // whether '&' '|' and '^' are treated as
+                                // actionon in pattern section.
 int4 withsection =
-    0; // whether we are between the 'with' keyword and its open brace '{'
+    0;                          // whether we are between the 'with' keyword and
+                                // its open brace '{'
 vector<FileStreamState> filebuffers;
 vector<int4> ifstack;
 int4 negative_if = -1;
@@ -491,109 +493,109 @@ int4 scan_number (char* numtext, YYSTYPE* lval, bool signednum)
 %x preproc
 %%
 
-^@[^\n]*\n?  { slgh->nextLine(); BEGIN( preprocess(INITIAL,preproc) ); }
+^@[^\n]*\n?                        { slgh->nextLine(); BEGIN( preprocess(INITIAL,preproc) ); }
 \$\([a-zA-Z0-9_.][a-zA-Z0-9_.]*\)  { preproc_macroexpand(); }
-[(),\-] { yylval.ch = yytext[0]; return yytext[0]; }
-\:    { BEGIN(print); slgh->calcContextLayout(); yylval.ch = yytext[0]; return yytext[0]; }
-\{    { BEGIN(sem); yylval.ch = yytext[0]; return yytext[0]; }
+[(),\-]                            { yylval.ch = yytext[0]; return yytext[0]; }
+\:                                 { BEGIN(print); slgh->calcContextLayout(); yylval.ch = yytext[0]; return yytext[0]; }
+\{                                 { BEGIN(sem); yylval.ch = yytext[0]; return yytext[0]; }
 #.*$
 [\r\ \t\v]+
-\n             { slgh->nextLine(); }
-macro  { BEGIN(macroblock); return MACRO_KEY; }
-define { BEGIN(defblock); return DEFINE_KEY; }
-attach { BEGIN(defblock); slgh->calcContextLayout(); return ATTACH_KEY; }
-with   { BEGIN(pattern); withsection = 1; slgh->calcContextLayout(); return WITH_KEY; }
-[a-zA-Z_.][a-zA-Z0-9_.]* {  return find_symbol();  }
-.      { return yytext[0]; }
+\n                                 { slgh->nextLine(); }
+macro                              { BEGIN(macroblock); return MACRO_KEY; }
+define                             { BEGIN(defblock); return DEFINE_KEY; }
+attach                             { BEGIN(defblock); slgh->calcContextLayout(); return ATTACH_KEY; }
+with                               { BEGIN(pattern); withsection = 1; slgh->calcContextLayout(); return WITH_KEY; }
+[a-zA-Z_.][a-zA-Z0-9_.]*           { return find_symbol();  }
+.                                  { return yytext[0]; }
 
-<macroblock>^@[^\n]*\n?  { slgh->nextLine(); BEGIN( preprocess(macroblock,preproc) ); }
+<macroblock>^@[^\n]*\n?            { slgh->nextLine(); BEGIN( preprocess(macroblock,preproc) ); }
 <macroblock>\$\([a-zA-Z0-9_.][a-zA-Z0-9_.]*\)  { preproc_macroexpand(); }
-<macroblock>[(),]  { yylval.ch = yytext[0]; return yytext[0]; }
-<macroblock>\{     { BEGIN(sem); return yytext[0]; }
-<macroblock>[a-zA-Z_.][a-zA-Z0-9_.]*   {  yylval.str = new string(yytext); return STRING;  }
+<macroblock>[(),]                              { yylval.ch = yytext[0]; return yytext[0]; }
+<macroblock>\{                                 { BEGIN(sem); return yytext[0]; }
+<macroblock>[a-zA-Z_.][a-zA-Z0-9_.]*           { yylval.str = new string(yytext); return STRING;  }
 <macroblock>[\r\ \t\v]+
-<macroblock>\n     { slgh->nextLine(); }
-<macroblock>.      { return yytext[0]; }
+<macroblock>\n                                 { slgh->nextLine(); }
+<macroblock>.                                  { return yytext[0]; }
 
-<defblock>^@[^\n]*\n?  { slgh->nextLine(); BEGIN( preprocess(defblock,preproc) ); }
-<defblock>\$\([a-zA-Z0-9_.][a-zA-Z0-9_.]*\)  { preproc_macroexpand(); }
-<defblock>[(),=:\[\]]  { yylval.ch = yytext[0]; return yytext[0]; }
-<defblock>\;   { BEGIN(INITIAL); yylval.ch = yytext[0]; return yytext[0]; }
-<defblock>space     { return SPACE_KEY; }
-<defblock>type      { return TYPE_KEY; }
-<defblock>ram_space { return RAM_KEY; }
-<defblock>default   { return DEFAULT_KEY; }
-<defblock>register_space  { return REGISTER_KEY; }
-<defblock>token     { return TOKEN_KEY; }
-<defblock>context   { return CONTEXT_KEY; }
-<defblock>bitrange  { return BITRANGE_KEY; }
-<defblock>signed    { return SIGNED_KEY; }
-<defblock>noflow    { return NOFLOW_KEY; }
-<defblock>hex       { return HEX_KEY; }
-<defblock>dec       { return DEC_KEY; }
-<defblock>endian    { return ENDIAN_KEY; }
-<defblock>alignment { return ALIGN_KEY; }
-<defblock>big       { return BIG_KEY; }
-<defblock>little    { return LITTLE_KEY; }
-<defblock>size      { return SIZE_KEY; }
-<defblock>wordsize  { return WORDSIZE_KEY; }
-<defblock>offset    { return OFFSET_KEY; }
-<defblock>names     { return NAMES_KEY; }
-<defblock>values    { return VALUES_KEY; }
-<defblock>variables { return VARIABLES_KEY; }
-<defblock>pcodeop   { return PCODEOP_KEY; }
+<defblock>^@[^\n]*\n?                       { slgh->nextLine(); BEGIN( preprocess(defblock,preproc) ); }
+<defblock>\$\([a-zA-Z0-9_.][a-zA-Z0-9_.]*\) { preproc_macroexpand(); }
+<defblock>[(),=:\[\]]                       { yylval.ch = yytext[0]; return yytext[0]; }
+<defblock>\;                                { BEGIN(INITIAL); yylval.ch = yytext[0]; return yytext[0]; }
+<defblock>space          { return SPACE_KEY;     }
+<defblock>type           { return TYPE_KEY;      }
+<defblock>ram_space      { return RAM_KEY;       }
+<defblock>default        { return DEFAULT_KEY;   }
+<defblock>register_space { return REGISTER_KEY;  }
+<defblock>token          { return TOKEN_KEY;     }
+<defblock>context        { return CONTEXT_KEY;   }
+<defblock>bitrange       { return BITRANGE_KEY;  }
+<defblock>signed         { return SIGNED_KEY;    }
+<defblock>noflow         { return NOFLOW_KEY;    }
+<defblock>hex            { return HEX_KEY;       }
+<defblock>dec            { return DEC_KEY;       }
+<defblock>endian         { return ENDIAN_KEY;    }
+<defblock>alignment      { return ALIGN_KEY;     }
+<defblock>big            { return BIG_KEY;       }
+<defblock>little         { return LITTLE_KEY;    }
+<defblock>size           { return SIZE_KEY;      }
+<defblock>wordsize       { return WORDSIZE_KEY;  }
+<defblock>offset         { return OFFSET_KEY;    }
+<defblock>names          { return NAMES_KEY;     }
+<defblock>values         { return VALUES_KEY;    }
+<defblock>variables      { return VARIABLES_KEY; }
+<defblock>pcodeop        { return PCODEOP_KEY;   }
 <defblock>#.*$
-<defblock>[a-zA-Z_.][a-zA-Z0-9_.]* {  return find_symbol();  }
-<defblock>[0-9]|[1-9][0-9]+	{ return scan_number(yytext,&yylval,false); }
-<defblock>0x[0-9a-fA-F]+	{ return scan_number(yytext,&yylval,false); }
-<defblock>0b[01]+		{ return scan_number(yytext,&yylval,false); }
-<defblock>\"([^\"]|\"\")*\"	{ yylval.str = new string(yytext+1,strlen(yytext)-2); return STRING; }
+<defblock>[a-zA-Z_.][a-zA-Z0-9_.]* { return find_symbol();  }
+<defblock>[0-9]|[1-9][0-9]+        { return scan_number(yytext,&yylval,false); }
+<defblock>0x[0-9a-fA-F]+           { return scan_number(yytext,&yylval,false); }
+<defblock>0b[01]+                  { return scan_number(yytext,&yylval,false); }
+<defblock>\"([^\"]|\"\")*\"        { yylval.str = new string(yytext+1,strlen(yytext)-2); return STRING; }
 <defblock>[\r\ \t\v]+
-<defblock>\n        { slgh->nextLine(); }
-<defblock>.         { return yytext[0]; }
+<defblock>\n                       { slgh->nextLine(); }
+<defblock>.                        { return yytext[0]; }
 
 
-<print>^@[^\n]*\n?  { slgh->nextLine(); BEGIN( preprocess(print,preproc) ); }
+<print>^@[^\n]*\n?                        { slgh->nextLine(); BEGIN( preprocess(print,preproc) ); }
 <print>\$\([a-zA-Z0-9_.][a-zA-Z0-9_.]*\)  { preproc_macroexpand(); }
-<print>[~!@#$%&*()\-=+\[\]{}|;:<>?,/0-9] { yylval.ch = yytext[0]; return CHAR; }
-<print>\^           { yylval.ch = '^'; return '^'; }
-<print>is           { BEGIN(pattern); actionon=0; return IS_KEY; }
-<print>[a-zA-Z_.][a-zA-Z0-9_.]*   {  yylval.str = new string(yytext); return SYMBOLSTRING;  }
-<print>\"([^\"]|\"\")*\"       { yylval.str = new string(yytext+1,strlen(yytext)-2); return STRING; }
-<print>[\r\ \t\v]+  { yylval.ch = ' '; return ' '; }
-<print>\n           { slgh->nextLine(); return ' '; }
-<print>.            { return yytext[0]; }
+<print>[~!@#$%&*()\-=+\[\]{}|;:<>?,/0-9]  { yylval.ch = yytext[0]; return CHAR; }
+<print>\^                                 { yylval.ch = '^'; return '^'; }
+<print>is                                 { BEGIN(pattern); actionon=0; return IS_KEY; }
+<print>[a-zA-Z_.][a-zA-Z0-9_.]*           {  yylval.str = new string(yytext); return SYMBOLSTRING;  }
+<print>\"([^\"]|\"\")*\"                  { yylval.str = new string(yytext+1,strlen(yytext)-2); return STRING; }
+<print>[\r\ \t\v]+                        { yylval.ch = ' '; return ' '; }
+<print>\n                                 { slgh->nextLine(); return ' '; }
+<print>.                                  { return yytext[0]; }
 
-<pattern>^@[^\n]*\n?  { slgh->nextLine(); BEGIN( preprocess(pattern,preproc) ); }
-<pattern>\$\([a-zA-Z0-9_.][a-zA-Z0-9_.]*\)  { preproc_macroexpand(); }
-<pattern>\{         { BEGIN((withsection==1) ? INITIAL:sem); withsection=0; yylval.ch = yytext[0]; return yytext[0]; }
-<pattern>unimpl     { BEGIN(INITIAL); return OP_UNIMPL; }
-<pattern>globalset  { return GLOBALSET_KEY; }
-<pattern>\>\>       { return OP_RIGHT; }
-<pattern>\<\<       { return OP_LEFT; }
-<pattern>\!\=       { return OP_NOTEQUAL; }
-<pattern>\<\=       { return OP_LESSEQUAL; }
-<pattern>\>\=       { return OP_GREATEQUAL; }
-<pattern>\$and      { return OP_AND; }
-<pattern>\$or       { return OP_OR; }
-<pattern>\$xor      { return OP_XOR; }
-<pattern>\.\.\.     { return ELLIPSIS_KEY; }
-<pattern>\[         { actionon = 1; yylval.ch = yytext[0]; return yytext[0]; }
-<pattern>\]         { actionon = 0; yylval.ch = yytext[0]; return yytext[0]; }
-<pattern>\&         { yylval.ch = yytext[0];  return (actionon==0) ? yytext[0] : OP_AND; }
-<pattern>\|         { yylval.ch = yytext[0];  return (actionon==0) ? yytext[0] : OP_OR; }
-<pattern>\^         { return OP_XOR; }
+<pattern>^@[^\n]*\n?                         { slgh->nextLine(); BEGIN( preprocess(pattern,preproc) ); }
+<pattern>\$\([a-zA-Z0-9_.][a-zA-Z0-9_.]*\)   { preproc_macroexpand(); }
+<pattern>\{                                  { BEGIN((withsection==1) ? INITIAL:sem); withsection=0; yylval.ch = yytext[0]; return yytext[0]; }
+<pattern>unimpl                              { BEGIN(INITIAL); return OP_UNIMPL; }
+<pattern>globalset                           { return GLOBALSET_KEY; }
+<pattern>\>\>               { return OP_RIGHT; }
+<pattern>\<\<               { return OP_LEFT; }
+<pattern>\!\=               { return OP_NOTEQUAL; }
+<pattern>\<\=               { return OP_LESSEQUAL; }
+<pattern>\>\=               { return OP_GREATEQUAL; }
+<pattern>\$and              { return OP_AND; }
+<pattern>\$or               { return OP_OR; }
+<pattern>\$xor              { return OP_XOR; }
+<pattern>\.\.\.             { return ELLIPSIS_KEY; }
+<pattern>\[                 { actionon = 1; yylval.ch = yytext[0]; return yytext[0]; }
+<pattern>\]                 { actionon = 0; yylval.ch = yytext[0]; return yytext[0]; }
+<pattern>\&                 { yylval.ch = yytext[0];  return (actionon==0) ? yytext[0] : OP_AND; }
+<pattern>\|                 { yylval.ch = yytext[0];  return (actionon==0) ? yytext[0] : OP_OR; }
+<pattern>\^                 { return OP_XOR; }
 <pattern>[=(),:;+\-*/~<>]   { yylval.ch = yytext[0]; return yytext[0]; }
 <pattern>#.*$
-<pattern>[a-zA-Z_.][a-zA-Z0-9_.]*   { return find_symbol();   }
-<pattern>[0-9]|[1-9][0-9]+ { return scan_number(yytext,&yylval,true); }
-<pattern>0x[0-9a-fA-F]+  { return scan_number(yytext,&yylval,true); }
-<pattern>0b[01]+         { return scan_number(yytext,&yylval,true); }
+<pattern>[a-zA-Z_.][a-zA-Z0-9_.]* { return find_symbol();   }
+<pattern>[0-9]|[1-9][0-9]+        { return scan_number(yytext,&yylval,true); }
+<pattern>0x[0-9a-fA-F]+           { return scan_number(yytext,&yylval,true); }
+<pattern>0b[01]+                  { return scan_number(yytext,&yylval,true); }
 <pattern>[\r\ \t\v]+
 <pattern>\n        { slgh->nextLine(); }
 <pattern>.         { return yytext[0]; }
 
-<sem>^@[^\n]*\n?   { slgh->nextLine(); BEGIN( preprocess(sem,preproc) ); }
+<sem>^@[^\n]*\n?                        { slgh->nextLine(); BEGIN( preprocess(sem,preproc) ); }
 <sem>\$\([a-zA-Z0-9_.][a-zA-Z0-9_.]*\)  { preproc_macroexpand(); }
 <sem>\}            { BEGIN(INITIAL); yylval.ch = yytext[0]; return yytext[0]; }
 <sem>\|\|          { return OP_BOOL_OR; }
@@ -648,15 +650,15 @@ with   { BEGIN(pattern); withsection = 1; slgh->calcContextLayout(); return WITH
 <sem>export        { return EXPORT_KEY; }
 <sem>build         { return BUILD_KEY; }
 <sem>local         { return LOCAL_KEY; }
-<sem>[=(),:\[\];!&|^+\-*/%~<>]   { yylval.ch = yytext[0]; return yytext[0]; }
+<sem>[=(),:\[\];!&|^+\-*/%~<>] { yylval.ch = yytext[0]; return yytext[0]; }
 <sem>#.*$
-<sem>[a-zA-Z_.][a-zA-Z0-9_.]*   { return find_symbol();   }
-<sem>[0-9]|[1-9][0-9]+ { return scan_number(yytext,&yylval,false); }
-<sem>0x[0-9a-fA-F]+  { return scan_number(yytext,&yylval,false); }
-<sem>0b[01]+         { return scan_number(yytext,&yylval,false); }
+<sem>[a-zA-Z_.][a-zA-Z0-9_.]*  { return find_symbol();   }
+<sem>[0-9]|[1-9][0-9]+         { return scan_number(yytext,&yylval,false); }
+<sem>0x[0-9a-fA-F]+            { return scan_number(yytext,&yylval,false); }
+<sem>0b[01]+                   { return scan_number(yytext,&yylval,false); }
 <sem>[\r\ \t\v]+
-<sem>\n         { slgh->nextLine(); }
-<sem>.          { return yytext[0]; }
+<sem>\n                        { slgh->nextLine(); }
+<sem>.                         { return yytext[0]; }
 
 <preproc>^@.*\n?  { slgh->nextLine(); BEGIN( preprocess(preproc,preproc) ); }
 <preproc>^.*\n    { slgh->nextLine(); }
