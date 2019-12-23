@@ -82,7 +82,7 @@ public:
         }
         s << ',' << dec << data.size << ')';
     }
-
+    // Gets called through trans.oneInstruction(pcodeemit, addr).
     virtual void dump (Address const& addr, OpCode opc, VarnodeData* outvar,
                        VarnodeData* vars, int4 isize) override
     {
@@ -91,7 +91,7 @@ public:
             cout << " = ";
         }
         cout << get_opname (opc);
-        // Possibly check for a code reference or a space reference
+        // Possibly check for a code reference or a space reference.
         for (int4 i = 0; i < isize; ++i) {
             cout << ' ';
             print_vardata (cout, vars[i]);
@@ -103,6 +103,7 @@ public:
 
 class AssemblyRaw : public AssemblyEmit {
 public:
+    // Gets called through trans.printAssembly(asmemit, addr).
     virtual void dump (const Address& addr, const string& mnem,
                        const string& body) override
     {
