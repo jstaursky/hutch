@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 #include "hutch-disasm.hpp"
 
 void hutch_Disasm::configure (string const cpu)

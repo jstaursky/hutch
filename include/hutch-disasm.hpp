@@ -29,6 +29,7 @@ constexpr uint1 OPT_IN_ASM       = (1<<2);
 
 constexpr uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
 
+
 class DefaultLoadImage : public LoadImage {
     uintb baseaddr = 0;
     uint1 const* buf = NULL;
@@ -66,6 +67,7 @@ public:
     virtual void adjustVma (long adjust) override {} // TODO
 };
 
+
 class PcodeRawOut : public PcodeEmit {
 public:
     void print_vardata (ostream& s, VarnodeData& data)
@@ -98,7 +100,7 @@ public:
     }
 };
 
-class hutch_Disasm;
+
 class AssemblyRaw : public AssemblyEmit {
 public:
     virtual void dump (const Address& addr, const string& mnem,
@@ -107,6 +109,7 @@ public:
         cout << mnem << ' ' << body << endl;
     }
 };
+
 
 class hutch_Disasm {
     DocumentStorage docstorage;
