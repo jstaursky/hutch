@@ -21,10 +21,13 @@ SLEIGH := context  filemanage  pcodecompile    pcodeparse   semantics   \
           sleigh   sleighbase  slghpatexpress  slghpattern  slghsymbol
 
 
+HUTCH_LIB_ADDONS := hutch-disasm
+
 # BUILD EVERYTHING #############################################################
 all: sleigh-compile x86.sla 8085.sla libsla.a
 	$(MAKE) -C examples/example-one
 	$(MAKE) -C examples/example-two
+	$(MAKE) -C examples/example-three
 
 
 x86.sla: x86.slaspec
@@ -71,6 +74,10 @@ $(BUILD_DIR):
 $(BUILD_DIR)/%.o: %.cc
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
 
+# For Hutch addons
+$(BUILD_DIR)/%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
+
 
 # BUILD SLEIGH COMPILER RECIPE #################################################
 # Files specific to the sleigh compiler
@@ -94,7 +101,9 @@ sleigh-compile: $(SLEIGH_COMP_OBJS)
 LIBSLA := loadimage emulate  memstate  opbehavior  slghparse  slghscan
 
 LIBSLA_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/,       \
-	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(LIBSLA))))
+	$(filter-out $(PARSING_FILES), 		   						\
+			$(CORE) $(SLEIGH) $(LIBSLA)							\
+			$(HUTCH_LIB_ADDONS)))) # Add hutch addons to libsla.a
 
 $(LIBSLA_OBJS): | $(BUILD_DIR) $(addsuffix .o, $(PARSING_FILES))
 # No actions
@@ -117,6 +126,8 @@ clean:
 	rm -f examples/example-one/*.o
 	rm -f examples/example-two/example-two
 	rm -f examples/example-two/*.o
+	rm -f examples/example-three/example-three
+	rm -f examples/example-three/*.o
 
 
 # Useful for debugging. To find out value of variable, type 'make
