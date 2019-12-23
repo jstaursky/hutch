@@ -31,21 +31,21 @@ static uint1 code[] = { 0x55, 0x89, 0xe5, 0xb8, 0x78, 0x56, 0x34, 0x12 };
 
 int main(int argc, char *argv[])
 {
-    hutch_Disasm handle;
+    hutch_Disasm hutch_h;
     // x86 only atm, but this should be easy enough to change. Will update for
     // other arches eventually.
-    handle.configure("../../processors/x86/languages/x86.sla");
+    hutch_h.configure("../../processors/x86/languages/x86.sla");
 
-    // Can display Address info, pcode, assembly alone or in combination with
-    // each other. Omission of handle.options() will display a default of asm +
+    // Can display address info, pcode, assembly alone or in combination with
+    // each other. Omission of hutch_h.options() will display a default of asm +
     // address info.
-    handle.options (OPT_IN_DISP_ADDR | OPT_IN_PCODE | OPT_IN_ASM);
+    hutch_h.options (OPT_IN_DISP_ADDR | OPT_IN_PCODE | OPT_IN_ASM);
 
-    // Below relies on default args, full prototype of handle.disasm is;
+    // Below relies on default args, full prototype of hutch_h.disasm is;
     // void hutch_Disasm::disasm (uint1 const* buf, uintb bufsize, uintb start,
     //                            ssize_t ninsn)
 
-    handle.disasm (code, sizeof (code));
+    hutch_h.disasm (code, sizeof (code));
 
     return 0;
 }
