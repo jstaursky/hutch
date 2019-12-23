@@ -59,7 +59,8 @@ Type `make` in `hutch` main directory.
 # WINDOWS BUILDING
 Assuming your running under an mingw-w64-x86_64 style environment, after
 installing `bison` and `flex` (and `g++` + `binutils` + etc.), execute `make
-sleigh-compile CXX='g++ -D_WINDOWS '`,
+CXX='g++ -D_WINDOWS '`.
 
-the rest of the instructions are same as above but always append the `make`
-commands with `CXX='g++ -D_WINDOWS '` otherwise you will run into errors.
+
+# MISC
+[Ghidra Language Specification](https://ghidra.re/courses/languages/index.html)
