@@ -13,17 +13,8 @@ issues). That said, until I start implementing my own changes, this repo will
 try and stay up to date. I am still analyzing the codebase.
 
 # BUILDING
-To build the sleigh compiler type: `make sleigh-compile`
-Follow this up with:
 
-`./bin/sleigh-compile -a processors/x86/languages`
-
-which compiles `x86.sla`.
-
-Next type: `make libsla.a` to build the library.
-
-To see a complete example of what you can do with this library, enter
-`examples/example-one` directory.
+Type `make` in `hutch` main directory.
 
 # WINDOWS BUILDING
 Assuming your running under an mingw-w64-x86_64 style environment, after
