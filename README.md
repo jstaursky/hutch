@@ -56,6 +56,8 @@ Example can be found in `examples/example-three`.
 
 Type `make` in `hutch` main directory.
 
+Can now build as a static library or a shared library (e.g., for use from python, example coming soon).
+
 # WINDOWS BUILDING
 Assuming your running under an mingw-w64-x86_64 style environment, after
 installing `bison` and `flex` (and `g++` + `binutils` + etc.), execute `make
