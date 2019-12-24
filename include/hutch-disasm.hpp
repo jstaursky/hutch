@@ -23,14 +23,21 @@
 #include <fstream>
 #include <iostream>
 
+class hutch_Disasm;             // Forward Declaration.
+
 // Necessary for C ffi, see more in hutch-disasm.cpp
 extern "C" {
     extern const uint1 OPT_IN_DISP_ADDR;
     extern const uint1 OPT_IN_PCODE;
     extern const uint1 OPT_IN_ASM;
     extern const uint1 OPT_OUT_DISP_ADDR, OPT_OUT_PCODE, OPT_OUT_ASM;
-}
 
+    extern hutch_Disasm* hutch_Disasm_new ();
+    extern void hutch_configure (hutch_Disasm* hutch_h, char const* cpu);
+    extern void hutch_options (hutch_Disasm* hutch_h, unsigned char const opt);
+    extern void hutch_disasm (hutch_Disasm* hutch_h, unsigned char const* buf,
+                              unsigned long bufsize);
+}
 
 class DefaultLoadImage : public LoadImage {
     uintb baseaddr = 0;

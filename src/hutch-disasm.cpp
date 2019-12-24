@@ -18,8 +18,6 @@
 
 // *****************************************************************************
 // Initial implementation of FFI
-// TODO something funny going on in Makefile that prevents putting this the
-// header file.
 extern "C" {
     const uint1 OPT_IN_DISP_ADDR = (1<<0);
     const uint1 OPT_IN_PCODE     = (1<<1);
