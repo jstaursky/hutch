@@ -3,9 +3,11 @@ VPATH = parser-tools include src src/build processors/x86/languages processors/8
 CC       = gcc
 CXX      = g++
 CXXFLAGS = -O2  -Wall  -Wno-sign-compare
+CXXFLAGS_SHARED = -O2 -Wall -Wno-sign-compare -fPIC
 
 PARSER_TOOLS	 = parser-tools
 BUILD_DIR	 = src/build
+BUILD_SHARED_DIR = src/build-shared
 PUB_INCLUDE_DIR = include # Plan to eventually separate headers into public and
 				  		  # private headers. Where private headers reside in src
 SRC_DIR		 = src
@@ -24,7 +26,7 @@ SLEIGH := context  filemanage  pcodecompile    pcodeparse   semantics   \
 HUTCH_LIB_ADDONS := hutch-disasm
 
 # BUILD EVERYTHING #############################################################
-all: sleigh-compile x86.sla 8085.sla libsla.a
+all: sleigh-compile x86.sla 8085.sla libsla.a libsla.so
 	$(MAKE) -C examples/example-one
 	$(MAKE) -C examples/example-two
 	$(MAKE) -C examples/example-three
@@ -45,17 +47,25 @@ PARSING_FILES = xml  slghparse  pcodeparse  slghscan
 # PARSING ######################################################################
 xml.o: xml.cc
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
+	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
 xml.cc: xml.y
 	$(YACC) -p xml -o $(BUILD_DIR)/$@ $<
 
 slghparse.o: slghparse.cc
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
+	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
+
 slghparse.cc: slghparse.y
 	$(YACC) -d -o $(BUILD_DIR)/$@ $<
 	mv $(BUILD_DIR)/slghparse.hh $(BUILD_DIR)/slghparse.tab.hh
 
 pcodeparse.o: pcodeparse.cc
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
+	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
+
 pcodeparse.cc: pcodeparse.y
 	$(YACC) -p pcode -o $(BUILD_DIR)/$@ $<
 
@@ -63,6 +73,9 @@ pcodeparse.cc: pcodeparse.y
 # LEXING #######################################################################
 slghscan.o: slghscan.cc
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
+	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
+
 slghscan.cc: slghscan.l
 	$(LEX) -o $(BUILD_DIR)/$@ $<
 
@@ -79,6 +92,19 @@ $(BUILD_DIR)/%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
 
 
+# FOR SHARED LIBRARY VERSION ###################################################
+$(BUILD_SHARED_DIR):
+	mkdir -p $(BUILD_SHARED_DIR)
+
+$(BUILD_SHARED_DIR)/%.cc.o: %.cc
+	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
+
+# For Hutch addons
+$(BUILD_SHARED_DIR)/%.cpp.o: %.cpp
+	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
+
+
+
 # BUILD SLEIGH COMPILER RECIPE #################################################
 # Files specific to the sleigh compiler
 SLEIGH_COMP := slgh_compile  slghparse  slghscan
@@ -88,7 +114,7 @@ SLEIGH_COMP := slgh_compile  slghparse  slghscan
 SLEIGH_COMP_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/,       \
 	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(SLEIGH_COMP))))
 
-$(SLEIGH_COMP_OBJS): | $(BUILD_DIR) $(addsuffix .o, $(PARSING_FILES))
+$(SLEIGH_COMP_OBJS): | $(BUILD_DIR) $(BUILD_SHARED_DIR) $(addsuffix .o, $(PARSING_FILES))
 # No actions. Messes up build process.
 
 
@@ -115,11 +141,27 @@ libsla.a: $(LIBSLA_OBJS)
 	ar rcs $(LIB_DIR)/$@ $^ $(addprefix $(BUILD_DIR)/, xml.o pcodeparse.o)
 
 
+# BUILD LIBSLA.SO RECIPE #######################################################
+
+LIBSLA_SHARED_OBJS := $(addsuffix .cc.o, $(addprefix $(BUILD_SHARED_DIR)/, \
+	$(filter-out $(PARSING_FILES),									\
+	$(CORE) $(SLEIGH) $(LIBSLA)										\
+	)))
+
+LIBSLA_SHARED_OBJS += $(addsuffix .cpp.o, $(addprefix $(BUILD_SHARED_DIR)/, \
+	$(HUTCH_LIB_ADDONS)))
+
+# Create shared library
+libsla.so: $(LIBSLA_SHARED_OBJS)
+	$(CXX) -shared -o $(LIB_DIR)/$@ $^ $(addprefix $(BUILD_SHARED_DIR)/, xml.cc.o pcodeparse.cc.o)
+
 # CLEANUP ######################################################################
 clean:
 	rm -rf src/build
+	rm -rf src/build-shared
 	rm -f bin/sleigh-compile
 	rm -f lib/libsla.a
+	rm -f lib/libsla.so
 	rm -f processors/x86/languages/x86.sla
 	rm -f processors/8085/languages/8085.sla
 	rm -f examples/example-one/example-one
