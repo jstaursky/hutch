@@ -16,6 +16,41 @@
 
 #include "hutch-disasm.hpp"
 
+// *****************************************************************************
+// Initial implementation of FFI
+// TODO something funny going on in Makefile that prevents putting this the
+// header file.
+extern "C" {
+    const uint1 OPT_IN_DISP_ADDR = (1<<0);
+    const uint1 OPT_IN_PCODE     = (1<<1);
+    const uint1 OPT_IN_ASM       = (1<<2);
+
+    const uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
+
+
+    hutch_Disasm* hutch_Disasm_new ()
+    {
+        return new hutch_Disasm ();
+    }
+    void hutch_configure (hutch_Disasm* hutch_h, char const* cpu)
+    {
+        hutch_h->configure (cpu);
+    }
+    void hutch_options (hutch_Disasm* hutch_h, unsigned char const opt)
+    {
+        hutch_h->options (opt);
+    }
+    void hutch_disasm (hutch_Disasm* hutch_h, unsigned char const* buf,
+                       unsigned long bufsize)
+    {
+        hutch_h->disasm (buf, bufsize);
+    }
+
+} // end extern "C"
+// *****************************************************************************
+
+
+
 void hutch_Disasm::configure (string const cpu)
 {
     Element* ast_root = docstorage.openDocument (cpu)->getRoot ();

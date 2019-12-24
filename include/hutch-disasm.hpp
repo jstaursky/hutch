@@ -23,11 +23,13 @@
 #include <fstream>
 #include <iostream>
 
-constexpr uint1 OPT_IN_DISP_ADDR = (1<<0);
-constexpr uint1 OPT_IN_PCODE     = (1<<1);
-constexpr uint1 OPT_IN_ASM       = (1<<2);
-
-constexpr uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
+// Necessary for C ffi, see more in hutch-disasm.cpp
+extern "C" {
+    extern const uint1 OPT_IN_DISP_ADDR;
+    extern const uint1 OPT_IN_PCODE;
+    extern const uint1 OPT_IN_ASM;
+    extern const uint1 OPT_OUT_DISP_ADDR, OPT_OUT_PCODE, OPT_OUT_ASM;
+}
 
 
 class DefaultLoadImage : public LoadImage {
