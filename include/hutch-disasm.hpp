@@ -130,9 +130,9 @@ public:
     hutch_Disasm () = default;
 
     void configure (string const cpu);
+    void options (const uint1 opts) { optionlist = opts; }
     void disasm (uint1 const* buf, uintb bufsize, uintb start = 0x00000000,
                  ssize_t ninsn = -1);
-    void options (const uint1 opts) { optionlist = opts; }
 };
 
 #endif

@@ -1,7 +1,8 @@
 #include <stdio.h>
 
 // Compile against shared object lib.
-// gcc -o cTest cTest.c -L../../lib -l:../../lib/libsla.so
+// gcc -o cTest cTest.c -L../../lib -lsla (or alt.)
+// gcc -o cTest cTest.c -L../../lib -l:../../libsla.so
 extern struct hutch_Disasm* hutch_Disasm_new();
 extern void hutch_configure(struct hutch_Disasm*, char const*);
 extern void hutch_options(struct hutch_Disasm*, unsigned char);
