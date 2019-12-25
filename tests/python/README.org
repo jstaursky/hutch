@@ -1,0 +1,26 @@
+* Instructions
+The python script that runs is =tester.py=, but it must be run through the =test.sh=
+shell wrapper (this sets the runtime linker path so =libsla.so= can be found). 
+
+but first you need to:
+- Run =make= in the root =/hutch= directory, this will build the necessary shared
+  library =libsla.so=.
+- Enter =pyx= directory found inside this directory and run =make=. This will build
+  the shared library that python can use.
+- Next run  
+#+begin_src sh
+chmod +x test.sh
+#+end_src
+To make the shell script executable.
+
+After all that you should be able to run 
+#+begin_src sh
+./test.sh
+#+end_src
+
+and be greeted with
+#+begin_src text
+--- 0x00001000:PUSH EBP
+--- 0x00001001:MOV EBP,ESP
+--- 0x00001003:MOV EAX,0x12345678
+#+end_src
