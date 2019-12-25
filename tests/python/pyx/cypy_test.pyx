@@ -12,16 +12,16 @@ cdef extern from "hutch-disasm.hpp":
 
 
 cdef class pyhutch_Disasm:
-    cdef unique_ptr[hutch_Disasm] thisptr
+    cdef hutch_Disasm hutch_h
 
     def __init__(self):
-        self.thisptr.reset(new hutch_Disasm())
+        self.hutch_h = hutch_Disasm()
 
     def configure(self, _cpu):
-        deref(self.thisptr).configure(_cpu)
+        self.hutch_h.configure(_cpu)
 
     def options(self, _opts):
-        deref(self.thisptr).options(_opts)
+        self.hutch_h.options(_opts)
 
     def disasm(self, _buf, _bufsize, _start):
-        deref(self.thisptr).disasm(_buf, _bufsize, _start)
+        self.hutch_h.disasm(_buf, _bufsize, _start)

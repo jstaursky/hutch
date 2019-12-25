@@ -1,4 +1,5 @@
 import pyx.cypy_test as hutch
+# Need to run make in pyx directory to create shared lib first.
 
 CODE = b"\x55\x89\xe5\xb8\x78\x56\x34\x12"
 
