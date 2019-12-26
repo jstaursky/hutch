@@ -55,11 +55,11 @@ void hutch_Disasm::configure (string const cpu)
     docstorage.registerTag (ast_root);
 }
 
-void hutch_Disasm::disasm (uint1 const* buf, uintb bufsize, uintb start,
+void hutch_Disasm::disasm (uint1 const* buf, uintb bufsize, uintb baseaddr,
                            ssize_t ninsn)
+// NOTE baseaddr = 0x1000 , ninsn = -1 is default
 {
-    // NOTE start = 0x1000 , ninsn = -1 is default
-    DefaultLoadImage loader (start, buf, bufsize);
+    DefaultLoadImage loader (baseaddr, buf, bufsize);
 
     Sleigh trans (&loader, &context);
     trans.initialize (docstorage);
@@ -72,14 +72,13 @@ void hutch_Disasm::disasm (uint1 const* buf, uintb bufsize, uintb start,
     AssemblyRaw asmemit;
     int4 len;
 
-    Address addr (trans.getDefaultSpace (), start);
-    Address lastaddr (trans.getDefaultSpace (), start + bufsize);
+    Address addr (trans.getDefaultSpace (), baseaddr);
+    Address lastaddr (trans.getDefaultSpace (), baseaddr + bufsize);
 
     // Set up default options if user has not;
     optionlist = (optionlist == -1) ? OPT_IN_ASM | OPT_IN_DISP_ADDR : optionlist;
     // Set up default number of insns to count if user has not.
     ninsn = (ninsn == -1) ? bufsize : ninsn;
-
     // Assume ninsn was given the default -1 value. The above reassigns it to
     // the size of the buffer, consequently since the smallest insn len is 1,
     // The addr < lastaddr condition will trigger before the i < ninsn

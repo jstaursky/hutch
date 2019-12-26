@@ -24,3 +24,6 @@ and be greeted with
 --- 0x00001001:MOV EBP,ESP
 --- 0x00001003:MOV EAX,0x12345678
 #+end_src
+
+* CAVEAT
+this works as of =commit 80f4479a52762e575648de660781d9e1202e2aac=, (heavy changes comming)

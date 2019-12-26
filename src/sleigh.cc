@@ -120,12 +120,13 @@ void PcodeCacher::resolveRelatives(void)
 }
 
 void PcodeCacher::emit(const Address &addr,PcodeEmit *emt) const
+// Emit any cached pcode
+{
+    vector<PcodeData>::const_iterator iter;
 
-{ // Emit any cached pcode
-  vector<PcodeData>::const_iterator iter;
-
-  for(iter=issued.begin();iter!=issued.end();++iter)
-    emt->dump(addr,(*iter).opc,(*iter).outvar,(*iter).invar,(*iter).isize);
+    for (iter = issued.begin (); iter != issued.end (); ++iter)
+        emt->dump (addr, (*iter).opc, (*iter).outvar, (*iter).invar,
+                   (*iter).isize);
 }
 
 void SleighBuilder::generateLocation(const VarnodeTpl *vntpl,VarnodeData &vn)
@@ -618,55 +619,57 @@ int4 Sleigh::printAssembly(AssemblyEmit &emit,const Address &baseaddr) const
 int4 Sleigh::oneInstruction(PcodeEmit &emit,const Address &baseaddr) const
 
 {
-  int4 fallOffset;
-  if (alignment != 1) {
-    if ((baseaddr.getOffset() % alignment)!=0) {
-      ostringstream s;
-      s << "Instruction address not aligned: " << baseaddr;
-      throw UnimplError(s.str(),0);
+    int4 fallOffset;
+    if (alignment != 1) {
+        if ((baseaddr.getOffset () % alignment) != 0) {
+            ostringstream s;
+            s << "Instruction address not aligned: " << baseaddr;
+            throw UnimplError (s.str (), 0);
+        }
     }
-  }
-  
-  ParserContext *pos = obtainContext(baseaddr,ParserContext::pcode);
-  pos->applyCommits();
-  fallOffset = pos->getLength();
-  
-  if (pos->getDelaySlot()>0) {
-    int4 bytecount = 0;
-    do {
-    // Do not pass pos->getNaddr() to obtainContext, as pos may have been previously cached and had naddr adjusted
-      ParserContext *delaypos = obtainContext(pos->getAddr() + fallOffset,ParserContext::pcode);
-      delaypos->applyCommits();
-      int4 len = delaypos->getLength();
-      fallOffset += len;
-      bytecount += len;
-    } while(bytecount < pos->getDelaySlot());
-    pos->setNaddr(pos->getAddr()+fallOffset);
-  }
-  ParserWalker walker(pos);
-  walker.baseState();
-  pcode_cache.clear();
-  SleighBuilder builder(&walker,discache,&pcode_cache,getConstantSpace(),getUniqueSpace(),unique_allocatemask);
-  try {
-    builder.build(walker.getConstructor()->getTempl(),-1);
-    pcode_cache.resolveRelatives();
-    pcode_cache.emit(baseaddr,&emit);
-  } catch(UnimplError &err) {
-    ostringstream s;
-    s << "Instruction not implemented in pcode:\n ";
-    ParserWalker *cur = builder.getCurrentWalker();
-    cur->baseState();
-    Constructor *ct = cur->getConstructor();
-    cur->getAddr().printRaw(s);
-    s << ": ";
-    ct->printMnemonic(s,*cur);
-    s << "  ";
-    ct->printBody(s,*cur);
-    err.explain = s.str();
-    err.instruction_length = fallOffset;
-    throw err;
-  }
-  return fallOffset;
+
+    ParserContext* pos = obtainContext (baseaddr, ParserContext::pcode);
+    pos->applyCommits ();
+    fallOffset = pos->getLength ();
+
+    if (pos->getDelaySlot () > 0) {
+        int4 bytecount = 0;
+        do {
+            // Do not pass pos->getNaddr() to obtainContext, as pos may have been previously cached and had naddr adjusted
+            ParserContext* delaypos = obtainContext (
+                pos->getAddr () + fallOffset, ParserContext::pcode);
+            delaypos->applyCommits ();
+            int4 len = delaypos->getLength ();
+            fallOffset += len;
+            bytecount += len;
+        } while (bytecount < pos->getDelaySlot ());
+        pos->setNaddr (pos->getAddr () + fallOffset);
+    }
+    ParserWalker walker (pos);
+    walker.baseState ();
+    pcode_cache.clear ();
+    SleighBuilder builder (&walker, discache, &pcode_cache, getConstantSpace (),
+                           getUniqueSpace (), unique_allocatemask);
+    try {
+        builder.build (walker.getConstructor ()->getTempl (), -1);
+        pcode_cache.resolveRelatives ();
+        pcode_cache.emit (baseaddr, &emit);
+    } catch (UnimplError& err) {
+        ostringstream s;
+        s << "Instruction not implemented in pcode:\n ";
+        ParserWalker* cur = builder.getCurrentWalker ();
+        cur->baseState ();
+        Constructor* ct = cur->getConstructor ();
+        cur->getAddr ().printRaw (s);
+        s << ": ";
+        ct->printMnemonic (s, *cur);
+        s << "  ";
+        ct->printBody (s, *cur);
+        err.explain = s.str ();
+        err.instruction_length = fallOffset;
+        throw err;
+    }
+    return fallOffset;
 }
 
 void Sleigh::registerContext(const string &name,int4 sbit,int4 ebit)

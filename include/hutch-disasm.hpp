@@ -79,6 +79,7 @@ public:
 
 class PcodeRawOut : public PcodeEmit {
 public:
+    // Called via PcodeRawOut::dump
     void print_vardata (ostream& s, VarnodeData& data)
     {
         const Translate* trans = data.space->getTrans ();
@@ -91,7 +92,9 @@ public:
         }
         s << ',' << dec << data.size << ')';
     }
-    // Gets called through trans.oneInstruction(pcodeemit, addr).
+    // Gets called multiple times through PcodeCacher::emit called by
+    // trans.oneInstruction(pcodeemit, addr) -- which is called through
+    // hutch_Disasm::disasm(). -- see sleigh.cc for more info on call process.
     virtual void dump (Address const& addr, OpCode opc, VarnodeData* outvar,
                        VarnodeData* vars, int4 isize) override
     {
@@ -131,7 +134,7 @@ public:
 
     void configure (string const cpu);
     void options (const uint1 opts) { optionlist = opts; }
-    void disasm (uint1 const* buf, uintb bufsize, uintb start = 0x00000000,
+    void disasm (uint1 const* buf, uintb bufsize, uintb baseaddr = 0x00000000,
                  ssize_t ninsn = -1);
 };
 
