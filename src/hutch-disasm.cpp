@@ -26,9 +26,9 @@ extern "C" {
     const uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
 
 
-    hutch_Disasm* hutch_Disasm_new ()
+    hutch_Disasm* hutch_Disasm_new (int4 cpu)
     {
-        return new hutch_Disasm ();
+        return new hutch_Disasm (cpu);
     }
     void hutch_configure (hutch_Disasm* hutch_h, char const* cpu)
     {
@@ -55,19 +55,30 @@ void hutch_Disasm::configure (string const cpu)
     docstorage.registerTag (ast_root);
 }
 
+Sleigh hutch_Disasm::initializeImageAlloc (uint1 const* buf, uintb bufsize,
+                                           uintb baseaddr)
+{
+    this->image = new DefaultLoadImage (baseaddr, buf, bufsize);
+    Sleigh trans (image, &context);
+    trans.initialize (docstorage);
+    // cpu_context set by hutch_Disasm ctor.
+    for (auto i : this->cpu_context)
+        // first = option, second = setting.
+        this->context.setVariableDefault (i.first, i.second);
+
+    return trans;
+}
+
+void hutch_Disasm::releaseImage ()
+{
+    delete this->image;
+}
+
 void hutch_Disasm::disasm (uint1 const* buf, uintb bufsize, uintb baseaddr,
                            ssize_t ninsn)
 // NOTE baseaddr = 0x1000 , ninsn = -1 is default
 {
-    DefaultLoadImage loader (baseaddr, buf, bufsize);
-
-    Sleigh trans (&loader, &context);
-    trans.initialize (docstorage);
-    // TODO some cpu's do not have setup beyond ContextInternal (e.g., 8085) so
-    // this needs be optional / have ability to be passed specific options.
-    context.setVariableDefault ("addrsize", 1);
-    context.setVariableDefault ("opsize", 1);
-
+    Sleigh trans = initializeImageAlloc(buf, bufsize, baseaddr);
     PcodeRawOut pcodeemit;
     AssemblyRaw asmemit;
     int4 len;
@@ -98,10 +109,66 @@ void hutch_Disasm::disasm (uint1 const* buf, uintb bufsize, uintb baseaddr,
         if (optionlist & OPT_IN_ASM) {
             len = trans.printAssembly (asmemit, addr);
         }
-        // Print pcode?
+        // Print ir?
         if (optionlist & OPT_IN_PCODE) {
             len = trans.oneInstruction (pcodeemit, addr);
         }
 
     }
+    releaseImage();
 }
+
+struct Pcode hutch_Disasm::lift (uint1 const* buf, uintb bufsize,
+                                 uintb baseaddr, ssize_t ninsn)
+{
+    Sleigh trans = initializeImageAlloc(buf, bufsize, baseaddr);
+    struct Pcode pcode;
+
+    Address addr (trans.getDefaultSpace (), baseaddr);
+    Address lastaddr (trans.getDefaultSpace (), baseaddr + bufsize);
+
+    // Set up default number of insns to count if user has not.
+    ninsn = (ninsn == -1) ? bufsize : ninsn;
+
+    // Go through all pcode statements for each asm insn.
+    for (auto i = 0, len = 0; i < ninsn && addr < lastaddr;
+         ++i, addr = addr + len) {
+        pair<vector<struct PcodeData>, int4> tmp = trans.hutch_liftInstruction (addr);
+        pcode.insns = tmp.first.data ();
+        pcode.ninsns = tmp.first.size ();
+        len = pcode.bytelen = tmp.second;
+
+        // Print all pcode statements corresponding to the i'th asm insn.
+        for (auto n = 0; n < pcode.ninsns; ++n) {
+            // If there is an output varnode, print it.
+            print_vardata (cout, pcode.insns[n].outvar);
+            if (pcode.insns[n].outvar != (VarnodeData*)0) {
+                cout << " = ";
+            }
+
+            cout << get_opname (pcode.insns[n].opc);
+            // Print out all varnode inputs to this operation.
+            for (auto k = 0; k < pcode.insns[n].isize; ++k) {
+                print_vardata (cout, &pcode.insns[n].invar[k]);
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
+    releaseImage();
+    return pcode;
+}
+
+// Constructor kept separate so the list of cpu context variables can be large
+// and not obstruct viewing the definition of hutch_Disasm.
+hutch_Disasm::hutch_Disasm(int4 cpu) {
+    switch (cpu) {
+    case IA32:
+        cpu_context = { {"addrsize",1},
+                        {"opsize",1} };
+        break;
+    default:
+        break;
+    }
+}
+

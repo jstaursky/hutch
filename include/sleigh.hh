@@ -64,6 +64,10 @@ public:
   void clear(void);
   void resolveRelatives(void);
   void emit(const Address &addr,PcodeEmit *emt) const;
+  vector<struct PcodeData> hutch_emitIR() const;
+
+
+
 };
 
 class DisassemblyCache {
@@ -124,6 +128,7 @@ public:
   virtual int4 instructionLength(const Address &baseaddr) const;
   virtual int4 oneInstruction(PcodeEmit &emit,const Address &baseaddr) const;
   virtual int4 printAssembly(AssemblyEmit &emit,const Address &baseaddr) const;
+  pair<vector<struct PcodeData>, int4> hutch_liftInstruction(const Address &baseaddr) const;
 };
 
 /** \page sleigh SLEIGH

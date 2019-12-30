@@ -129,6 +129,26 @@ void PcodeCacher::emit(const Address &addr,PcodeEmit *emt) const
                    (*iter).isize);
 }
 
+vector<struct PcodeData> PcodeCacher::hutch_emitIR() const
+
+{
+    vector<PcodeData> result;
+    struct PcodeData tmp;
+    vector<PcodeData>::const_iterator iter;
+
+    for (iter = issued.begin (); iter != issued.end (); ++iter) {
+        tmp.outvar = (*iter).outvar;
+        tmp.invar = (*iter).invar;
+        tmp.isize = (*iter).isize;
+        tmp.opc = (*iter).opc;
+
+        result.push_back(tmp);
+    }
+    return result;
+}
+
+
+
 void SleighBuilder::generateLocation(const VarnodeTpl *vntpl,VarnodeData &vn)
 
 {				// Generate a concrete varnode -vn- from the template -vntpl-
@@ -688,4 +708,63 @@ void Sleigh::allowContextSet(bool val) const
 
 {
   cache->allowSet(val);
+}
+
+pair<vector<struct PcodeData>, int4>
+Sleigh::hutch_liftInstruction (const Address& baseaddr) const
+
+{
+    pair<vector<struct PcodeData>, int4> result;
+    int4 insnbytelen;
+    if (alignment != 1) {
+        if ((baseaddr.getOffset () % alignment) != 0) {
+            ostringstream s;
+            s << "Instruction address not aligned: " << baseaddr;
+            throw UnimplError (s.str (), 0);
+        }
+    }
+
+    ParserContext* pos = obtainContext (baseaddr, ParserContext::pcode);
+    pos->applyCommits ();
+    insnbytelen = pos->getLength ();
+
+    if (pos->getDelaySlot () > 0) {
+        int4 bytecount = 0;
+        do {
+            // Do not pass pos->getNaddr() to obtainContext, as pos may have been previously cached and had naddr adjusted
+            ParserContext* delaypos = obtainContext (
+                pos->getAddr () + insnbytelen, ParserContext::pcode);
+            delaypos->applyCommits ();
+            int4 len = delaypos->getLength ();
+            insnbytelen += len;
+            bytecount += len;
+        } while (bytecount < pos->getDelaySlot ());
+        pos->setNaddr (pos->getAddr () + insnbytelen);
+    }
+    ParserWalker walker (pos);
+    walker.baseState ();
+    pcode_cache.clear ();
+    SleighBuilder builder (&walker, discache, &pcode_cache, getConstantSpace (),
+                           getUniqueSpace (), unique_allocatemask);
+    try {
+        builder.build (walker.getConstructor ()->getTempl (), -1);
+        pcode_cache.resolveRelatives ();
+        result.first = pcode_cache.hutch_emitIR ();
+        result.second = insnbytelen;
+    } catch (UnimplError& err) {
+        ostringstream s;
+        s << "Instruction not implemented in pcode:\n ";
+        ParserWalker* cur = builder.getCurrentWalker ();
+        cur->baseState ();
+        Constructor* ct = cur->getConstructor ();
+        cur->getAddr ().printRaw (s);
+        s << ": ";
+        ct->printMnemonic (s, *cur);
+        s << "  ";
+        ct->printBody (s, *cur);
+        err.explain = s.str ();
+        err.instruction_length = insnbytelen;
+        throw err;
+    }
+    return result;
 }

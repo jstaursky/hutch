@@ -23,16 +23,23 @@
 #include <fstream>
 #include <iostream>
 
-class hutch_Disasm;             // Forward Declaration.
+class hutch_Disasm;             // Forward Declaration for C ffi.
+
+struct Pcode {
+    struct PcodeData* insns;
+    uintb ninsns;
+    int4 bytelen;
+};
 
 // Necessary for C ffi, see more in hutch-disasm.cpp
 extern "C" {
+    enum {IA32};
     extern const uint1 OPT_IN_DISP_ADDR;
     extern const uint1 OPT_IN_PCODE;
     extern const uint1 OPT_IN_ASM;
     extern const uint1 OPT_OUT_DISP_ADDR, OPT_OUT_PCODE, OPT_OUT_ASM;
 
-    extern hutch_Disasm* hutch_Disasm_new ();
+    extern hutch_Disasm* hutch_Disasm_new (int4 cpu);
     extern void hutch_configure (hutch_Disasm* hutch_h, char const* cpu);
     extern void hutch_options (hutch_Disasm* hutch_h, unsigned char const opt);
     extern void hutch_disasm (hutch_Disasm* hutch_h, unsigned char const* buf,
@@ -77,21 +84,25 @@ public:
 };
 
 
+static void print_vardata (ostream& s, VarnodeData* data)
+{
+    if (data == (VarnodeData*)0)
+        return;
+
+    const Translate* trans = data->space->getTrans ();
+
+    s << '(' << data->space->getName () << ',';
+    if (data->space->getName () == "register") {
+        s << trans->getRegisterName (data->space, data->offset, data->size);
+    } else {
+        data->space->printOffset (s, data->offset);
+    }
+    s << ',' << dec << data->size << ')';
+}
+
+
 class PcodeRawOut : public PcodeEmit {
 public:
-    // Called via PcodeRawOut::dump
-    void print_vardata (ostream& s, VarnodeData& data)
-    {
-        const Translate* trans = data.space->getTrans ();
-
-        s << '(' << data.space->getName () << ',';
-        if (data.space->getName () == "register") {
-            s << trans->getRegisterName (data.space, data.offset, data.size);
-        } else {
-            data.space->printOffset (s, data.offset);
-        }
-        s << ',' << dec << data.size << ')';
-    }
     // Gets called multiple times through PcodeCacher::emit called by
     // trans.oneInstruction(pcodeemit, addr) -- which is called through
     // hutch_Disasm::disasm(). -- see sleigh.cc for more info on call process.
@@ -99,14 +110,14 @@ public:
                        VarnodeData* vars, int4 isize) override
     {
         if (outvar != (VarnodeData*)0) {
-            print_vardata (cout, *outvar);
+            print_vardata (cout, outvar);
             cout << " = ";
         }
         cout << get_opname (opc);
         // Possibly check for a code reference or a space reference.
         for (int4 i = 0; i < isize; ++i) {
             cout << ' ';
-            print_vardata (cout, vars[i]);
+            print_vardata (cout, &vars[i]);
         }
         cout << endl;
     }
@@ -123,19 +134,27 @@ public:
     }
 };
 
-
 class hutch_Disasm {
     DocumentStorage docstorage;
     ContextInternal context;
+    DefaultLoadImage* image;
     ssize_t optionlist = -1;
+    vector<pair<string, int4>> cpu_context;
+
+    Sleigh initializeImageAlloc (uint1 const* buf, uintb bufsize,
+                                 uintb baseaddr);
+    void releaseImage ();
 
 public:
-    hutch_Disasm () = default;
-
+    hutch_Disasm (int4 cpu = IA32); // See ctor at end of hutch_Disasm.cpp for
+                                    // viewing the different cpu context
+                                    // variables that are set.
     void configure (string const cpu);
     void options (const uint1 opts) { optionlist = opts; }
     void disasm (uint1 const* buf, uintb bufsize, uintb baseaddr = 0x00000000,
                  ssize_t ninsn = -1);
+    struct Pcode lift (uint1 const* buf, uintb bufsize,
+                       uintb baseaddr = 0x00000000, ssize_t ninsn = -1);
 };
 
 #endif

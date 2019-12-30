@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-#include "loadimage.hh"
-#include "sleigh.hh"
 #include <iostream>
 #include <string>
 
@@ -44,7 +42,6 @@ int main(int argc, char *argv[])
     // Below relies on default args, full prototype of hutch_h.disasm is;
     // void hutch_Disasm::disasm (uint1 const* buf, uintb bufsize, uintb start,
     //                            ssize_t ninsn)
-
     hutch_h.disasm (code, sizeof (code));
 
     return 0;

@@ -27,8 +27,8 @@ HUTCH_LIB_ADDONS := hutch-disasm
 
 # BUILD EVERYTHING #############################################################
 all: sleigh-compile x86.sla 8085.sla libsla.a libsla.so
-	$(MAKE) -C examples/example-one
-	$(MAKE) -C examples/example-two
+	# $(MAKE) -C examples/example-one
+	# $(MAKE) -C examples/example-two
 	$(MAKE) -C examples/example-three
 
 
