@@ -81,7 +81,6 @@ void hutch_Disasm::disasm (uint1 const* buf, uintb bufsize, uintb baseaddr,
     Sleigh trans = initializeImageAlloc(buf, bufsize, baseaddr);
     PcodeRawOut pcodeemit;
     AssemblyRaw asmemit;
-    int4 len;
 
     Address addr (trans.getDefaultSpace (), baseaddr);
     Address lastaddr (trans.getDefaultSpace (), baseaddr + bufsize);
@@ -98,7 +97,7 @@ void hutch_Disasm::disasm (uint1 const* buf, uintb bufsize, uintb baseaddr,
     // counting less instructions than the total that make up the buffer.
     // If ninsn is defined by user to be greator than the number of insns in
     // buffer, then addr < lastaddr will trigger first.
-    for (auto i = 0; i < ninsn && addr < lastaddr; ++i, addr = addr + len) {
+    for (auto i = 0, len = 0; i < ninsn && addr < lastaddr; ++i, addr = addr + len) {
         // Print hex Address?
         if (optionlist & OPT_IN_DISP_ADDR) {
             cout << "--- ";
