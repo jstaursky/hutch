@@ -23,7 +23,7 @@ SLEIGH := context  filemanage  pcodecompile    pcodeparse   semantics   \
           sleigh   sleighbase  slghpatexpress  slghpattern  slghsymbol
 
 
-HUTCH_LIB_ADDONS := hutch-disasm
+HUTCH_LIB_ADDONS := hutch
 
 # BUILD EVERYTHING #############################################################
 all: sleigh-compile x86.sla 8085.sla libsla.a libsla.so

@@ -8,7 +8,7 @@ OPT_IN_ASM = 4
 
 CODE = b"\x55\x89\xe5\xb8\x78\x56\x34\x12"
 
-hutch_h = hutch.pyhutch_Disasm()
+hutch_h = hutch.pyhutch()
 
 hutch_h.configure(b'../../processors/x86/languages/x86.sla')
 

@@ -16,35 +16,74 @@
 #ifndef __HUTCH_DISASM__
 #define __HUTCH_DISASM__
 
-
 #include "loadimage.hh"
 #include "sleigh.hh"
 
 #include <fstream>
 #include <iostream>
 
-class hutch_Disasm;             // Forward Declaration for C ffi.
+class hutch; // Forward Declaration for C ffi.
+// Necessary for C ffi, see more in hutch.cpp
+extern "C" {
+enum { IA32 };
+extern const uint1 OPT_IN_DISP_ADDR;
+extern const uint1 OPT_IN_PCODE;
+extern const uint1 OPT_IN_ASM;
+extern const uint1 OPT_OUT_DISP_ADDR, OPT_OUT_PCODE, OPT_OUT_ASM;
+
+extern hutch* hutch_new (int4 cpu);
+extern void hutch_configure (hutch* hutch_h, char const* cpu);
+extern void hutch_options (hutch* hutch_h, unsigned char const opt);
+extern void hutch_disasm (hutch* hutch_h, unsigned char const* buf,
+                          unsigned long bufsize);
+}
+
+static void print_vardata (ostream& s, VarnodeData* data)
+{
+    if (data == (VarnodeData*)0)
+        return;
+
+    const Translate* trans = data->space->getTrans ();
+
+    s << '(' << data->space->getName () << ',';
+    if (data->space->getName () == "register") {
+        s << trans->getRegisterName (data->space, data->offset, data->size);
+    } else {
+        data->space->printOffset (s, data->offset);
+    }
+
+    s << ',' << dec << data->size << ')';
+}
 
 struct Pcode {
     struct PcodeData* insns;
     uintb ninsns;
     int4 bytelen;
+    Pcode () = default;
+    // TODO not sure whether Deep copy ctor necessary.
+    Pcode (struct PcodeData* data, uintb insn_cnt, int4 bytelen) :
+    ninsns (insn_cnt), bytelen (bytelen)
+    {
+        insns = new struct PcodeData[insn_cnt];
+
+        for (auto i = 0; i < insn_cnt; ++i) {
+            insns[i].opc = data[i].opc;
+            insns[i].isize = data[i].isize;
+            insns[i].invar = new VarnodeData[data[i].isize];
+
+            if (data[i].outvar != (VarnodeData*)0) {
+                insns[i].outvar = new VarnodeData;
+                *insns[i].outvar = *data[i].outvar;
+            } else {
+                insns[i].outvar = (VarnodeData*)0;
+            }
+
+            for (auto j = 0; j < data[i].isize; ++j) {
+                insns[i].invar[j] = data[i].invar[j];
+            }
+        }
+    }
 };
-
-// Necessary for C ffi, see more in hutch-disasm.cpp
-extern "C" {
-    enum {IA32};
-    extern const uint1 OPT_IN_DISP_ADDR;
-    extern const uint1 OPT_IN_PCODE;
-    extern const uint1 OPT_IN_ASM;
-    extern const uint1 OPT_OUT_DISP_ADDR, OPT_OUT_PCODE, OPT_OUT_ASM;
-
-    extern hutch_Disasm* hutch_Disasm_new (int4 cpu);
-    extern void hutch_configure (hutch_Disasm* hutch_h, char const* cpu);
-    extern void hutch_options (hutch_Disasm* hutch_h, unsigned char const opt);
-    extern void hutch_disasm (hutch_Disasm* hutch_h, unsigned char const* buf,
-                              unsigned long bufsize);
-}
 
 class DefaultLoadImage : public LoadImage {
     uintb baseaddr = 0;
@@ -83,29 +122,11 @@ public:
     virtual void adjustVma (long adjust) override {} // TODO
 };
 
-
-static void print_vardata (ostream& s, VarnodeData* data)
-{
-    if (data == (VarnodeData*)0)
-        return;
-
-    const Translate* trans = data->space->getTrans ();
-
-    s << '(' << data->space->getName () << ',';
-    if (data->space->getName () == "register") {
-        s << trans->getRegisterName (data->space, data->offset, data->size);
-    } else {
-        data->space->printOffset (s, data->offset);
-    }
-    s << ',' << dec << data->size << ')';
-}
-
-
 class PcodeRawOut : public PcodeEmit {
 public:
     // Gets called multiple times through PcodeCacher::emit called by
     // trans.oneInstruction(pcodeemit, addr) -- which is called through
-    // hutch_Disasm::disasm(). -- see sleigh.cc for more info on call process.
+    // hutch::disasm(). -- see sleigh.cc for more info on call process.
     virtual void dump (Address const& addr, OpCode opc, VarnodeData* outvar,
                        VarnodeData* vars, int4 isize) override
     {
@@ -123,7 +144,6 @@ public:
     }
 };
 
-
 class AssemblyRaw : public AssemblyEmit {
 public:
     // Gets called through trans.printAssembly(asmemit, addr).
@@ -134,27 +154,34 @@ public:
     }
 };
 
-class hutch_Disasm {
+class hutch {
     DocumentStorage docstorage;
     ContextInternal context;
-    DefaultLoadImage* image;
     ssize_t optionlist = -1;
+
     vector<pair<string, int4>> cpu_context;
 
-    Sleigh initializeImageAlloc (uint1 const* buf, uintb bufsize,
-                                 uintb baseaddr);
-    void releaseImage ();
+    void initHutchResources (class hutch_insn* insn, uint1 const* buf,
+                             uintb bufsize, uintb baseaddr);
 
 public:
-    hutch_Disasm (int4 cpu = IA32); // See ctor at end of hutch_Disasm.cpp for
-                                    // viewing the different cpu context
-                                    // variables that are set.
+    hutch (int4 cpu = IA32);    // See ctor at end of hutch.cpp for
+                                // viewing the different cpu context
+                                // variables that are set.
     void configure (string const cpu);
     void options (const uint1 opts) { optionlist = opts; }
-    void disasm (uint1 const* buf, uintb bufsize, uintb baseaddr = 0x00000000,
-                 ssize_t ninsn = -1);
-    struct Pcode lift (uint1 const* buf, uintb bufsize,
-                       uintb baseaddr = 0x00000000, ssize_t ninsn = -1);
+    void disasm (class hutch_insn* insn, uint1 const* buf, uintb bufsize,
+                 uintb baseaddr = 0x00000000, ssize_t ninsn = -1);
+    vector<struct Pcode*>* lift (class hutch_insn* insn, uint1 const* buf,
+                                 uintb bufsize, uintb baseaddr = 0x00000000,
+                                 ssize_t ninsn = -1);
+};
+
+class hutch_insn {
+    friend class hutch;
+    DefaultLoadImage* image;
+    Sleigh* trans;
+    bool isInitialized = false;
 };
 
 #endif

@@ -3,19 +3,19 @@ from libcpp.memory cimport unique_ptr
 from libcpp.string cimport string
 
 
-cdef extern from "hutch-disasm.hpp":
-    cdef cppclass hutch_Disasm:
-        hutch_Disasm()
+cdef extern from "hutch.hpp":
+    cdef cppclass hutch:
+        hutch()
         void configure (const string cpu)
         void options (const unsigned char opts);
         void disasm (const unsigned char * buf, unsigned long bufsize, unsigned long start);
 
 
-cdef class pyhutch_Disasm:
-    cdef hutch_Disasm hutch_h
+cdef class pyhutch:
+    cdef hutch hutch_h
 
     def __init__(self):
-        self.hutch_h = hutch_Disasm()
+        self.hutch_h = hutch()
 
     def configure(self, _cpu):
         self.hutch_h.configure(_cpu)

@@ -17,7 +17,7 @@
 #include <iostream>
 #include <string>
 
-#include "hutch-disasm.hpp"
+#include "hutch.hpp"
 
 // x86 insns
 //
@@ -29,7 +29,10 @@ static uint1 code[] = { 0x55, 0x89, 0xe5, 0xb8, 0x78, 0x56, 0x34, 0x12 };
 
 int main(int argc, char *argv[])
 {
-    hutch_Disasm hutch_h;
+    hutch hutch_h;
+    hutch_insn insn;            // Needed to keep Sleigh translating object in
+                                // scope for accessing pcode IR.
+
     // x86 only atm, but this should be easy enough to change. Will update for
     // other arches eventually.
     hutch_h.configure("../../processors/x86/languages/x86.sla");
@@ -40,9 +43,33 @@ int main(int argc, char *argv[])
     hutch_h.options (OPT_IN_DISP_ADDR | OPT_IN_PCODE | OPT_IN_ASM);
 
     // Below relies on default args, full prototype of hutch_h.disasm is;
-    // void hutch_Disasm::disasm (uint1 const* buf, uintb bufsize, uintb start,
+    // void hutch::disasm (uint1 const* buf, uintb bufsize, uintb start,
     //                            ssize_t ninsn)
-    hutch_h.disasm (code, sizeof (code));
+    hutch_h.disasm (&insn, code, sizeof (code));
+
+    cout << "\n* ACCESS TO PCODE IR! \n";
+
+    // TODO cleanup IR access methodology, shouldnt need to use this much heap space.
+    vector<struct Pcode*>* ir = hutch_h.lift(&insn, code, sizeof (code));
+
+    for (auto pcode : *ir) {
+        // Print all pcode statments corresponding to the ith asm insn.
+        for (auto i = 0; i < pcode->ninsns; ++i) {
+            print_vardata(cout, pcode->insns[i].outvar); // print output varnode.
+            if (pcode->insns[i].outvar != (VarnodeData*)0) {
+                cout << " = ";
+            }
+
+            cout << get_opname(pcode->insns[i].opc);
+            // Print out all varnode inputs to this operation.
+            for (auto k = 0; k < pcode->insns[i].isize; ++k) {
+                print_vardata (cout, &pcode->insns[i].invar[k]);
+                cout << " ";
+            }
+            cout << endl;
+        }
+        cout << endl;
+    }
 
     return 0;
 }
