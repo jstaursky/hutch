@@ -14,8 +14,6 @@ try and stay up to date. I am still analyzing the codebase.
 
 # EXAMPLE
 ```c++
-#include "loadimage.hh"
-#include "sleigh.hh"
 #include <iostream>
 #include <string>
 
@@ -32,6 +30,8 @@ static uint1 code[] = { 0x55, 0x89, 0xe5, 0xb8, 0x78, 0x56, 0x34, 0x12 };
 int main(int argc, char *argv[])
 {
     hutch hutch_h;
+    hutch_insn insn;
+
     // x86 only atm, but this should be easy enough to change. Will update for
     // other arches eventually.
     hutch_h.configure("../../processors/x86/languages/x86.sla");
@@ -42,10 +42,11 @@ int main(int argc, char *argv[])
     hutch_h.options (OPT_IN_DISP_ADDR | OPT_IN_PCODE | OPT_IN_ASM);
 
     // Below relies on default args, full prototype of hutch_h.disasm is;
-    // void hutch::disasm (uint1 const* buf, uintb bufsize, uintb start,
-    //                            ssize_t ninsn)
+    // void hutch::disasm (class hutch_insn* insn, uint1 const* buf, 
+    //                     uintb bufsize, uintb start, ssize_t ninsn)
 
-    hutch_h.disasm (code, sizeof (code));
+    hutch_h.disasm (&insn, code, sizeof (code));
+    
 
     return 0;
 }
@@ -65,4 +66,5 @@ CXX='g++ -D_WINDOWS '`.
 
 
 # MISC
+Expect bindings found in `test` to be broken fairly often until a stable version number is released.
 [Ghidra Language Specification](https://ghidra.re/courses/languages/index.html)
