@@ -17,6 +17,8 @@
 #include <iostream>
 #include <string>
 
+#include <sys/stat.h>           // for struct stat status.st_size
+
 #include "hutch.hpp"
 
 // x86 insns
@@ -42,33 +44,46 @@ int main(int argc, char *argv[])
     // address info.
     hutch_h.options (OPT_IN_DISP_ADDR | OPT_IN_PCODE | OPT_IN_ASM);
 
-    // Below relies on default args, full prototype of hutch_h.disasm is;
-    // void hutch::disasm (uint1 const* buf, uintb bufsize, uintb start,
-    //                            ssize_t ninsn)
-    hutch_h.disasm (&insn, code, sizeof (code));
+    if (argc == 2) {
+        // For experimenting w/ ./program =(echo -n $'\x55') and the like..
+        struct stat filestatus;
+        stat (argv[1], &filestatus);
 
-    cout << "\n* ACCESS TO PCODE IR! \n";
+        ifstream file (argv[1], ios::in | ios::binary);
+        uint1* data = new uint1[filestatus.st_size];
+        file.read((char*)data, filestatus.st_size);
 
-    // TODO cleanup IR access methodology, shouldnt need to use this much heap space.
-    vector<struct Pcode*>* ir = hutch_h.lift(&insn, code, sizeof (code));
+        hutch_h.disasm (&insn, data, filestatus.st_size);
 
-    for (auto pcode : *ir) {
-        // Print all pcode statments corresponding to the ith asm insn.
-        for (auto i = 0; i < pcode->ninsns; ++i) {
-            print_vardata(cout, pcode->insns[i].outvar); // print output varnode.
-            if (pcode->insns[i].outvar != (VarnodeData*)0) {
-                cout << " = ";
-            }
+    } else {
+        // Below relies on default args, full prototype of hutch_h.disasm is;
+        // void hutch::disasm (uint1 const* buf, uintb bufsize, uintb start,
+        //                            ssize_t ninsn)
+        hutch_h.disasm (&insn, code, sizeof (code));
 
-            cout << get_opname(pcode->insns[i].opc);
-            // Print out all varnode inputs to this operation.
-            for (auto k = 0; k < pcode->insns[i].isize; ++k) {
-                print_vardata (cout, &pcode->insns[i].invar[k]);
-                cout << " ";
+        cout << "\n* ACCESS TO PCODE IR! \n";
+
+        // TODO cleanup IR access methodology, shouldnt need to use this much heap space.
+        vector<struct Pcode*>* ir = hutch_h.lift(&insn, code, sizeof (code));
+
+        for (auto pcode : *ir) {
+            // Print all pcode statments corresponding to the ith asm insn.
+            for (auto i = 0; i < pcode->ninsns; ++i) {
+                print_vardata(cout, pcode->insns[i].outvar); // print output varnode.
+                if (pcode->insns[i].outvar != (VarnodeData*)0) {
+                    cout << " = ";
+                }
+
+                cout << get_opname(pcode->insns[i].opc);
+                // Print out all varnode inputs to this operation.
+                for (auto k = 0; k < pcode->insns[i].isize; ++k) {
+                    print_vardata (cout, &pcode->insns[i].invar[k]);
+                    cout << " ";
+                }
+                cout << endl;
             }
             cout << endl;
         }
-        cout << endl;
     }
 
     return 0;
