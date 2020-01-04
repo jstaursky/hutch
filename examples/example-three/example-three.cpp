@@ -1,6 +1,6 @@
 /*
  * Copyright 2019 Joe Staursky
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,8 +17,12 @@
 #include <iostream>
 #include <string>
 
+// Check whether std=c++17
+#if __cplusplus >= 201703L
+#include <filesystem>
+#else
 #include <sys/stat.h>           // for struct stat status.st_size
-
+#endif
 #include "hutch.hpp"
 
 // x86 insns
@@ -46,14 +50,18 @@ int main(int argc, char *argv[])
 
     if (argc == 2) {
         // For experimenting w/ ./program =(echo -n $'\x55') and the like..
+#if __cplusplus >= 201703L
+        auto fsize = filesystem::file_size(argv[1]);
+#else
         struct stat filestatus;
         stat (argv[1], &filestatus);
-
+        auto fsize = filestatus.st_size;
+#endif
         ifstream file (argv[1], ios::in | ios::binary);
-        uint1* data = new uint1[filestatus.st_size];
-        file.read((char*)data, filestatus.st_size);
+        uint1* data = new uint1[fsize];
+        file.read((char*)data, fsize);
 
-        hutch_h.disasm (&scribe, data, filestatus.st_size);
+        hutch_h.disasm (&scribe, data, fsize);
 
     } else {
         // Below relies on default args, full prototype of hutch_h.disasm is;

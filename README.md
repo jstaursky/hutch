@@ -58,6 +58,10 @@ Type `make` in `hutch` main directory.
 
 Can now build as a static library or a shared library (e.g., for use from python, example coming soon).
 
+Starting to implement using c++17 features, so you may someday need to update to
+`g++-8` or `g++-9` to compile this. That said, unless there is some killer
+feature I'll try and make these be optioned out via preprocessor.
+
 # WINDOWS BUILDING
 Assuming your running under an mingw-w64-x86_64 style environment, after
 installing `bison` and `flex` (and `g++` + `binutils` + etc.), execute `make
