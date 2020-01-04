@@ -55,7 +55,7 @@ static void print_vardata (ostream& s, VarnodeData* data)
     s << ',' << dec << data->size << ')';
 }
 
-struct Pcode {
+struct [[depreciated("Should use PcodeOpRaw instead")]] Pcode {
     struct PcodeData* insns;
     uintb ninsns;
     int4 bytelen;
@@ -104,7 +104,7 @@ public:
         auto max = baseaddr + (bufsize - 1);
         for (auto i = 0; i < size; ++i) { // For every byte request
             auto curoff = start + i;      // Calculate offset of byte.
-            if ((curoff < baseaddr) ||
+            if ((curoff < this->baseaddr) ||
                 (curoff > max)) { // if byte does not fall in window,
                 ptr[i] = 0;       // return 0
                 continue;
@@ -161,23 +161,27 @@ class hutch {
 
     vector<pair<string, int4>> cpu_context;
 
-    void initHutchResources (class hutch_insn* insn, uint1 const* buf,
+    void initHutchResources (class hutch_transcribe* insn, uint1 const* buf,
                              uintb bufsize, uintb baseaddr);
 
 public:
     hutch (int4 cpu = IA32);    // See ctor at end of hutch.cpp for
                                 // viewing the different cpu context
                                 // variables that are set.
+    // Sets up docstorage.
     void configure (string const cpu);
+    // Gets passed an bitwise OR to decide disasm display options.
     void options (const uint1 opts) { optionlist = opts; }
-    void disasm (class hutch_insn* insn, uint1 const* buf, uintb bufsize,
+    void disasm (class hutch_transcribe* insn, uint1 const* buf, uintb bufsize,
                  uintb baseaddr = 0x00000000, ssize_t ninsn = -1);
-    vector<struct Pcode*>* lift (class hutch_insn* insn, uint1 const* buf,
+    // TODO Learn how to use procedures in emulate.hh + pcoderaw.hh
+    [[depreciated("Should use PcodeOpRaw")]]
+    vector<struct Pcode*>* lift (class hutch_transcribe* insn, uint1 const* buf,
                                  uintb bufsize, uintb baseaddr = 0x00000000,
                                  ssize_t ninsn = -1);
 };
 
-class hutch_insn {
+class hutch_transcribe {
     friend class hutch;
     DefaultLoadImage* image;
     Sleigh* trans;

@@ -32,7 +32,7 @@ static uint1 code[] = { 0x55, 0x89, 0xe5, 0xb8, 0x78, 0x56, 0x34, 0x12 };
 int main(int argc, char *argv[])
 {
     hutch hutch_h;
-    hutch_insn insn;            // Needed to keep Sleigh translating object in
+    hutch_transcribe scribe;    // Needed to keep Sleigh translating object in
                                 // scope for accessing pcode IR.
 
     // x86 only atm, but this should be easy enough to change. Will update for
@@ -53,21 +53,21 @@ int main(int argc, char *argv[])
         uint1* data = new uint1[filestatus.st_size];
         file.read((char*)data, filestatus.st_size);
 
-        hutch_h.disasm (&insn, data, filestatus.st_size);
+        hutch_h.disasm (&scribe, data, filestatus.st_size);
 
     } else {
         // Below relies on default args, full prototype of hutch_h.disasm is;
         // void hutch::disasm (uint1 const* buf, uintb bufsize, uintb start,
         //                            ssize_t ninsn)
-        hutch_h.disasm (&insn, code, sizeof (code));
+        hutch_h.disasm (&scribe, code, sizeof (code));
 
         cout << "\n* ACCESS TO PCODE IR! \n";
 
         // TODO cleanup IR access methodology, shouldnt need to use this much heap space.
-        vector<struct Pcode*>* ir = hutch_h.lift(&insn, code, sizeof (code));
+        vector<struct Pcode*>* ir = hutch_h.lift(&scribe, code, sizeof (code));
 
         for (auto pcode : *ir) {
-            // Print all pcode statments corresponding to the ith asm insn.
+            // Print all pcode statments corresponding to the ith asm scribe.
             for (auto i = 0; i < pcode->ninsns; ++i) {
                 print_vardata(cout, pcode->insns[i].outvar); // print output varnode.
                 if (pcode->insns[i].outvar != (VarnodeData*)0) {

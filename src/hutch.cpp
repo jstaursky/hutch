@@ -56,7 +56,7 @@ void hutch::configure (string const cpu)
     docstorage.registerTag (ast_root);
 }
 
-void hutch::initHutchResources (class hutch_insn* insn, uint1 const* buf, uintb bufsize,
+void hutch::initHutchResources (class hutch_transcribe* insn, uint1 const* buf, uintb bufsize,
                                 uintb baseaddr)
 {
     if (insn->isInitialized) {
@@ -75,7 +75,7 @@ void hutch::initHutchResources (class hutch_insn* insn, uint1 const* buf, uintb 
     insn->isInitialized = true;
 }
 
-void hutch::disasm (class hutch_insn* insn, uint1 const* buf, uintb bufsize, uintb baseaddr,
+void hutch::disasm (class hutch_transcribe* insn, uint1 const* buf, uintb bufsize, uintb baseaddr,
                     ssize_t ninsn)
 // NOTE baseaddr = 0x1000 , ninsn = -1 is default
 {
@@ -120,7 +120,7 @@ void hutch::disasm (class hutch_insn* insn, uint1 const* buf, uintb bufsize, uin
 
 
 
-vector<struct Pcode*>* hutch::lift (class hutch_insn* insn, uint1 const* buf, uintb bufsize,
+vector<struct Pcode*>* hutch::lift (class hutch_transcribe* insn, uint1 const* buf, uintb bufsize,
                                     uintb baseaddr, ssize_t ninsn)
 {
     initHutchResources(insn, buf, bufsize, baseaddr);

@@ -30,7 +30,7 @@ static uint1 code[] = { 0x55, 0x89, 0xe5, 0xb8, 0x78, 0x56, 0x34, 0x12 };
 int main(int argc, char *argv[])
 {
     hutch hutch_h;
-    hutch_insn insn;
+    hutch_transcribe insn;
 
     // x86 only atm, but this should be easy enough to change. Will update for
     // other arches eventually.
@@ -42,9 +42,8 @@ int main(int argc, char *argv[])
     hutch_h.options (OPT_IN_DISP_ADDR | OPT_IN_PCODE | OPT_IN_ASM);
 
     // Below relies on default args, full prototype of hutch_h.disasm is;
-    // void hutch::disasm (class hutch_insn* insn, uint1 const* buf, 
+    // void hutch::disasm (class hutch_transcribe* insn, uint1 const* buf, 
     //                     uintb bufsize, uintb start, ssize_t ninsn)
-
     hutch_h.disasm (&insn, code, sizeof (code));
     
 
