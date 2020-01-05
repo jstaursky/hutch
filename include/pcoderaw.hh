@@ -34,7 +34,7 @@ struct VarnodeData {
   AddrSpace *space;		///< The address space
   uintb offset;			///< The offset within the space
   uint4 size;                   ///< The number of bytes in the location
-  bool operator<(const VarnodeData &op2) const;  ///< An ordering for VarnodeData
+  bool operator<(const VarnodeData &op2) const; ///< An ordering for VarnodeData
   bool operator==(const VarnodeData &op2) const; ///< Compare for equality
   bool operator!=(const VarnodeData &op2) const; ///< Compare for inequality
 
@@ -90,26 +90,27 @@ inline Address VarnodeData::getAddr(void) const {
 /// and input varnodes
 class PcodeOpRaw {
   OpBehavior *behave;		///< The opcode for this operation
-  SeqNum seq;	                ///< Identifying address and index of this operation
-  VarnodeData *out;		///< Output varnode triple
+  SeqNum seq;               ///< Identifying address and index of this operation
+  VarnodeData *out;         ///< Output varnode triple
   vector<VarnodeData *> in;	///< Raw varnode inputs to this op
 public:
-  void setBehavior(OpBehavior *be); ///< Set the opcode for this op
+  void setBehavior(OpBehavior *be);    ///< Set the opcode for this op
   OpBehavior *getBehavior(void) const; ///< Retrieve the behavior for this op
-  OpCode getOpcode(void) const;	///< Get the opcode for this op
+  OpCode getOpcode(void) const;        ///< Get the opcode for this op
   void setSeqNum(const Address &a,uintm b); ///< Set the sequence number
-  const SeqNum &getSeqNum(void) const; ///< Retrieve the sequence number
-  const Address &getAddr(void) const; ///< Get address of this operation
-  void setOutput(VarnodeData *o); ///< Set the output varnode for this op
+  const SeqNum &getSeqNum(void) const;      ///< Retrieve the sequence number
+  const Address &getAddr(void) const;       ///< Get address of this operation
+  void setOutput(VarnodeData *o);     ///< Set the output varnode for this op
   VarnodeData *getOutput(void) const; ///< Retrieve the output varnode for this op
   void addInput(VarnodeData *i); ///< Add an additional input varnode to this op
-  void clearInputs(void);	///< Remove all input varnodes to this op
+  void clearInputs(void);        ///< Remove all input varnodes to this op
   int4 numInput(void) const;	///< Get the number of input varnodes to this op
   VarnodeData *getInput(int4 i) const; ///< Get the i-th input varnode for this op
 };
 
 /// The core behavior for this operation is controlled by an OpBehavior object
-/// which knows how output is determined given inputs. This routine sets that object
+/// which knows how output is determined given inputs. This routine sets that
+/// object
 /// \param be is the behavior object
 inline void PcodeOpRaw::setBehavior(OpBehavior *be)
 
@@ -117,7 +118,7 @@ inline void PcodeOpRaw::setBehavior(OpBehavior *be)
   behave = be;
 }
 
-/// Get the underlying behavior object for this pcode operation.  From this
+/// Get the underlying behavior object for this pcode operation. From this
 /// object you can determine how the object evaluates inputs to get the output
 /// \return the behavior object
 inline OpBehavior *PcodeOpRaw::getBehavior(void) const
@@ -135,10 +136,10 @@ inline OpCode PcodeOpRaw::getOpcode(void) const
   return behave->getOpcode();
 }
 
-/// Every pcode operation has a \b sequence \b number
-/// which associates the operation with the address of the machine instruction
-/// being translated and an order number which provides an index for this
-/// particular operation within the entire translation of the machine instruction
+/// Every pcode operation has a \b sequence \b number which associates the
+/// operation with the address of the machine instruction being translated and
+/// an order number which provides an index for this particular operation within
+/// the entire translation of the machine instruction
 /// \param a is the instruction address
 /// \param b is the order number
 inline void PcodeOpRaw::setSeqNum(const Address &a,uintm b)
@@ -166,7 +167,8 @@ inline const Address &PcodeOpRaw::getAddr(void) const
   return seq.getAddr();
 }
 
-/// Most pcode operations output to a varnode.  This routine sets what that varnode is.
+/// Most pcode operations output to a varnode. This routine sets what that
+/// varnode is.
 /// \param o is the varnode to set as output
 inline void PcodeOpRaw::setOutput(VarnodeData *o)
 
@@ -174,7 +176,8 @@ inline void PcodeOpRaw::setOutput(VarnodeData *o)
   out = o;
 }
 
-/// Most pcode operations have an output varnode. This routine retrieves that varnode.
+/// Most pcode operations have an output varnode. This routine retrieves that
+/// varnode.
 /// \return the output varnode or \b null if there is no output
 inline VarnodeData *PcodeOpRaw::getOutput(void) const
 
@@ -182,8 +185,9 @@ inline VarnodeData *PcodeOpRaw::getOutput(void) const
   return out;
 }
 
-/// A PcodeOpRaw is initially created with no input varnodes.  Inputs are added with this method.
-/// Varnodes are added in order, so the first addInput call creates input 0, for example.
+/// A PcodeOpRaw is initially created with no input varnodes. Inputs are added
+/// with this method. Varnodes are added in order, so the first addInput call
+/// creates input 0, for example.
 /// \param i is the varnode to be added as input
 inline void PcodeOpRaw::addInput(VarnodeData *i)
 
@@ -191,8 +195,8 @@ inline void PcodeOpRaw::addInput(VarnodeData *i)
   in.push_back(i);
 }
 
-/// If the inputs to a pcode operation need to be changed, this routine clears the existing
-/// inputs so new ones can be added.
+/// If the inputs to a pcode operation need to be changed, this routine clears
+/// the existing inputs so new ones can be added.
 inline void PcodeOpRaw::clearInputs(void)
 
 {
@@ -206,9 +210,9 @@ inline int4 PcodeOpRaw::numInput(void) const
   return in.size();
 }
 
-/// Input varnodes are indexed starting at 0.  This retrieves the input varnode by index.
-/// The index \e must be in range, or unpredicatable behavior will result. Use the numInput method
-/// to get the number of inputs.
+/// Input varnodes are indexed starting at 0. This retrieves the input varnode
+/// by index. The index \e must be in range, or unpredicatable behavior will
+/// result. Use the numInput method to get the number of inputs.
 /// \param i is the index of the desired input
 /// \return the desired input varnode
 inline VarnodeData *PcodeOpRaw::getInput(int4 i) const
