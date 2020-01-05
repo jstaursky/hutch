@@ -125,7 +125,7 @@ void AssemblyRaw::dump (const Address& addr, const string& mnem,
 //
 // * hutch
 //
-void hutch::configure (string const cpu, int4 arch)
+void hutch::preconfigure (string const cpu, int4 arch)
 {
     Element* ast_root = docstorage.openDocument (cpu)->getRoot ();
     docstorage.registerTag (ast_root);

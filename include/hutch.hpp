@@ -100,7 +100,7 @@ public:
     hutch() = default;
     ~hutch() = default;                   // TODO
     // Sets up docstorage.
-    void configure (string const cpu, int4 arch);
+    void preconfigure (string const cpu, int4 arch);
     // Gets passed an bitwise OR to decide disasm display options.
     void options (const uint1 opts);
     // Creates image of executable.

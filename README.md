@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 {
     hutch hutch_h;
 
-    hutch_h.configure("../../processors/x86/languages/x86.sla", IA32);
+    hutch_h.preconfigure("../../processors/x86/languages/x86.sla", IA32);
 
     // Can display Address info, pcode, assembly alone or in combination with
     // each other. Omission of hutch_h.options() will display a default of asm +
