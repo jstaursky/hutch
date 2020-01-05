@@ -20,12 +20,11 @@
 // *****************************************************************************
 // Initial implementation of FFI
 // extern "C" {
-    const uint1 OPT_IN_DISP_ADDR = (1<<0);
-    const uint1 OPT_IN_PCODE     = (1<<1);
-    const uint1 OPT_IN_ASM       = (1<<2);
+const uint1 OPT_IN_DISP_ADDR = (1 << 0);
+const uint1 OPT_IN_PCODE = (1 << 1);
+const uint1 OPT_IN_ASM = (1 << 2);
 
-    const uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
-
+const uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
 
 //     hutch* hutch_new (int4 cpu)
 //     {
@@ -44,72 +43,147 @@
 //     {
 //         hutch_h->disasm (buf, bufsize);
 //     }
-
 // } // end extern "C"
-// *****************************************************************************
 
-void hutch_transcribe::transpose(class hutch *handle, const uint1 *buf, uintb bufsize, uintb begaddr)
+// *****************************************************************************
+//
+// * file local convienience function(s).
+// 
+static void print_vardata (ostream& s, VarnodeData* data)
+{
+    if (data == (VarnodeData*)0)
+        return;
+
+    const Translate* trans = data->space->getTrans ();
+
+    s << '(' << data->space->getName () << ',';
+    if (data->space->getName () == "register") {
+        s << trans->getRegisterName (data->space, data->offset, data->size);
+    } else {
+        data->space->printOffset (s, data->offset);
+    }
+
+    s << ',' << dec << data->size << ')';
+}
+//
+// * DefaultLoadImage
+//
+void DefaultLoadImage::loadFill (uint1* ptr, int4 size,
+                                 const Address& addr)
+{
+    auto start = addr.getOffset ();
+    auto max = baseaddr + (bufsize - 1);
+    for (auto i = 0; i < size; ++i) { // For every byte request
+        auto curoff = start + i;      // Calculate offset of byte.
+        if ((curoff < this->baseaddr) ||
+            (curoff > max)) { // if byte does not fall in window,
+            ptr[i] = 0;       // return 0
+            continue;
+        }
+        // Otherwise return data from our window.
+        auto diff = curoff - baseaddr;
+        ptr[i] = this->buf[(int4)diff];
+    }
+}
+
+string DefaultLoadImage::getArchType (void) const
+{
+    return "DefaultLoadImage";
+}
+
+void DefaultLoadImage::adjustVma (long adjust)
+{
+    // TODO
+} 
+//
+// * PcodeRawOut
+//
+void PcodeRawOut::dump (Address const& addr, OpCode opc,
+                                VarnodeData* outvar, VarnodeData* vars,
+                                int4 isize)
+{
+    if (outvar != (VarnodeData*)0) {
+        print_vardata (cout, outvar);
+        cout << " = ";
+    }
+    cout << get_opname (opc);
+    // Possibly check for a code reference or a space reference.
+    for (int4 i = 0; i < isize; ++i) {
+        cout << ' ';
+        print_vardata (cout, &vars[i]);
+    }
+    cout << endl;
+}
+//
+// * AssemblyRaw
+// 
+void AssemblyRaw::dump (const Address& addr, const string& mnem,
+                                const string& body)
+{
+    cout << mnem << ' ' << body << endl;
+}
+//
+// * hutch
+// 
+void hutch::configure (string const cpu, int4 arch)
+{
+    Element* ast_root = docstorage.openDocument (cpu)->getRoot ();
+    docstorage.registerTag (ast_root);
+
+    setArchContextInfo (arch);
+}
+
+void hutch::setArchContextInfo (int4 cpu)
+{
+    switch (cpu) {
+    case IA32:
+        cpu_context = { { "addrsize", 1 }, { "opsize", 1 } };
+        break;
+    default:
+        // IA32 is default.
+        cpu_context = { { "addrsize", 1 }, { "opsize", 1 } };
+        break;
+    }
+}
+
+void hutch::options (const uint1 opts)
+{
+    optionlist = opts;
+}
+
+void hutch::initialize (const uint1* buf, uintb bufsize, uintb begaddr)
 {
     if (this->isInitialized) {
         delete this->image;
         delete this->trans;
     }
     this->image = new DefaultLoadImage (begaddr, buf, bufsize);
-    this->trans = new Sleigh(this->image, &handle->context);
-    this->trans->initialize (handle->docstorage);
+    this->trans = new Sleigh (this->image, &this->context);
+    this->trans->initialize (this->docstorage);
 
-    for (auto [option, setting] : handle->cpu_context)
-        handle->context.setVariableDefault (option, setting);
+    for (auto [option, setting] : this->cpu_context)
+        this->context.setVariableDefault (option, setting);
 
     this->isInitialized = true;
 }
 
-void hutch::configure (string const cpu, int4 arch)
-{
-    Element* ast_root = docstorage.openDocument (cpu)->getRoot ();
-    docstorage.registerTag (ast_root);
-
-    setArchInfo(arch);
-}
-
-void hutch::initHutchResources (class hutch_transcribe* insn, uint1 const* buf, uintb bufsize,
-                                uintb baseaddr)
-{
-    if (insn->isInitialized) {
-        delete insn->image;
-        delete insn->trans;
-    }
-    // Start fresh.
-    insn->image = new DefaultLoadImage (baseaddr, buf, bufsize);
-    insn->trans = new Sleigh(insn->image, &context);
-    insn->trans->initialize (docstorage);
-    // cpu_context set by hutch ctor.
-    for (auto [option, setting] : this->cpu_context)
-        this->context.setVariableDefault (option, setting);
-
-    insn->isInitialized = true;
-}
-
-void hutch::disasm (class hutch_transcribe* scribe, disasmUnit unit,
-                    uintb offset, uintb amount)
-
-// NOTE baseaddr = 0x1000 , ninsn = -1 is default
+void hutch::disasm (DisasmUnit unit, uintb offset, uintb amount)
 {
     PcodeRawOut pcodeemit;
     AssemblyRaw asmemit;
 
-    uintb baseaddr = scribe->image->getBaseAddr ();
+    uintb baseaddr = this->image->getBaseAddr ();
 
-    Address addr (scribe->trans->getDefaultSpace (), baseaddr);
-    Address lastaddr (scribe->trans->getDefaultSpace (),
-                      baseaddr + scribe->image->getImageSize ());
+    Address addr (this->trans->getDefaultSpace (), baseaddr);
+    Address lastaddr (this->trans->getDefaultSpace (),
+                      baseaddr + this->image->getImageSize ());
 
     // Is offset in instruction units?
     if (unit == UNIT_INSN) {
         // If so we want to move addr forward by offset amount of instructions.
         for (auto moveaddr = 0, insnlen = 0;
              moveaddr < offset && addr < lastaddr; addr = addr + insnlen) {
-            moveaddr += insnlen = scribe->trans->instructionLength (addr);
+            moveaddr += insnlen = this->trans->instructionLength (addr);
         }
     } else {
         // Offset unit must be in bytes.
@@ -130,50 +204,11 @@ void hutch::disasm (class hutch_transcribe* scribe, disasmUnit unit,
         }
         // Print assembly?
         if (optionlist & OPT_IN_ASM) {
-            len = scribe->trans->printAssembly (asmemit, addr);
+            len = this->trans->printAssembly (asmemit, addr);
         }
         // Print ir?
         if (optionlist & OPT_IN_PCODE) {
-            len = scribe->trans->oneInstruction (pcodeemit, addr);
+            len = this->trans->oneInstruction (pcodeemit, addr);
         }
     }
 }
-
-vector<struct Pcode*>* hutch::lift (class hutch_transcribe* insn,
-                                    uint1 const* buf, uintb bufsize,
-                                    uintb baseaddr, ssize_t ninsn)
-{
-    initHutchResources(insn, buf, bufsize, baseaddr);
-    vector<struct Pcode*> *pcode = new vector<struct Pcode*>;
-
-    Address addr (insn->trans->getDefaultSpace (), baseaddr);
-    Address lastaddr (insn->trans->getDefaultSpace (), baseaddr + bufsize);
-
-    // Set up default number of insns to count if user has not.
-    ninsn = (ninsn == -1) ? bufsize : ninsn;
-
-    // Go through all pcode statements for each asm insn.
-    for (auto i = 0, len = 0; i < ninsn && addr < lastaddr;
-         ++i, addr = addr + len) {
-        pair<vector<struct PcodeData>, int4> tmp = insn->trans->hutch_liftInstruction (addr);
-        struct Pcode* instructions = new struct Pcode(tmp.first.data(), tmp.first.size(), tmp.second);
-        pcode->push_back(instructions);
-        len = tmp.second;
-
-    }
-
-    return pcode;
-}
-
-void hutch::setArchInfo (int4 cpu) {
-    switch (cpu) {
-    case IA32:
-        cpu_context = { {"addrsize",1},
-                        {"opsize",1} };
-        break;
-    default:                    // ctor given IA32 as default so this case is
-                                // never triggered.
-        break;
-    }
-}
-

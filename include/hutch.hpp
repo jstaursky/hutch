@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __HUTCH_DISASM__
-#define __HUTCH_DISASM__
+#ifndef __HUTCH__
+#define __HUTCH__
 
 #include "loadimage.hh"
 #include "sleigh.hh"
@@ -26,7 +26,7 @@ class hutch; // Forward Declaration for C ffi.
 // Necessary for C ffi, see more in hutch.cpp
 extern "C" {
     enum { IA32 };
-    enum disasmUnit { UNIT_BYTE, UNIT_INSN };
+    enum DisasmUnit { UNIT_BYTE, UNIT_INSN };
     extern const uint1 OPT_IN_DISP_ADDR;
     extern const uint1 OPT_IN_PCODE;
     extern const uint1 OPT_IN_ASM;
@@ -38,162 +38,98 @@ extern "C" {
     extern void hutch_disasm (hutch* hutch_h, unsigned char const* buf,
                               unsigned long bufsize);
 }
-
-static void print_vardata (ostream& s, VarnodeData* data)
-{
-    if (data == (VarnodeData*)0)
-        return;
-
-    const Translate* trans = data->space->getTrans ();
-
-    s << '(' << data->space->getName () << ',';
-    if (data->space->getName () == "register") {
-        s << trans->getRegisterName (data->space, data->offset, data->size);
-    } else {
-        data->space->printOffset (s, data->offset);
-    }
-
-    s << ',' << dec << data->size << ')';
-}
-
-struct Pcode {
-    struct PcodeData* insns;
-    uintb ninsns;
-    int4 bytelen;
-    Pcode () = default;
-    // TODO not sure whether Deep copy ctor necessary.
-    Pcode (struct PcodeData* data, uintb insn_cnt, int4 bytelen) :
-    ninsns (insn_cnt), bytelen (bytelen)
-    {
-        insns = new struct PcodeData[insn_cnt];
-
-        for (auto i = 0; i < insn_cnt; ++i) {
-            insns[i].opc = data[i].opc;
-            insns[i].isize = data[i].isize;
-            insns[i].invar = new VarnodeData[data[i].isize];
-
-            if (data[i].outvar != (VarnodeData*)0) {
-                insns[i].outvar = new VarnodeData;
-                *insns[i].outvar = *data[i].outvar;
-            } else {
-                insns[i].outvar = (VarnodeData*)0;
-            }
-
-            for (auto j = 0; j < data[i].isize; ++j) {
-                insns[i].invar[j] = data[i].invar[j];
-            }
-        }
-    }
-};
-
+//
+// * DefaultLoadImage
+//
 class DefaultLoadImage : public LoadImage {
     uintb baseaddr = 0;
     uint1 const* buf = NULL;
     uintb bufsize = 0;
-
 public:
     DefaultLoadImage (uintb baseaddr, uint1 const* buf, uintb bufsize) :
-    LoadImage ("nofile"), baseaddr (baseaddr), buf (buf), bufsize (bufsize)
+        LoadImage ("nofile"), baseaddr (baseaddr), buf (buf), bufsize (bufsize)
     {
     }
-
     inline uintb getImageSize () { return bufsize; }
     inline uintb getBaseAddr () { return baseaddr; }
 
-    virtual void loadFill (uint1* ptr, int4 size, const Address& addr) override
-    {
-        auto start = addr.getOffset ();
-        auto max = baseaddr + (bufsize - 1);
-        for (auto i = 0; i < size; ++i) { // For every byte request
-            auto curoff = start + i;      // Calculate offset of byte.
-            if ((curoff < this->baseaddr) ||
-                (curoff > max)) { // if byte does not fall in window,
-                ptr[i] = 0;       // return 0
-                continue;
-            }
-            auto diff = curoff - baseaddr;
-            ptr[i] =
-                this->buf[(int4)diff]; // Otherwise return data from our window.
-        }
-    }
-
-    virtual string getArchType (void) const override
-    {
-        return "DefaultLoadImage";
-    }
-    virtual void adjustVma (long adjust) override {} // TODO
-
+    virtual void loadFill (uint1* ptr, int4 size, const Address& addr) override;
+    virtual string getArchType (void) const override;
+    virtual void adjustVma (long adjust) override;
 };
-
+//
+// * PcodeRawOut
+//
 class PcodeRawOut : public PcodeEmit {
 public:
     // Gets called multiple times through PcodeCacher::emit called by
     // trans.oneInstruction(pcodeemit, addr) -- which is called through
     // hutch::disasm(). -- see sleigh.cc for more info on call process.
     virtual void dump (Address const& addr, OpCode opc, VarnodeData* outvar,
-                       VarnodeData* vars, int4 isize) override
-    {
-        if (outvar != (VarnodeData*)0) {
-            print_vardata (cout, outvar);
-            cout << " = ";
-        }
-        cout << get_opname (opc);
-        // Possibly check for a code reference or a space reference.
-        for (int4 i = 0; i < isize; ++i) {
-            cout << ' ';
-            print_vardata (cout, &vars[i]);
-        }
-        cout << endl;
-    }
+                       VarnodeData* vars, int4 isize) override;
 };
-
+//
+// * AssemblyRaw
+// 
 class AssemblyRaw : public AssemblyEmit {
 public:
     // Gets called through trans.printAssembly(asmemit, addr).
     virtual void dump (const Address& addr, const string& mnem,
-                       const string& body) override
-    {
-        cout << mnem << ' ' << body << endl;
-    }
+                       const string& body) override;
 };
-
-class hutch;
-
-class hutch_transcribe {
-    friend class hutch;
-    DefaultLoadImage* image;
-    Sleigh* trans;
-    bool isInitialized = false;
-public:
-    void transpose (class hutch* handle, uint1 const* buf, uintb bufsize,
-                    uintb baseaddr);
-
-};
-
+//
+// * hutch
+// 
 class hutch {
-    friend class hutch_transcribe;
     DocumentStorage docstorage;
     ContextInternal context;
+    // Stores the executable buffer passed to initialize();
+    DefaultLoadImage* image;
+    // The sleigh translator.
+    Sleigh* trans;
+    // Check whether initialize() has already been called.
+    bool isInitialized = false;
+    // Disassembler options, e.g., OPT_IN_DISP_ADDR, OPT_IN_PCODE, ...
     ssize_t optionlist = -1;
-
+    // Set the options to be used for context.setVariableDefault(...)
+    void setArchContextInfo (int4 cpu);
+    // Stores the options set.
     vector<pair<string, int4>> cpu_context;
-    void setArchInfo (int4 cpu);
-
-    void initHutchResources (class hutch_transcribe* insn, uint1 const* buf,
-                             uintb bufsize, uintb baseaddr);
 
 public:
     hutch() = default;
+    ~hutch() = default;                   // TODO
     // Sets up docstorage.
     void configure (string const cpu, int4 arch);
     // Gets passed an bitwise OR to decide disasm display options.
-    void options (const uint1 opts) { optionlist = opts; }
-    void disasm (class hutch_transcribe* scribe, disasmUnit unit, uintb offset, uintb amount);
+    void options (const uint1 opts);
+    // Creates image of executable.
+    void initialize(uint1 const* buf, uintb bufsize, uintb baseaddr);
+    // * Disassembler notes
+    // disasm() allows you to specify the offset + length with which you wish
+    // begin disassembling. Additionally, this offset & length may be specified
+    // in bytes or insns. That is, by specifying:
+    //   disasm(UNIT_BYTE, 1, 3);
+    //   - disassembling will begin 1 byte into the executable image.
+    //   - continues for ~3 bytes (~ meaning approximately as
+    //     disassembler appears to try and complete any incomplete or invalid
+    //     insns--triggering errors will be looked into TODO).
+    // Now if instead you specified,
+    //   disasm(UNIT_INSN, 1, 3);
+    //   - disassembling will begin 1 instruction past the begining of the
+    //     image.
+    //   - continues for 3 instructions.
+    // In the case of simply disassembling the entire buffer, either
+    // disasm(UNIT_BYTE, 0, <buffer-size>) or
+    // disasm(UNIT_INSN, 0, <buffer-size>) will suffice.
+    // * Caveats
+    // - It should also be noted that I have not as of yet bothered will
+    //   implementing error detection (TODO), so if you put garbage in you will
+    //   get garbage out.
+    // - options such as whether or not to display the baseaddress + rawpcode
+    //   must be previously set by the options() method.
+    void disasm (DisasmUnit unit, uintb offset, uintb amount);
 
-    // TODO Learn how to use procedures in emulate.hh + pcoderaw.hh
-    vector<struct Pcode*>* lift (class hutch_transcribe* insn, uint1 const* buf,
-                                 uintb bufsize, uintb baseaddr = 0x00000000,
-                                 ssize_t ninsn = -1);
 };
 
 #endif

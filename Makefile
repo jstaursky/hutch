@@ -2,17 +2,17 @@ VPATH = parser-tools include src src/build processors/x86/languages processors/8
 
 CC       = gcc
 CXX      = g++
-CXXFLAGS = -O2  -Wall  -Wno-sign-compare
-CXXFLAGS_SHARED = -O2 -Wall -Wno-sign-compare -fPIC
+CXXFLAGS = -O2 -Wall -Wno-sign-compare -std=c++17
+CXXFLAGS_SHARED = -O2 -Wall -Wno-sign-compare -fPIC -std=c++17
 
-PARSER_TOOLS	 = parser-tools
-BUILD_DIR	 = src/build
-BUILD_SHARED_DIR = src/build-shared
-PUB_INCLUDE_DIR = include # Plan to eventually separate headers into public and
-				  		  # private headers. Where private headers reside in src
-SRC_DIR		 = src
-LIB_DIR		 = lib
-BIN_DIR		 = bin
+PARSER_TOOLS        = parser-tools
+BUILD_DIR           = src/build
+BUILD_SHARED_DIR    = src/build-shared
+PUB_INCLUDE_DIR         = include # Plan to eventually separate headers into public and
+                          # private headers. Where private headers reside in src
+SRC_DIR          = src
+LIB_DIR          = lib
+BIN_DIR          = bin
 
 
 # Core source files used in all projects
@@ -27,10 +27,9 @@ HUTCH_LIB_ADDONS := hutch
 
 # BUILD EVERYTHING #############################################################
 all: sleigh-compile x86.sla 8085.sla libsla.a libsla.so
-	# $(MAKE) -C examples/example-one
-	# $(MAKE) -C examples/example-two
-	$(MAKE) -C examples/example-three
 
+examples: all
+	$(MAKE) -C examples/example-one
 
 x86.sla: x86.slaspec
 	./bin/sleigh-compile -a processors/x86/languages
@@ -47,6 +46,7 @@ PARSING_FILES = xml  slghparse  pcodeparse  slghscan
 # PARSING ######################################################################
 xml.o: xml.cc
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+# For creating shared library.
 	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
 	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
 xml.cc: xml.y
@@ -54,6 +54,7 @@ xml.cc: xml.y
 
 slghparse.o: slghparse.cc
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+# For creating shared library.
 	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
 	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
 
@@ -63,6 +64,7 @@ slghparse.cc: slghparse.y
 
 pcodeparse.o: pcodeparse.cc
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+# For creating shared library.
 	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
 	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
 
@@ -73,6 +75,7 @@ pcodeparse.cc: pcodeparse.y
 # LEXING #######################################################################
 slghscan.o: slghscan.cc
 	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+# For creating shared library.
 	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
 	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
 
@@ -111,7 +114,7 @@ SLEIGH_COMP := slgh_compile  slghparse  slghscan
 
 # Collect all the requisite .o files, less the parsing ones. Those are handled
 # separately.
-SLEIGH_COMP_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/,       \
+SLEIGH_COMP_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/, \
 	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(SLEIGH_COMP))))
 
 $(SLEIGH_COMP_OBJS): | $(BUILD_DIR) $(BUILD_SHARED_DIR) $(addsuffix .o, $(PARSING_FILES))
@@ -126,9 +129,9 @@ sleigh-compile: $(SLEIGH_COMP_OBJS)
 
 LIBSLA := loadimage emulate  memstate  opbehavior  slghparse  slghscan
 
-LIBSLA_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/,       \
-	$(filter-out $(PARSING_FILES), 		   						\
-			$(CORE) $(SLEIGH) $(LIBSLA)							\
+LIBSLA_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/, \
+	$(filter-out $(PARSING_FILES), \
+			$(CORE) $(SLEIGH) $(LIBSLA) \
 			$(HUTCH_LIB_ADDONS)))) # Add hutch addons to libsla.a
 
 $(LIBSLA_OBJS): | $(BUILD_DIR) $(addsuffix .o, $(PARSING_FILES))
@@ -144,8 +147,8 @@ libsla.a: $(LIBSLA_OBJS)
 # BUILD LIBSLA.SO RECIPE #######################################################
 
 LIBSLA_SHARED_OBJS := $(addsuffix .cc.o, $(addprefix $(BUILD_SHARED_DIR)/, \
-	$(filter-out $(PARSING_FILES),									\
-	$(CORE) $(SLEIGH) $(LIBSLA)										\
+	$(filter-out $(PARSING_FILES), \
+	$(CORE) $(SLEIGH) $(LIBSLA) \
 	)))
 
 LIBSLA_SHARED_OBJS += $(addsuffix .cpp.o, $(addprefix $(BUILD_SHARED_DIR)/, \
@@ -166,10 +169,6 @@ clean:
 	rm -f processors/8085/languages/8085.sla
 	rm -f examples/example-one/example-one
 	rm -f examples/example-one/*.o
-	rm -f examples/example-two/example-two
-	rm -f examples/example-two/*.o
-	rm -f examples/example-three/example-three
-	rm -f examples/example-three/*.o
 
 
 # Useful for debugging. To find out value of variable, type 'make
