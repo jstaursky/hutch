@@ -25,17 +25,18 @@
 class hutch; // Forward Declaration for C ffi.
 // Necessary for C ffi, see more in hutch.cpp
 extern "C" {
-enum { IA32 };
-extern const uint1 OPT_IN_DISP_ADDR;
-extern const uint1 OPT_IN_PCODE;
-extern const uint1 OPT_IN_ASM;
-extern const uint1 OPT_OUT_DISP_ADDR, OPT_OUT_PCODE, OPT_OUT_ASM;
+    enum { IA32 };
+    enum disasmUnit { UNIT_BYTE, UNIT_INSN };
+    extern const uint1 OPT_IN_DISP_ADDR;
+    extern const uint1 OPT_IN_PCODE;
+    extern const uint1 OPT_IN_ASM;
+    extern const uint1 OPT_OUT_DISP_ADDR, OPT_OUT_PCODE, OPT_OUT_ASM;
 
-extern hutch* hutch_new (int4 cpu);
-extern void hutch_configure (hutch* hutch_h, char const* cpu);
-extern void hutch_options (hutch* hutch_h, unsigned char const opt);
-extern void hutch_disasm (hutch* hutch_h, unsigned char const* buf,
-                          unsigned long bufsize);
+    extern hutch* hutch_new (int4 cpu);
+    extern void hutch_configure (hutch* hutch_h, char const* cpu);
+    extern void hutch_options (hutch* hutch_h, unsigned char const opt);
+    extern void hutch_disasm (hutch* hutch_h, unsigned char const* buf,
+                              unsigned long bufsize);
 }
 
 static void print_vardata (ostream& s, VarnodeData* data)
@@ -55,7 +56,7 @@ static void print_vardata (ostream& s, VarnodeData* data)
     s << ',' << dec << data->size << ')';
 }
 
-struct [[depreciated("Should use PcodeOpRaw instead")]] Pcode {
+struct Pcode {
     struct PcodeData* insns;
     uintb ninsns;
     int4 bytelen;
@@ -97,6 +98,7 @@ public:
     }
 
     inline uintb getImageSize () { return bufsize; }
+    inline uintb getBaseAddr () { return baseaddr; }
 
     virtual void loadFill (uint1* ptr, int4 size, const Address& addr) override
     {
@@ -120,6 +122,7 @@ public:
         return "DefaultLoadImage";
     }
     virtual void adjustVma (long adjust) override {} // TODO
+
 };
 
 class PcodeRawOut : public PcodeEmit {
@@ -154,38 +157,43 @@ public:
     }
 };
 
-class hutch {
-    DocumentStorage docstorage;
-    ContextInternal context;
-    ssize_t optionlist = -1;
-
-    vector<pair<string, int4>> cpu_context;
-
-    void initHutchResources (class hutch_transcribe* insn, uint1 const* buf,
-                             uintb bufsize, uintb baseaddr);
-
-public:
-    hutch (int4 cpu = IA32);    // See ctor at end of hutch.cpp for
-                                // viewing the different cpu context
-                                // variables that are set.
-    // Sets up docstorage.
-    void configure (string const cpu);
-    // Gets passed an bitwise OR to decide disasm display options.
-    void options (const uint1 opts) { optionlist = opts; }
-    void disasm (class hutch_transcribe* insn, uint1 const* buf, uintb bufsize,
-                 uintb baseaddr = 0x00000000, ssize_t ninsn = -1);
-    // TODO Learn how to use procedures in emulate.hh + pcoderaw.hh
-    [[depreciated("Should use PcodeOpRaw")]]
-    vector<struct Pcode*>* lift (class hutch_transcribe* insn, uint1 const* buf,
-                                 uintb bufsize, uintb baseaddr = 0x00000000,
-                                 ssize_t ninsn = -1);
-};
+class hutch;
 
 class hutch_transcribe {
     friend class hutch;
     DefaultLoadImage* image;
     Sleigh* trans;
     bool isInitialized = false;
+public:
+    void transpose (class hutch* handle, uint1 const* buf, uintb bufsize,
+                    uintb baseaddr);
+
+};
+
+class hutch {
+    friend class hutch_transcribe;
+    DocumentStorage docstorage;
+    ContextInternal context;
+    ssize_t optionlist = -1;
+
+    vector<pair<string, int4>> cpu_context;
+    void setArchInfo (int4 cpu);
+
+    void initHutchResources (class hutch_transcribe* insn, uint1 const* buf,
+                             uintb bufsize, uintb baseaddr);
+
+public:
+    hutch() = default;
+    // Sets up docstorage.
+    void configure (string const cpu, int4 arch);
+    // Gets passed an bitwise OR to decide disasm display options.
+    void options (const uint1 opts) { optionlist = opts; }
+    void disasm (class hutch_transcribe* scribe, disasmUnit unit, uintb offset, uintb amount);
+
+    // TODO Learn how to use procedures in emulate.hh + pcoderaw.hh
+    vector<struct Pcode*>* lift (class hutch_transcribe* insn, uint1 const* buf,
+                                 uintb bufsize, uintb baseaddr = 0x00000000,
+                                 ssize_t ninsn = -1);
 };
 
 #endif

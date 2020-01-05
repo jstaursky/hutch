@@ -48,12 +48,28 @@
 // } // end extern "C"
 // *****************************************************************************
 
+void hutch_transcribe::transpose(class hutch *handle, const uint1 *buf, uintb bufsize, uintb begaddr)
+{
+    if (this->isInitialized) {
+        delete this->image;
+        delete this->trans;
+    }
+    this->image = new DefaultLoadImage (begaddr, buf, bufsize);
+    this->trans = new Sleigh(this->image, &handle->context);
+    this->trans->initialize (handle->docstorage);
 
+    for (auto [option, setting] : handle->cpu_context)
+        handle->context.setVariableDefault (option, setting);
 
-void hutch::configure (string const cpu)
+    this->isInitialized = true;
+}
+
+void hutch::configure (string const cpu, int4 arch)
 {
     Element* ast_root = docstorage.openDocument (cpu)->getRoot ();
     docstorage.registerTag (ast_root);
+
+    setArchInfo(arch);
 }
 
 void hutch::initHutchResources (class hutch_transcribe* insn, uint1 const* buf, uintb bufsize,
@@ -68,59 +84,63 @@ void hutch::initHutchResources (class hutch_transcribe* insn, uint1 const* buf, 
     insn->trans = new Sleigh(insn->image, &context);
     insn->trans->initialize (docstorage);
     // cpu_context set by hutch ctor.
-    for (auto i : this->cpu_context)
-        // first = option, second = setting.
-        this->context.setVariableDefault (i.first, i.second);
+    for (auto [option, setting] : this->cpu_context)
+        this->context.setVariableDefault (option, setting);
 
     insn->isInitialized = true;
 }
 
-void hutch::disasm (class hutch_transcribe* insn, uint1 const* buf, uintb bufsize, uintb baseaddr,
-                    ssize_t ninsn)
+void hutch::disasm (class hutch_transcribe* scribe, disasmUnit unit,
+                    uintb offset, uintb amount)
+
 // NOTE baseaddr = 0x1000 , ninsn = -1 is default
 {
-    initHutchResources(insn, buf, bufsize, baseaddr);
     PcodeRawOut pcodeemit;
     AssemblyRaw asmemit;
 
-    Address addr (insn->trans->getDefaultSpace (), baseaddr);
-    Address lastaddr (insn->trans->getDefaultSpace (), baseaddr + bufsize);
+    uintb baseaddr = scribe->image->getBaseAddr ();
+
+    Address addr (scribe->trans->getDefaultSpace (), baseaddr);
+    Address lastaddr (scribe->trans->getDefaultSpace (),
+                      baseaddr + scribe->image->getImageSize ());
+
+    // Is offset in instruction units?
+    if (unit == UNIT_INSN) {
+        // If so we want to move addr forward by offset amount of instructions.
+        for (auto moveaddr = 0, insnlen = 0;
+             moveaddr < offset && addr < lastaddr; addr = addr + insnlen) {
+            moveaddr += insnlen = scribe->trans->instructionLength (addr);
+        }
+    } else {
+        // Offset unit must be in bytes.
+        addr = addr + offset;
+    }
 
     // Set up default options if user has not;
-    optionlist = (optionlist == -1) ? OPT_IN_ASM | OPT_IN_DISP_ADDR : optionlist;
-    // Set up default number of insns to count if user has not.
-    ninsn = (ninsn == -1) ? bufsize : ninsn;
-    // Assume ninsn was given the default -1 value. The above reassigns it to
-    // the size of the buffer, consequently since the smallest insn len is 1,
-    // The addr < lastaddr condition will trigger before the i < ninsn
-    // condition. Conversly, if ninsn != -1 then the 1 < ninsn will trigger
-    // before the addr < lastaddr condition (if used correctly) because we are
-    // counting less instructions than the total that make up the buffer.
-    // If ninsn is defined by user to be greator than the number of insns in
-    // buffer, then addr < lastaddr will trigger first.
-    for (auto i = 0, len = 0; i < ninsn && addr < lastaddr; ++i, addr = addr + len) {
+    optionlist =
+        (optionlist == -1) ? OPT_IN_ASM | OPT_IN_DISP_ADDR : optionlist;
+
+    for (auto i = 0, len = 0; i < amount && addr < lastaddr;
+         i += (unit == UNIT_BYTE) ? len : 1, addr = addr + len) {
         // Print hex Address?
         if (optionlist & OPT_IN_DISP_ADDR) {
             cout << "--- ";
-            addr.printRaw(cout);
+            addr.printRaw (cout);
             cout << ":";
         }
         // Print assembly?
         if (optionlist & OPT_IN_ASM) {
-            len = insn->trans->printAssembly (asmemit, addr);
+            len = scribe->trans->printAssembly (asmemit, addr);
         }
         // Print ir?
         if (optionlist & OPT_IN_PCODE) {
-            len = insn->trans->oneInstruction (pcodeemit, addr);
+            len = scribe->trans->oneInstruction (pcodeemit, addr);
         }
-
     }
 }
 
-
-
-
-vector<struct Pcode*>* hutch::lift (class hutch_transcribe* insn, uint1 const* buf, uintb bufsize,
+vector<struct Pcode*>* hutch::lift (class hutch_transcribe* insn,
+                                    uint1 const* buf, uintb bufsize,
                                     uintb baseaddr, ssize_t ninsn)
 {
     initHutchResources(insn, buf, bufsize, baseaddr);
@@ -145,9 +165,7 @@ vector<struct Pcode*>* hutch::lift (class hutch_transcribe* insn, uint1 const* b
     return pcode;
 }
 
-// Constructor kept separate so the list of cpu context variables can be large
-// and not obstruct viewing the definition of hutch.
-hutch::hutch(int4 cpu) {
+void hutch::setArchInfo (int4 cpu) {
     switch (cpu) {
     case IA32:
         cpu_context = { {"addrsize",1},
