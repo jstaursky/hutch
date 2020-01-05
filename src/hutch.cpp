@@ -48,7 +48,7 @@ const uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
 // *****************************************************************************
 //
 // * file local convienience function(s).
-// 
+//
 static void print_vardata (ostream& s, VarnodeData* data)
 {
     if (data == (VarnodeData*)0)
@@ -94,7 +94,7 @@ string DefaultLoadImage::getArchType (void) const
 void DefaultLoadImage::adjustVma (long adjust)
 {
     // TODO
-} 
+}
 //
 // * PcodeRawOut
 //
@@ -116,7 +116,7 @@ void PcodeRawOut::dump (Address const& addr, OpCode opc,
 }
 //
 // * AssemblyRaw
-// 
+//
 void AssemblyRaw::dump (const Address& addr, const string& mnem,
                                 const string& body)
 {
@@ -124,7 +124,7 @@ void AssemblyRaw::dump (const Address& addr, const string& mnem,
 }
 //
 // * hutch
-// 
+//
 void hutch::configure (string const cpu, int4 arch)
 {
     Element* ast_root = docstorage.openDocument (cpu)->getRoot ();
