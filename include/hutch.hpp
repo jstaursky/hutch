@@ -70,7 +70,7 @@ public:
 };
 //
 // * AssemblyRaw
-// 
+//
 class AssemblyRaw : public AssemblyEmit {
 public:
     // Gets called through trans.printAssembly(asmemit, addr).
@@ -79,7 +79,7 @@ public:
 };
 //
 // * hutch
-// 
+//
 class hutch {
     DocumentStorage docstorage;
     ContextInternal context;
