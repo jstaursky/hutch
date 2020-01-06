@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
     }
 
     hutch hutch_h;
+    hutch_insn pcode_h;
 
     hutch_h.preconfigure ("../../processors/x86/languages/x86.sla", IA32);
     hutch_h.options(OPT_IN_DISP_ADDR | OPT_IN_PCODE | OPT_IN_ASM);
@@ -38,6 +39,12 @@ int main(int argc, char *argv[])
     hutch_h.initialize(img,imgsize,0x12345680);
 
     hutch_h.disasm(UNIT_BYTE, 0, imgsize);
+
+
+    vector<PcodeData> pcode = pcode_h.expand_insn_to_rpcode(&hutch_h, code,sizeof(code));
+
+    hutch_print_pcodedata(cout, pcode);
+
 
     return 0;
 }

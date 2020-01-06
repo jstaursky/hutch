@@ -49,10 +49,10 @@ const uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
 //
 // * file local convienience function(s).
 //
-static void print_vardata (ostream& s, VarnodeData* data)
+static bool print_vardata (ostream& s, VarnodeData* data)
 {
     if (data == (VarnodeData*)0)
-        return;
+        return false;
 
     const Translate* trans = data->space->getTrans ();
 
@@ -64,7 +64,10 @@ static void print_vardata (ostream& s, VarnodeData* data)
     }
 
     s << ',' << dec << data->size << ')';
+
+    return true;
 }
+
 //
 // * DefaultLoadImage
 //
@@ -127,7 +130,8 @@ void AssemblyRaw::dump (const Address& addr, const string& mnem,
 //
 void hutch::preconfigure (string const cpu, int4 arch)
 {
-    Element* ast_root = docstorage.openDocument (cpu)->getRoot ();
+    this->docname = cpu;
+    Element* ast_root = docstorage.openDocument (this->docname)->getRoot ();
     docstorage.registerTag (ast_root);
 
     setArchContextInfo (arch);
@@ -212,3 +216,55 @@ void hutch::disasm (DisasmUnit unit, uintb offset, uintb amount)
         }
     }
 }
+//
+// * regular functions.
+//
+vector<PcodeData> hutch_insn::expand_insn_to_rpcode(hutch* handle, uint1 const* code, uintb bufsize)
+{
+    vector<PcodeData> result;
+    // Need to pretest in case rpcodes has already been populated.
+    for (auto [addr, pcode] : this->rpcodes) {
+        if (pcode.outvar != nullptr)
+            delete pcode.outvar;
+        if (pcode.invar != nullptr)
+            delete[] pcode.invar;
+    }
+    this->rpcodes.clear();
+    if (loader != nullptr)
+        delete loader;
+    if (translate != nullptr)
+        delete translate;
+    // Start Fresh.
+    this->insn_docstorage.registerTag(this->insn_docstorage.openDocument(handle->docname)->getRoot());
+    this->loader = new DefaultLoadImage((uintb)0x00, code, bufsize);
+    this->translate = new Sleigh(loader, &insn_context);
+
+    translate->initialize(insn_docstorage);
+
+    for (auto [opt, setting] : handle->cpu_context)
+        insn_context.setVariableDefault(opt, setting);
+
+    Address tmp (translate->getDefaultSpace(),(uintb)0x00);
+    translate->oneInstruction (*this, tmp);
+    for (auto [addr, rpc] : this->rpcodes) {
+        result.push_back(rpc);
+    }
+    return result;
+}
+
+void hutch_print_pcodedata (ostream& s, vector<PcodeData> data)
+{
+
+    for (auto iter : data) {
+        if (print_vardata(s, iter.outvar)) {
+            s << " = ";
+                }
+        s << get_opname(iter.opc);
+        for (auto i = 0; i < iter.isize; ++i) {
+            s << " ";
+            print_vardata(s, &iter.invar[i]);
+        }
+        s << endl;
+    }
+}
+

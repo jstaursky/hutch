@@ -26,20 +26,20 @@ struct RelativeRecord {
 };
 
 struct PcodeData { // Data for building one pcode instruction
-  OpCode opc;
-  VarnodeData *outvar;	     // Points to outvar is there is an output
-  VarnodeData *invar;		// Inputs
-  int4 isize;			// Number of inputs
+    OpCode opc;
+    VarnodeData* outvar = nullptr; // Points to outvar is there is an output
+    VarnodeData* invar = nullptr;  // Inputs
+    int4 isize; // Number of inputs
 };
 
 class PcodeCacher { // Cached chunk of pcode, prior to emitting
-  VarnodeData *poolstart;
-  VarnodeData *curpool;
-  VarnodeData *endpool;
-  vector<PcodeData> issued;
-  list<RelativeRecord> label_refs; // References to labels
-  vector<uintb> labels;		// Locations of labels
-  VarnodeData *expandPool(uint4 size);
+    VarnodeData* poolstart;
+    VarnodeData* curpool;
+    VarnodeData* endpool;
+    vector<PcodeData> issued;
+    list<RelativeRecord> label_refs; // References to labels
+    vector<uintb> labels; // Locations of labels
+    VarnodeData* expandPool (uint4 size);
 public:
   PcodeCacher(void);
   ~PcodeCacher(void);
@@ -52,22 +52,20 @@ public:
     }
     return expandPool(size);
   }
-  PcodeData *allocateInstruction(void) {
-    issued.push_back(PcodeData());
-    PcodeData *res = &issued.back();
-    res->outvar = (VarnodeData *)0;
-    res->invar = (VarnodeData *)0;
-    return res;
-  }
+    PcodeData *allocateInstruction(void)
+    {
+        issued.push_back(PcodeData());
+        PcodeData *res = &issued.back();
+        res->outvar = (VarnodeData *)0;
+        res->invar = (VarnodeData *)0;
+        return res;
+    }
   void addLabelRef(VarnodeData *ptr);
   void addLabel(uint4 id);
   void clear(void);
   void resolveRelatives(void);
   void emit(const Address &addr,PcodeEmit *emt) const;
   vector<struct PcodeData> hutch_emitIR() const;
-
-
-
 };
 
 class DisassemblyCache {

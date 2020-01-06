@@ -24,14 +24,14 @@
 
 /// \brief Memory storage/state for a single AddressSpace
 ///
-/// Class for setting and getting memory values within a space The basic API is
+/// Class for setting and getting memory values within a space. The basic API is
 /// to get/set arrays of byte values via offset within the space. Helper
-/// functions getValue and setValue easily retrieve/store integers of various
-/// sizes from memory, using the endianness encoding specified by the space.
-/// Accesses through the public interface, are automatically broken down into \b
-/// word accesses, through the private insert/find methods, and \b page accesses
-/// through getPage/setPage. So these are the virtual methods that need to be
-/// overridden in the derived classes.
+/// functions getValue() and setValue() easily retrieve/store integers of
+/// various sizes from memory, using the endianness encoding specified by the
+/// space. Accesses through the public interface, are automatically broken down
+/// into \b word accesses, through the private insert/find methods, and \b page
+/// accesses through getPage/setPage. So these are the virtual methods that need
+/// to be overridden in the derived classes.
 
 class MemoryBank {
     friend class MemoryPageOverlay;

@@ -193,8 +193,8 @@ void SleighBuilder::dump (OpTpl* op)
     for (int4 i = 0; i < isize; ++i) {
         vn = op->getIn (i);
         if (vn->isDynamic (*walker)) {
-            generateLocation (
-                vn, invars[i]); // Input of -op- is really temporary storage
+            // Input of -op- is really temporary storage
+            generateLocation (vn, invars[i]);
             PcodeData* load_op = cache->allocateInstruction ();
             load_op->opc = CPUI_LOAD;
             load_op->outvar = invars + i;
@@ -240,8 +240,9 @@ void SleighBuilder::dump (OpTpl* op)
 }
 
 void SleighBuilder::buildEmpty (Constructor* ct, int4 secnum)
-
-{ // Build a named p-code section of a constructor that contains only implied BUILD directives
+// Build a named p-code section of a constructor that contains only implied
+// BUILD directives
+{
     int4 numops = ct->getNumOperands ();
 
     for (int4 i = 0; i < numops; ++i) {

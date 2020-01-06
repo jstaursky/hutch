@@ -18,7 +18,7 @@
 
 #include "loadimage.hh"
 #include "sleigh.hh"
-
+#include <memory>
 #include <fstream>
 #include <iostream>
 
@@ -38,6 +38,7 @@ extern "C" {
     extern void hutch_disasm (hutch* hutch_h, unsigned char const* buf,
                               unsigned long bufsize);
 }
+
 //
 // * DefaultLoadImage
 //
@@ -58,6 +59,29 @@ public:
     virtual void adjustVma (long adjust) override;
 };
 //
+// * AssemblyRaw
+//
+class AssemblyRaw : public AssemblyEmit {
+public:
+    // Gets called through trans.printAssembly(asmemit, addr).
+    virtual void dump (const Address& addr, const string& mnem,
+                       const string& body) override;
+};
+//
+// * hutch_rasm
+//
+class hutch_rasm : public AssemblyEmit {
+    string mnem;
+    string body;
+public:
+    virtual void dump (const Address& addr, const string& mnem,
+                       const string& body) override
+    {
+        this->mnem = mnem;
+        this->body = body;
+    }
+};
+//
 // * PcodeRawOut
 //
 class PcodeRawOut : public PcodeEmit {
@@ -69,24 +93,60 @@ public:
                        VarnodeData* vars, int4 isize) override;
 };
 //
-// * AssemblyRaw
+// * hutch_rpcode_insn
 //
-class AssemblyRaw : public AssemblyEmit {
+class hutch_insn : public PcodeEmit {
+    friend class hutch;
+    DocumentStorage insn_docstorage;
+    ContextInternal insn_context;
+    DefaultLoadImage* loader = nullptr;
+    Sleigh* translate = nullptr;
+
+    map<Address, PcodeData> rpcodes;
 public:
-    // Gets called through trans.printAssembly(asmemit, addr).
-    virtual void dump (const Address& addr, const string& mnem,
-                       const string& body) override;
+    ~hutch_insn()
+    {
+        for (auto [addr, pdata] : rpcodes) {
+            if (pdata.outvar != nullptr)
+                delete pdata.outvar;
+            if (pdata.invar != nullptr)
+                delete[] pdata.invar;
+        }
+    }
+    virtual void dump (Address const& addr, OpCode opc, VarnodeData* outvar,
+                       VarnodeData* vars, int4 isize) override
+    {
+        PcodeData node;
+        node.opc = opc;
+        node.outvar = new VarnodeData;
+
+        if (outvar != (VarnodeData*)0) {
+            *node.outvar = *outvar;
+        } else {
+            node.outvar = (VarnodeData*)0;
+        }
+        node.isize = isize;
+        node.invar = new VarnodeData[isize];
+        for (auto i = 0; i != isize; ++i) {
+            node.invar[i] = vars[i];
+        }
+        rpcodes.insert({addr, node});
+    }
+
+    vector<PcodeData> expand_insn_to_rpcode(hutch* handle, uint1 const* code, uintb bufsize);
 };
 //
 // * hutch
 //
 class hutch {
+    friend class hutch_insn;
+    string docname;
     DocumentStorage docstorage;
     ContextInternal context;
-    // Stores the executable buffer passed to initialize();
-    DefaultLoadImage* image;
     // The sleigh translator.
     Sleigh* trans;
+    // Stores the executable buffer passed to initialize();
+    DefaultLoadImage* image;
     // Check whether initialize() has already been called.
     bool isInitialized = false;
     // Disassembler options, e.g., OPT_IN_DISP_ADDR, OPT_IN_PCODE, ...
@@ -97,14 +157,14 @@ class hutch {
     vector<pair<string, int4>> cpu_context;
 
 public:
-    hutch() = default;
-    ~hutch() = default;                   // TODO
+    hutch () = default;
+    ~hutch () = default; // TODO
     // Sets up docstorage.
     void preconfigure (string const cpu, int4 arch);
     // Gets passed an bitwise OR to decide disasm display options.
     void options (const uint1 opts);
     // Creates image of executable.
-    void initialize(uint1 const* buf, uintb bufsize, uintb baseaddr);
+    void initialize (uint1 const* buf, uintb bufsize, uintb baseaddr);
     // * Disassembler notes
     // disasm() allows you to specify the offset + length with which you wish
     // begin disassembling. Additionally, this offset & length may be specified
@@ -129,7 +189,12 @@ public:
     // - options such as whether or not to display the baseaddress + rawpcode
     //   must be previously set by the options() method.
     void disasm (DisasmUnit unit, uintb offset, uintb amount);
-
 };
+//
+// * Function prototypes.
+//
+vector<PcodeData> hutch_to_rpcode(hutch_insn* rpcode_emit, hutch* handle, uint1 const* code, uintb bufsize);
+void hutch_print_pcodedata (ostream& s, vector<PcodeData> data);
+
 
 #endif
