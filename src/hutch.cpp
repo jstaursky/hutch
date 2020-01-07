@@ -219,8 +219,9 @@ void hutch::disasm (DisasmUnit unit, uintb offset, uintb amount)
 //
 // * hutch_insn
 //
-optional<vector<PcodeData>>
-hutch_insn::expand_insn_to_rpcode (hutch* handle, uint1* code, uintb bufsize)
+static optional<vector<PcodeData>>
+expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+             bool (*manip) (PcodeData&))
 {
     static uint1* save = nullptr;
     static uintb size = (code == nullptr) ? size : bufsize;
@@ -228,41 +229,63 @@ hutch_insn::expand_insn_to_rpcode (hutch* handle, uint1* code, uintb bufsize)
     uint1* end;
 
     if (size == 0)
-        return nullopt;
+        return nullopt;         // Have gone through the whole buffer.
 
     vector<PcodeData> result;
     // Need to test whether rpcodes has already been populated.
-    for (auto [addr, pcode] : this->rpcodes) {
+    for (auto [addr, pcode] : emit->rpcodes) {
         if (pcode.outvar != nullptr)
             delete pcode.outvar;
         if (pcode.invar != nullptr)
             delete[] pcode.invar;
     }
-    this->rpcodes.clear ();
-    if (loader != nullptr)
-        delete loader;
-    if (translate != nullptr)
-        delete translate;
-    // Start Fresh.
-    this->insn_docstorage.registerTag (
-        this->insn_docstorage.openDocument (handle->docname)->getRoot ());
-    this->loader = new DefaultLoadImage ((uintb)0x00, begin, bufsize);
-    this->translate = new Sleigh (loader, &insn_context);
+    emit->rpcodes.clear ();
+    if (emit->loader != nullptr)
+        delete emit->loader;
+    if (emit->translate != nullptr)
+        delete emit->translate;
 
-    translate->initialize (insn_docstorage);
+    // Start Fresh.
+    emit->insn_docstorage.registerTag (
+        emit->insn_docstorage.openDocument (handle->docname)->getRoot ());
+    emit->loader = new DefaultLoadImage ((uintb)0x00, begin, bufsize);
+    emit->translate = new Sleigh (emit->loader, &emit->insn_context);
+
+    emit->translate->initialize (emit->insn_docstorage);
 
     for (auto [opt, setting] : handle->cpu_context)
-        insn_context.setVariableDefault (opt, setting);
+        emit->insn_context.setVariableDefault (opt, setting);
 
-    Address tmp (translate->getDefaultSpace (), (uintb)0x00);
-    auto len = translate->oneInstruction (*this, tmp);
+    Address tmp (emit->translate->getDefaultSpace (), (uintb)0x00);
+
+    // Setup complete.
+
+    // Begin translating (populate emit->rpcodes via
+    // hutch_insn::dump()).
+    auto len = emit->translate->oneInstruction (*emit, tmp);
     save = end = begin + len;
     size -= len;
-    for (auto [addr, rpc] : this->rpcodes) {
-        result.push_back (rpc);
+    for (auto [addr, rpc] : emit->rpcodes) {
+        // Option to manip results before returning.
+        // Convention is that the function passed to manip returns true when it
+        // is desirable to pass whatever manipulations that took place inside
+        // *manip onto result; and return false when we would like to prevent
+        // rpc from being passed onto result. Thus you can define a function in
+        // terms of expand_insn() that has complete control over the number of
+        // pcode insns returned per asm instruction as well as control over
+        // each pcode instructions opcode, output varnode, and input varnodes.
+        if ((*manip)(rpc))
+            result.push_back (rpc);
     }
     return result;
 }
+
+optional<vector<PcodeData>>
+hutch_insn::expand_insn_to_rpcode (hutch* handle, uint1* code, uintb bufsize)
+{
+    return expand_insn(handle, this, code, bufsize, [](PcodeData& i){return true;});
+}
+
 
 //
 // * regular functions.

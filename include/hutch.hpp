@@ -23,7 +23,23 @@
 #include <fstream>
 #include <iostream>
 
-class hutch; // Forward Declaration for C ffi.
+// Forward Declarations.
+class hutch; 
+class hutch_insn;
+// This will generate warnings about expand_insn being declared but undefined. A
+// necessary evil to have this compile correctly. The function was meant to be
+// file local in hutch.cpp and have other functions defined as instances of
+// expand_insn with varying argument configurations--(*manip)() being the
+// primary method to accomplish this--but since it needs access to class
+// variables it needed to be declared as a friend function. Unfortunately this
+// prevented compilation as expand_insn() was appearing as extern in hutch.hpp
+// and static in hutch.cpp. Thus forcing the below forward declaration to solve
+// this.
+static optional<vector<PcodeData>>
+expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+             bool (*manip) (PcodeData&));
+
+
 // Necessary for C ffi, see more in hutch.cpp
 extern "C" {
     enum { IA32 };
@@ -98,6 +114,11 @@ public:
 //
 class hutch_insn : public PcodeEmit {
     friend class hutch;
+    // Read comment in forward declaration at top of this file.
+    friend optional<vector<PcodeData>>
+    expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+                 bool (*manip) (PcodeData&));
+
     DocumentStorage insn_docstorage;
     ContextInternal insn_context;
     DefaultLoadImage* loader = nullptr;
@@ -143,7 +164,12 @@ public:
 // * hutch
 //
 class hutch {
-    friend class hutch_insn;
+    friend class hutch_insn;    // Needs access to docname + cpu_context.
+    // Read comment in forward declaration at top of this file.
+    friend optional<vector<PcodeData>>
+    expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+                 bool (*manip) (PcodeData&));
+
     string docname;
     DocumentStorage docstorage;
     ContextInternal context;
