@@ -283,7 +283,7 @@ expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
 optional<vector<PcodeData>>
 hutch_insn::expand_insn_to_rpcode (hutch* handle, uint1* code, uintb bufsize)
 {
-    return expand_insn(handle, this, code, bufsize, [](PcodeData& i){return true;});
+    return expand_insn(handle, this, code, bufsize, [](PcodeData&){return true;});
 }
 
 
