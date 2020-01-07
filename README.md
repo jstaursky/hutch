@@ -43,25 +43,25 @@ examples directory.
 //
 static uint1 code[] = { 0x55, 0x89, 0xe5, 0xb8, 0x78, 0x56, 0x34, 0x12 };
 
-int main(int argc, char *argv[])
+int main (int argc, char* argv[])
 {
     hutch hutch_h;
     hutch_insn insn;
 
-    hutch_h.preconfigure("../../processors/x86/languages/x86.sla", IA32);
+    hutch_h.preconfigure ("../../processors/x86/languages/x86.sla", IA32);
 
     // Can display Address info, pcode, assembly alone or in combination with
     // each other. Omission of hutch_h.options() will display a default of asm +
     // address info.
     hutch_h.options (OPT_IN_DISP_ADDR | OPT_IN_PCODE | OPT_IN_ASM);
 
-    // Need to translate the buffer into internal representation prior to use. 
+    // Need to translate the buffer into internal representation prior to use.
     // Loaded image is persistent.
-    hutch_h.initialize(code,sizeof(code),0x12345680);
+    hutch_h.initialize (code, sizeof (code), 0x12345680);
 
     // Able to disassemble at specific offset + length.
     // The offset + length can be specified in terms bytes or instructions.
-    hutch_h.disasm(UNIT_BYTE, 0, sizeof(code));
+    hutch_h.disasm (UNIT_BYTE, 0, sizeof (code));
 
     // The above is useful for handling a single persistent image. If you have
     // snippets you want to pass and convert to pcode, you only need to run the
@@ -78,7 +78,6 @@ int main(int argc, char *argv[])
             hutch_print_pcodedata (cout, pcode->at (i));
         }
     }
-
 
     return 0;
 }
