@@ -85,7 +85,7 @@ public:
                        const string& body) override;
 };
 //
-// * hutch_rasm
+// * hutch_asm
 //
 class hutch_asm : public AssemblyEmit {
     string mnem;
@@ -113,7 +113,6 @@ public:
 // * hutch_rpcode_insn
 //
 class hutch_insn : public PcodeEmit {
-    friend class hutch;
     // Read comment in forward declaration at top of this file.
     friend optional<vector<PcodeData>>
     expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
