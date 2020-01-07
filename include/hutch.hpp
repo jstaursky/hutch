@@ -87,7 +87,7 @@ public:
 //
 // * hutch_rasm
 //
-class hutch_rasm : public AssemblyEmit {
+class hutch_asm : public AssemblyEmit {
     string mnem;
     string body;
 public:
@@ -127,34 +127,10 @@ class hutch_insn : public PcodeEmit {
     multimap<Address, PcodeData> rpcodes;
 
 public:
-    ~hutch_insn ()
-    {
-        for (auto [addr, pdata] : rpcodes) {
-            if (pdata.outvar != nullptr)
-                delete pdata.outvar;
-            if (pdata.invar != nullptr)
-                delete[] pdata.invar;
-        }
-    }
+    hutch_insn() = default;
+    ~hutch_insn (void);
     virtual void dump (Address const& addr, OpCode opc, VarnodeData* outvar,
-                       VarnodeData* vars, int4 isize) override
-    {
-        PcodeData node;
-        node.opc = opc;
-        node.outvar = new VarnodeData;
-
-        if (outvar != (VarnodeData*)0) {
-            *node.outvar = *outvar;
-        } else {
-            node.outvar = (VarnodeData*)0;
-        }
-        node.isize = isize;
-        node.invar = new VarnodeData[isize];
-        for (auto i = 0; i != isize; ++i) {
-            node.invar[i] = vars[i];
-        }
-        rpcodes.insert ({ addr, node });
-    }
+                       VarnodeData* vars, int4 isize) override;
     // Not the best interface but it works, follows a semantics similiar to
     // strtok(). Also not very efficient, will rewrite in future. TODO
     optional<vector<PcodeData>>
