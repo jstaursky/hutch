@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     // Convert insn by insn to pcode and print.
     for (auto [buf, pcode] = pair{ code, (optional<vector<PcodeData>>)0 };
          pcode = insn.expand_insn_to_rpcode (&hutch_h, buf, sizeof (code));
-         buf = nullptr)
+         buf = nullptr) // expand_insn_to_rpcode() has semantics sim. to strtok().
     {
         cout << "** converting insn..." << endl;
         for (auto i = 0; i < pcode->size (); ++i) {
