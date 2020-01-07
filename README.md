@@ -46,6 +46,7 @@ static uint1 code[] = { 0x55, 0x89, 0xe5, 0xb8, 0x78, 0x56, 0x34, 0x12 };
 int main(int argc, char *argv[])
 {
     hutch hutch_h;
+    hutch_insn insn;
 
     hutch_h.preconfigure("../../processors/x86/languages/x86.sla", IA32);
 
@@ -60,7 +61,23 @@ int main(int argc, char *argv[])
 
     // Able to disassemble at specific offset + length.
     // The offset + length can be specified in terms bytes or instructions.
-    hutch_h.disasm(UNIT_BYTE, 0, fsize);
+    hutch_h.disasm(UNIT_BYTE, 0, sizeof(code));
+
+    // The above is useful for handling a single persistent image. If you have
+    // snippets you want to pass and convert to pcode, you only need to run the
+    // hutch_h.preconfigure step before continuing to the below.
+    cout << "\n* Convert insn by insn to raw pcode\n";
+
+    // Convert insn by insn to pcode and print.
+    for (auto [buf, pcode] = pair{ code, (optional<vector<PcodeData>>)0 };
+         pcode = insn.expand_insn_to_rpcode (&hutch_h, buf, sizeof (code));
+         buf = nullptr)
+    {
+        cout << "** converting insn..." << endl;
+        for (auto i = 0; i < pcode->size (); ++i) {
+            hutch_print_pcodedata (cout, pcode->at (i));
+        }
+    }
 
 
     return 0;

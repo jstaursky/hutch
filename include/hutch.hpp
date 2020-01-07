@@ -19,6 +19,7 @@
 #include "loadimage.hh"
 #include "sleigh.hh"
 #include <memory>
+#include <optional>
 #include <fstream>
 #include <iostream>
 
@@ -101,10 +102,11 @@ class hutch_insn : public PcodeEmit {
     ContextInternal insn_context;
     DefaultLoadImage* loader = nullptr;
     Sleigh* translate = nullptr;
+    // Multimap because asm -> pcode is typically a 1 to many mapping.
+    multimap<Address, PcodeData> rpcodes;
 
-    map<Address, PcodeData> rpcodes;
 public:
-    ~hutch_insn()
+    ~hutch_insn ()
     {
         for (auto [addr, pdata] : rpcodes) {
             if (pdata.outvar != nullptr)
@@ -130,10 +132,12 @@ public:
         for (auto i = 0; i != isize; ++i) {
             node.invar[i] = vars[i];
         }
-        rpcodes.insert({addr, node});
+        rpcodes.insert ({ addr, node });
     }
-
-    vector<PcodeData> expand_insn_to_rpcode(hutch* handle, uint1 const* code, uintb bufsize);
+    // Not the best interface but it works, follows a semantics similiar to
+    // strtok(). Also not very efficient, will rewrite in future. TODO
+    optional<vector<PcodeData>>
+    expand_insn_to_rpcode (hutch* handle, uint1* code, uintb bufsize);
 };
 //
 // * hutch
@@ -193,8 +197,7 @@ public:
 //
 // * Function prototypes.
 //
-vector<PcodeData> hutch_to_rpcode(hutch_insn* rpcode_emit, hutch* handle, uint1 const* code, uintb bufsize);
-void hutch_print_pcodedata (ostream& s, vector<PcodeData> data);
+void hutch_print_pcodedata (ostream& s, PcodeData data);
 
 
 #endif
