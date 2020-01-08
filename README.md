@@ -66,11 +66,14 @@ int main (int argc, char* argv[])
     // The above is useful for handling a single persistent image. If you have
     // snippets you want to pass and convert to pcode, you only need to run the
     // hutch_h.preconfigure step before continuing to the below.
-    cout << "\n* Convert insn by insn to raw pcode\n";
+
+    cout << endl << "* Convert insn by insn to raw pcode" << endl;
+    cout << endl << "* Parse code insn by insn and"
+                 << " expand into disassembly + raw pcode\n";
 
     // Convert insn by insn to pcode and print.
-    for (auto [buf, asm_pcode] = pair{ img, (optional<Hutch_Data>)nullopt };
-         asm_pcode = insn.expand_insn(&hutch_h, buf, imgsize);
+    for (auto [buf, asm_pcode] = pair{ code, (optional<Hutch_Data>)nullopt };
+         asm_pcode = insn.expand_insn(&hutch_h, buf, sizeof (code));
          buf = nullptr)
     {
         cout << asm_pcode->asm_stmt <<endl;
