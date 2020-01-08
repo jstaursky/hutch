@@ -68,7 +68,7 @@ static bool print_vardata (ostream& s, VarnodeData* data)
     return true;
 }
 
-static optional<vector<PcodeData>>
+static optional<pair<asm_statement, vector<PcodeData>>>
 expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
              bool (*manip) (PcodeData&))
 {
@@ -80,7 +80,7 @@ expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
     if (size == 0)
         return nullopt;         // Have gone through the whole buffer.
 
-    vector<PcodeData> result;
+    pair<asm_statement,vector<PcodeData>> result;
     // Need to test whether rpcodes has already been populated.
     for (auto [addr, pcode] : emit->rpcodes) {
         if (pcode.outvar != nullptr)
@@ -112,6 +112,11 @@ expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
     // Begin translating (populate emit->rpcodes via
     // hutch_insn::dump()).
     auto len = emit->translate->oneInstruction (*emit, tmp);
+    // Get the asm statement as well;
+    hutch_asm assem;
+    emit->translate->printAssembly(assem, tmp);
+    result.first = assem.asm_stmt;
+
     save = end = begin + len;
     size -= len;
     for (auto [addr, rpc] : emit->rpcodes) {
@@ -124,7 +129,7 @@ expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
         // pcode insns returned per asm instruction as well as control over
         // each pcode instructions opcode, output varnode, and input varnodes.
         if ((*manip)(rpc))
-            result.push_back (rpc);
+            result.second.push_back (rpc);
     }
     return result;
 }
@@ -312,7 +317,12 @@ void hutch_insn::dump (Address const& addr, OpCode opc, VarnodeData* outvar,
 optional<vector<PcodeData>>
 hutch_insn::expand_insn_to_rpcode (hutch* handle, uint1* code, uintb bufsize)
 {
-    return expand_insn(handle, this, code, bufsize, [](PcodeData&){return true;});
+    auto tmp = expand_insn(handle, this, code, bufsize, [](PcodeData&){return true;});
+
+    if (tmp)
+        return tmp->second;
+    else
+        return nullopt;
 }
 //
 // * regular functions.

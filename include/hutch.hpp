@@ -23,8 +23,9 @@
 #include <fstream>
 #include <iostream>
 
+using asm_statement = string;
 // Forward Declarations.
-class hutch; 
+class hutch;
 class hutch_insn;
 // This will generate warnings about expand_insn being declared but undefined. A
 // necessary evil to have this compile correctly. The function was meant to be
@@ -35,9 +36,10 @@ class hutch_insn;
 // prevented compilation as expand_insn() was appearing as extern in hutch.hpp
 // and static in hutch.cpp. Thus forcing the below forward declaration to solve
 // this.
-static optional<vector<PcodeData>>
+static optional<pair<asm_statement, vector<PcodeData>>>
 expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
              bool (*manip) (PcodeData&));
+
 
 
 // Necessary for C ffi, see more in hutch.cpp
@@ -88,20 +90,23 @@ public:
 // * hutch_asm
 //
 class hutch_asm : public AssemblyEmit {
-    string mnem;
-    string body;
+    friend optional<pair<asm_statement, vector<PcodeData>>>
+    expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+                 bool (*manip) (PcodeData&));
+
+    asm_statement asm_stmt;
 public:
     virtual void dump (const Address& addr, const string& mnem,
                        const string& body) override
     {
-        this->mnem = mnem;
-        this->body = body;
+        this->asm_stmt = mnem + ' ' + body;
     }
 };
 //
 // * PcodeRawOut
 //
 class PcodeRawOut : public PcodeEmit {
+    friend class hutch_insn;
 public:
     // Gets called multiple times through PcodeCacher::emit called by
     // trans.oneInstruction(pcodeemit, addr) -- which is called through
@@ -110,11 +115,11 @@ public:
                        VarnodeData* vars, int4 isize) override;
 };
 //
-// * hutch_rpcode_insn
+// * hutch_insn
 //
 class hutch_insn : public PcodeEmit {
     // Read comment in forward declaration at top of this file.
-    friend optional<vector<PcodeData>>
+    friend optional<pair<asm_statement, vector<PcodeData>>>
     expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
                  bool (*manip) (PcodeData&));
 
@@ -122,6 +127,7 @@ class hutch_insn : public PcodeEmit {
     ContextInternal insn_context;
     DefaultLoadImage* loader = nullptr;
     Sleigh* translate = nullptr;
+
     // Multimap because asm -> pcode is typically a 1 to many mapping.
     multimap<Address, PcodeData> rpcodes;
 
@@ -141,7 +147,7 @@ public:
 class hutch {
     friend class hutch_insn;    // Needs access to docname + cpu_context.
     // Read comment in forward declaration at top of this file.
-    friend optional<vector<PcodeData>>
+    friend optional<pair<asm_statement, vector<PcodeData>>>
     expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
                  bool (*manip) (PcodeData&));
 
