@@ -27,6 +27,11 @@ using AssemblyString = string;
 // Forward Declarations.
 class hutch;
 class hutch_insn;
+
+struct hutch_data {
+    string asm_stmt;
+    vector<PcodeData> pcodes;
+};
 // This will generate warnings about expand_insn being declared but undefined. A
 // necessary evil to have this compile correctly. The function was meant to be
 // file local in hutch.cpp and have other functions defined as instances of
@@ -36,8 +41,8 @@ class hutch_insn;
 // prevented compilation as expand_insn() was appearing as extern in hutch.hpp
 // and static in hutch.cpp. Thus forcing the below forward declaration to solve
 // this.
-static optional<pair<AssemblyString, vector<PcodeData>>>
-expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+static optional<hutch_data>
+_expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
              bool (*manip) (PcodeData&, AssemblyString));
 
 
@@ -90,8 +95,8 @@ public:
 // * hutch_asm
 //
 class hutch_asm : public AssemblyEmit {
-    friend optional<pair<AssemblyString, vector<PcodeData>>>
-    expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+    friend optional<hutch_data>
+    _expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
                  bool (*manip) (PcodeData&,AssemblyString));
 
     AssemblyString asm_stmt;
@@ -119,8 +124,8 @@ public:
 //
 class hutch_insn : public PcodeEmit {
     // Read comment in forward declaration at top of this file.
-    friend optional<pair<AssemblyString, vector<PcodeData>>>
-    expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+    friend optional<hutch_data>
+    _expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
                  bool (*manip) (PcodeData&,AssemblyString));
 
     DocumentStorage insn_docstorage;
@@ -139,7 +144,14 @@ public:
     // Not the best interface but it works, follows a semantics similiar to
     // strtok(). Also not very efficient, will rewrite in future. TODO
     optional<vector<PcodeData>>
-    expand_insn_to_rpcode (hutch* handle, uint1* code, uintb bufsize);
+    expand_to_pcode (hutch* handle, uint1* code, uintb bufsize);
+
+    optional<AssemblyString> disasm(hutch* handle, uint1* code, uintb bufsize);
+
+    optional<hutch_data>
+    expand_insn (hutch* handle, uint1* code, uintb bufsize);
+
+
 };
 //
 // * hutch
@@ -147,8 +159,8 @@ public:
 class hutch {
     friend class hutch_insn;    // Needs access to docname + cpu_context.
     // Read comment in forward declaration at top of this file.
-    friend optional<pair<AssemblyString, vector<PcodeData>>>
-    expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+    friend optional<hutch_data>
+    _expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
                  bool (*manip) (PcodeData&,AssemblyString));
 
     string docname;

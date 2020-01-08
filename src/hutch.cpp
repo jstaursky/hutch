@@ -68,8 +68,8 @@ static bool print_vardata (ostream& s, VarnodeData* data)
     return true;
 }
 
-static optional<pair<AssemblyString, vector<PcodeData>>>
-expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+static optional<hutch_data>
+_expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
              bool (*manip) (PcodeData&, AssemblyString))
 {
     static uint1* save = nullptr;
@@ -80,7 +80,7 @@ expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
     if (size == 0)
         return nullopt;         // Have gone through the whole buffer.
 
-    pair<AssemblyString,vector<PcodeData>> result;
+    hutch_data result;
     // Need to test whether rpcodes has already been populated.
     for (auto [addr, pcode] : emit->rpcodes) {
         if (pcode.outvar != nullptr)
@@ -115,22 +115,27 @@ expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
     // Get the asm statement as well;
     hutch_asm assem;
     emit->translate->printAssembly(assem, tmp);
-    result.first = assem.asm_stmt;
 
-    save = end = begin + len;
-    size -= len;
-    for (auto [addr, rpc] : emit->rpcodes) {
+    vector<PcodeData> pcodes;
+    for (auto [addr, pc] : emit->rpcodes) {
         // Option to manip results before returning.
         // Convention is that the function passed to manip returns true when it
         // is desirable to pass whatever manipulations that took place inside
         // *manip onto result; and return false when we would like to prevent
-        // rpc from being passed onto result. Thus you can define a function in
+        // pc from being passed onto result. Thus you can define a function in
         // terms of expand_insn() that has complete control over the number of
         // pcode insns returned per asm instruction as well as control over
         // each pcode instructions opcode, output varnode, and input varnodes.
-        if ((*manip)(rpc, result.first))
-            result.second.push_back (rpc);
+        if ((*manip)(pc, assem.asm_stmt))
+            pcodes.push_back (pc);
     }
+
+    result.asm_stmt = assem.asm_stmt;
+    result.pcodes = pcodes;
+
+    save = end = begin + len;
+    size -= len;
+
     return result;
 }
 //
@@ -314,17 +319,35 @@ void hutch_insn::dump (Address const& addr, OpCode opc, VarnodeData* outvar,
     rpcodes.insert ({ addr, node });
 }
 
-optional<vector<PcodeData>>
-hutch_insn::expand_insn_to_rpcode (hutch* handle, uint1* code, uintb bufsize)
+optional<hutch_data>
+hutch_insn::expand_insn (hutch* handle, uint1* code, uintb bufsize)
 {
-    auto tmp = expand_insn (handle, this, code, bufsize,
-                            [](PcodeData&, AssemblyString) { return true; });
-
-    if (tmp)
-        return tmp->second;
-    else
-        return nullopt;
+    return _expand_insn(handle, this, code, bufsize, [](PcodeData&, AssemblyString) { return true; });
 }
+
+// optional<vector<PcodeData>>
+// hutch_insn::expand_to_pcode (hutch* handle, uint1* code, uintb bufsize)
+// {
+//     auto result = _expand_insnn (handle, this, code, bufsize,
+//                             [](PcodeData&, AssemblyString) { return true; });
+
+//     if (result)
+//         return result->second;
+//     else
+//         return nullopt;
+// }
+
+// optional<AssemblyString>
+// hutch_insn::disasm (hutch* handle, uint1* code, uintb bufsize)
+// {
+//     auto result = expand_insn (handle, this, code, bufsize,
+//                                [](PcodeData&, AssemblyString) { return false; });
+//     if (result)
+//         return result->first;
+//     else
+//         return nullopt;
+// }
+
 //
 // * regular functions.
 //

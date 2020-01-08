@@ -50,16 +50,14 @@ int main(int argc, char *argv[])
     cout << "\n* Convert insn by insn to raw pcode\n";
 
     // Convert insn by insn to pcode and print.
-    for (auto [buf, pcode] = pair{ img, (optional<vector<PcodeData>>)0 };
-         pcode = insn.expand_insn_to_rpcode (&hutch_h, buf, imgsize);
+    for (auto [buf, asm_pcode] = pair{ img, (optional<hutch_data>)nullopt };
+         asm_pcode = insn.expand_insn(&hutch_h, buf, imgsize);
          buf = nullptr)
     {
-        cout << "** converting insn..." << endl;
-        for (auto i = 0; i < pcode->size (); ++i) {
-            hutch_print_pcodedata (cout, pcode->at (i));
-        }
+        cout << asm_pcode->asm_stmt <<endl;
+        for (auto pc : asm_pcode->pcodes)
+            hutch_print_pcodedata(cout, pc);
     }
-
 
     return 0;
 }
