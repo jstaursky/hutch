@@ -149,7 +149,7 @@ public:
     optional<AssemblyString> disasm(Hutch* handle, uint1* code, uintb bufsize);
 
     optional<Hutch_Data>
-    expand_insn (Hutch* handle, uint1* code, uintb bufsize);
+    expand_insn (Hutch* handle, uint1* code, uintb bufsize = 0);
 
 
 };
