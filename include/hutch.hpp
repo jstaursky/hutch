@@ -23,7 +23,7 @@
 #include <fstream>
 #include <iostream>
 
-using asm_statement = string;
+using AssemblyString = string;
 // Forward Declarations.
 class hutch;
 class hutch_insn;
@@ -36,9 +36,9 @@ class hutch_insn;
 // prevented compilation as expand_insn() was appearing as extern in hutch.hpp
 // and static in hutch.cpp. Thus forcing the below forward declaration to solve
 // this.
-static optional<pair<asm_statement, vector<PcodeData>>>
+static optional<pair<AssemblyString, vector<PcodeData>>>
 expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
-             bool (*manip) (PcodeData&));
+             bool (*manip) (PcodeData&, AssemblyString));
 
 
 
@@ -90,11 +90,11 @@ public:
 // * hutch_asm
 //
 class hutch_asm : public AssemblyEmit {
-    friend optional<pair<asm_statement, vector<PcodeData>>>
+    friend optional<pair<AssemblyString, vector<PcodeData>>>
     expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
-                 bool (*manip) (PcodeData&));
+                 bool (*manip) (PcodeData&,AssemblyString));
 
-    asm_statement asm_stmt;
+    AssemblyString asm_stmt;
 public:
     virtual void dump (const Address& addr, const string& mnem,
                        const string& body) override
@@ -119,9 +119,9 @@ public:
 //
 class hutch_insn : public PcodeEmit {
     // Read comment in forward declaration at top of this file.
-    friend optional<pair<asm_statement, vector<PcodeData>>>
+    friend optional<pair<AssemblyString, vector<PcodeData>>>
     expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
-                 bool (*manip) (PcodeData&));
+                 bool (*manip) (PcodeData&,AssemblyString));
 
     DocumentStorage insn_docstorage;
     ContextInternal insn_context;
@@ -147,9 +147,9 @@ public:
 class hutch {
     friend class hutch_insn;    // Needs access to docname + cpu_context.
     // Read comment in forward declaration at top of this file.
-    friend optional<pair<asm_statement, vector<PcodeData>>>
+    friend optional<pair<AssemblyString, vector<PcodeData>>>
     expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
-                 bool (*manip) (PcodeData&));
+                 bool (*manip) (PcodeData&,AssemblyString));
 
     string docname;
     DocumentStorage docstorage;
