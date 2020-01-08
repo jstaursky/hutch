@@ -68,8 +68,8 @@ static bool print_vardata (ostream& s, VarnodeData* data)
     return true;
 }
 
-static optional<hutch_data>
-_expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+static optional<Hutch_Data>
+_expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
              bool (*manip) (PcodeData&, AssemblyString))
 {
     static uint1* save = nullptr;
@@ -80,7 +80,7 @@ _expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
     if (size == 0)
         return nullopt;         // Have gone through the whole buffer.
 
-    hutch_data result;
+    Hutch_Data result;
     // Need to test whether rpcodes has already been populated.
     for (auto [addr, pcode] : emit->rpcodes) {
         if (pcode.outvar != nullptr)
@@ -198,7 +198,7 @@ void AssemblyRaw::dump (const Address& addr, const string& mnem,
 //
 // * hutch
 //
-void hutch::preconfigure (string const cpu, int4 arch)
+void Hutch::preconfigure (string const cpu, int4 arch)
 {
     this->docname = cpu;
     Element* ast_root = docstorage.openDocument (this->docname)->getRoot ();
@@ -207,7 +207,7 @@ void hutch::preconfigure (string const cpu, int4 arch)
     setArchContextInfo (arch);
 }
 
-void hutch::setArchContextInfo (int4 cpu)
+void Hutch::setArchContextInfo (int4 cpu)
 {
     switch (cpu) {
     case IA32:
@@ -220,12 +220,12 @@ void hutch::setArchContextInfo (int4 cpu)
     }
 }
 
-void hutch::options (const uint1 opts)
+void Hutch::options (const uint1 opts)
 {
     optionlist = opts;
 }
 
-void hutch::initialize (const uint1* buf, uintb bufsize, uintb begaddr)
+void Hutch::initialize (const uint1* buf, uintb bufsize, uintb begaddr)
 {
     if (this->isInitialized) {
         delete this->image;
@@ -241,7 +241,7 @@ void hutch::initialize (const uint1* buf, uintb bufsize, uintb begaddr)
     this->isInitialized = true;
 }
 
-void hutch::disasm (DisasmUnit unit, uintb offset, uintb amount)
+void Hutch::disasm (DisasmUnit unit, uintb offset, uintb amount)
 {
     PcodeRawOut pcodeemit;
     AssemblyRaw asmemit;
@@ -289,7 +289,7 @@ void hutch::disasm (DisasmUnit unit, uintb offset, uintb amount)
 //
 // * hutch_insn
 //
-hutch_insn::~hutch_insn (void)
+Hutch_Insn::~Hutch_Insn (void)
 {
     for (auto [addr, pdata] : rpcodes) {
         if (pdata.outvar != nullptr)
@@ -299,7 +299,7 @@ hutch_insn::~hutch_insn (void)
     }
 }
 
-void hutch_insn::dump (Address const& addr, OpCode opc, VarnodeData* outvar,
+void Hutch_Insn::dump (Address const& addr, OpCode opc, VarnodeData* outvar,
                        VarnodeData* vars, int4 isize)
 {
     PcodeData node;
@@ -319,8 +319,8 @@ void hutch_insn::dump (Address const& addr, OpCode opc, VarnodeData* outvar,
     rpcodes.insert ({ addr, node });
 }
 
-optional<hutch_data>
-hutch_insn::expand_insn (hutch* handle, uint1* code, uintb bufsize)
+optional<Hutch_Data>
+Hutch_Insn::expand_insn (Hutch* handle, uint1* code, uintb bufsize)
 {
     return _expand_insn(handle, this, code, bufsize, [](PcodeData&, AssemblyString) { return true; });
 }

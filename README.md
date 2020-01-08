@@ -45,8 +45,8 @@ static uint1 code[] = { 0x55, 0x89, 0xe5, 0xb8, 0x78, 0x56, 0x34, 0x12 };
 
 int main (int argc, char* argv[])
 {
-    hutch hutch_h;
-    hutch_insn insn;
+    Hutch hutch_h;
+    Hutch_Insn insn;
 
     hutch_h.preconfigure ("../../processors/x86/languages/x86.sla", IA32);
 
@@ -69,7 +69,7 @@ int main (int argc, char* argv[])
     cout << "\n* Convert insn by insn to raw pcode\n";
 
     // Convert insn by insn to pcode and print.
-    for (auto [buf, asm_pcode] = pair{ img, (optional<hutch_data>)nullopt };
+    for (auto [buf, asm_pcode] = pair{ img, (optional<Hutch_Data>)nullopt };
          asm_pcode = insn.expand_insn(&hutch_h, buf, imgsize);
          buf = nullptr)
     {

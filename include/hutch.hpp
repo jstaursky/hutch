@@ -25,10 +25,10 @@
 
 using AssemblyString = string;
 // Forward Declarations.
-class hutch;
-class hutch_insn;
+class Hutch;
+class Hutch_Insn;
 
-struct hutch_data {
+struct Hutch_Data {
     string asm_stmt;
     vector<PcodeData> pcodes;
 };
@@ -41,8 +41,8 @@ struct hutch_data {
 // prevented compilation as expand_insn() was appearing as extern in hutch.hpp
 // and static in hutch.cpp. Thus forcing the below forward declaration to solve
 // this.
-static optional<hutch_data>
-_expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+static optional<Hutch_Data>
+_expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
              bool (*manip) (PcodeData&, AssemblyString));
 
 
@@ -56,10 +56,10 @@ extern "C" {
     extern const uint1 OPT_IN_ASM;
     extern const uint1 OPT_OUT_DISP_ADDR, OPT_OUT_PCODE, OPT_OUT_ASM;
 
-    extern hutch* hutch_new (int4 cpu);
-    extern void hutch_configure (hutch* hutch_h, char const* cpu);
-    extern void hutch_options (hutch* hutch_h, unsigned char const opt);
-    extern void hutch_disasm (hutch* hutch_h, unsigned char const* buf,
+    extern Hutch* hutch_new (int4 cpu);
+    extern void hutch_configure (Hutch* hutch_h, char const* cpu);
+    extern void hutch_options (Hutch* hutch_h, unsigned char const opt);
+    extern void hutch_disasm (Hutch* hutch_h, unsigned char const* buf,
                               unsigned long bufsize);
 }
 
@@ -95,8 +95,8 @@ public:
 // * hutch_asm
 //
 class hutch_asm : public AssemblyEmit {
-    friend optional<hutch_data>
-    _expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+    friend optional<Hutch_Data>
+    _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
                  bool (*manip) (PcodeData&,AssemblyString));
 
     AssemblyString asm_stmt;
@@ -111,7 +111,7 @@ public:
 // * PcodeRawOut
 //
 class PcodeRawOut : public PcodeEmit {
-    friend class hutch_insn;
+    friend class Hutch_Insn;
 public:
     // Gets called multiple times through PcodeCacher::emit called by
     // trans.oneInstruction(pcodeemit, addr) -- which is called through
@@ -122,10 +122,10 @@ public:
 //
 // * hutch_insn
 //
-class hutch_insn : public PcodeEmit {
+class Hutch_Insn : public PcodeEmit {
     // Read comment in forward declaration at top of this file.
-    friend optional<hutch_data>
-    _expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+    friend optional<Hutch_Data>
+    _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
                  bool (*manip) (PcodeData&,AssemblyString));
 
     DocumentStorage insn_docstorage;
@@ -137,30 +137,30 @@ class hutch_insn : public PcodeEmit {
     multimap<Address, PcodeData> rpcodes;
 
 public:
-    hutch_insn() = default;
-    ~hutch_insn (void);
+    Hutch_Insn() = default;
+    ~Hutch_Insn (void);
     virtual void dump (Address const& addr, OpCode opc, VarnodeData* outvar,
                        VarnodeData* vars, int4 isize) override;
     // Not the best interface but it works, follows a semantics similiar to
     // strtok(). Also not very efficient, will rewrite in future. TODO
     optional<vector<PcodeData>>
-    expand_to_pcode (hutch* handle, uint1* code, uintb bufsize);
+    expand_to_pcode (Hutch* handle, uint1* code, uintb bufsize);
 
-    optional<AssemblyString> disasm(hutch* handle, uint1* code, uintb bufsize);
+    optional<AssemblyString> disasm(Hutch* handle, uint1* code, uintb bufsize);
 
-    optional<hutch_data>
-    expand_insn (hutch* handle, uint1* code, uintb bufsize);
+    optional<Hutch_Data>
+    expand_insn (Hutch* handle, uint1* code, uintb bufsize);
 
 
 };
 //
 // * hutch
 //
-class hutch {
-    friend class hutch_insn;    // Needs access to docname + cpu_context.
+class Hutch {
+    friend class Hutch_Insn;    // Needs access to docname + cpu_context.
     // Read comment in forward declaration at top of this file.
-    friend optional<hutch_data>
-    _expand_insn (hutch* handle, hutch_insn* emit, uint1* code, uintb bufsize,
+    friend optional<Hutch_Data>
+    _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
                  bool (*manip) (PcodeData&,AssemblyString));
 
     string docname;
@@ -180,8 +180,8 @@ class hutch {
     vector<pair<string, int4>> cpu_context;
 
 public:
-    hutch () = default;
-    ~hutch () = default; // TODO
+    Hutch () = default;
+    ~Hutch () = default; // TODO
     // Sets up docstorage.
     void preconfigure (string const cpu, int4 arch);
     // Gets passed an bitwise OR to decide disasm display options.
