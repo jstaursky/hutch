@@ -72,60 +72,64 @@ static optional<Hutch_Data>
 _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
              bool (*manip) (PcodeData&, AssemblyString))
 {
-    static uint1* save = nullptr;
-    static uintb size = (code == nullptr) ? size : bufsize;
-    uint1* begin = code ? code : save;
-    uint1* end;
+    // Remaining buffer size.
+    static uintb rsize = (code == nullptr) ? rsize : bufsize;
 
-    if (size == 0)
+    if (rsize == 0)
         return nullopt;         // Have gone through the whole buffer.
 
-    Hutch_Data result;
-    // Need to test whether rpcodes has already been populated.
-    for (auto [addr, pcode] : emit->rpcodes) {
-        if (pcode.outvar != nullptr)
-            delete pcode.outvar;
-        if (pcode.invar != nullptr)
-            delete[] pcode.invar;
+    if (code != nullptr) {
+        // Need to test whether rpcodes has already been populated.
+        if (!emit->rpcodes.empty()) {
+            for (auto [addr, pcode] : emit->rpcodes) {
+                if (pcode.outvar != nullptr)
+                    delete pcode.outvar;
+                if (pcode.invar != nullptr)
+                    delete[] pcode.invar;
+            }
+            emit->rpcodes.clear ();
+        }
+
+        if (emit->loader != nullptr)
+            delete emit->loader;
+        if (emit->translate != nullptr)
+            delete emit->translate;
+
+        // Start Fresh.
+        emit->insn_docstorage.registerTag (
+            emit->insn_docstorage.openDocument (handle->docname)->getRoot ());
+        emit->loader = new DefaultLoadImage ((uintb)0x00, code, bufsize);
+        emit->translate = new Sleigh (emit->loader, &emit->insn_context);
+
+        emit->translate->initialize (emit->insn_docstorage);
+
+        for (auto [opt, setting] : handle->cpu_context)
+            emit->insn_context.setVariableDefault (opt, setting);
+
     }
-    emit->rpcodes.clear ();
-    if (emit->loader != nullptr)
-        delete emit->loader;
-    if (emit->translate != nullptr)
-        delete emit->translate;
-
-    // Start Fresh.
-    emit->insn_docstorage.registerTag (
-        emit->insn_docstorage.openDocument (handle->docname)->getRoot ());
-    emit->loader = new DefaultLoadImage ((uintb)0x00, begin, bufsize);
-    emit->translate = new Sleigh (emit->loader, &emit->insn_context);
-
-    emit->translate->initialize (emit->insn_docstorage);
-
-    for (auto [opt, setting] : handle->cpu_context)
-        emit->insn_context.setVariableDefault (opt, setting);
-
-    Address tmp (emit->translate->getDefaultSpace (), (uintb)0x00);
-
+    Address offset (emit->translate->getDefaultSpace (), (uintb)(bufsize - rsize));
     // Setup complete.
+
+    Hutch_Data result;
+
 
     // Begin translating (populate emit->rpcodes via
     // hutch_insn::dump()).
-    auto len = emit->translate->oneInstruction (*emit, tmp);
+    auto len = emit->translate->oneInstruction (*emit, offset);
     // Get the asm statement as well;
     hutch_asm assem;
-    emit->translate->printAssembly(assem, tmp);
+    emit->translate->printAssembly(assem, offset);
 
     vector<PcodeData> pcodes;
     for (auto [addr, pc] : emit->rpcodes) {
-        // Option to manip results before returning.
-        // Convention is that the function passed to manip returns true when it
-        // is desirable to pass whatever manipulations that took place inside
-        // *manip onto result; and return false when we would like to prevent
-        // pc from being passed onto result. Thus you can define a function in
-        // terms of expand_insn() that has complete control over the number of
-        // pcode insns returned per asm instruction as well as control over
-        // each pcode instructions opcode, output varnode, and input varnodes.
+        // Option to manip results before returning. Convention is that the
+        // function passed to manip returns true when it is desirable to pass
+        // whatever manipulations that took place inside *manip onto result; and
+        // return false when we would like to prevent pc from being passed onto
+        // result. Thus you can define a function in terms of _expand_insn()
+        // that has complete control over the number of pcode insns returned per
+        // asm instruction as well as control over each pcode instructions
+        // opcode, output varnode, and input varnodes.
         if ((*manip)(pc, assem.asm_stmt))
             pcodes.push_back (pc);
     }
@@ -133,8 +137,7 @@ _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
     result.asm_stmt = assem.asm_stmt;
     result.pcodes = pcodes;
 
-    save = end = begin + len;
-    size -= len;
+    rsize -= len;
 
     return result;
 }
