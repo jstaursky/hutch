@@ -122,6 +122,10 @@ _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
 
     vector<PcodeData> pcodes;
     for (auto [addr, pc] : emit->rpcodes) {
+        // Only interested in the pcodes relevant to the insn found at current
+        // offset.
+        if (addr < offset)
+            continue;
         // Option to manip results before returning. Convention is that the
         // function passed to manip returns true when it is desirable to pass
         // whatever manipulations that took place inside *manip onto result; and
