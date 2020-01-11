@@ -88,4 +88,7 @@ Example can be found in `examples/example-three`.
 
 # MISC
 Expect bindings found in `test` to be broken fairly often until a stable version number is released.
+
 [Ghidra Language Specification](https://ghidra.re/courses/languages/index.html)
+
+[Sleigh Decompiler Docs](https://ghidra-decompiler-docs.netlify.com/)
