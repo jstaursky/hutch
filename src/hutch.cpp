@@ -236,13 +236,7 @@ void Hutch_Emulate::emulate(int4 pagesize, int4 hashsize)
 
     emulater->setHalt(false);
     do {
-        cout << "current insn address" << endl;
-        cout << emulater->getExecuteAddress() << endl;
-
-        cout << memstate->getValue("ESP") << "<- ESP" << endl;
-        cout << memstate->getValue("ECX") << "<- ECX" << endl;
         emulater->executeInstruction ();
-
     } while (!emulater->getHalt());
 
 }

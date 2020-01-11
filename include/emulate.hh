@@ -85,11 +85,11 @@ public:
     BreakCallBack (void);
     virtual ~BreakCallBack (void) {}
     // Call back method for pcode based breakpoints
-    virtual bool pcodeCallback (PcodeOpRaw* op); 
+    virtual bool pcodeCallback (PcodeOpRaw* op);
     // Call back method for address based breakpoints
-    virtual bool addressCallback (const Address& addr); 
+    virtual bool addressCallback (const Address& addr);
     // Associate a particular emulator with this breakpoint
-    void setEmulate (Emulate* emu); 
+    void setEmulate (Emulate* emu);
 };
 
 /// The base breakpoint needs no initialization parameters, the setEmulate()
@@ -145,26 +145,26 @@ inline void BreakCallBack::setEmulate (Emulate* emu)
 /// are implemented to search in these containers
 class BreakTableCallBack : public BreakTable {
     // The emulator associated with this table
-    Emulate* emulate; 
+    Emulate* emulate;
     // The translator
-    Translate* trans; 
+    Translate* trans;
     // a container of pcode based breakpoints
-    map<Address, BreakCallBack*> addresscallback; 
+    map<Address, BreakCallBack*> addresscallback;
     // a container of addressed based breakpoints
-    map<uintb, BreakCallBack*> pcodecallback; 
+    map<uintb, BreakCallBack*> pcodecallback;
 public:
     // Basic breaktable constructor
-    BreakTableCallBack (Translate* t); 
+    BreakTableCallBack (Translate* t);
     // Register a pcode based breakpoint
-    void registerPcodeCallback (const string& nm, BreakCallBack* func); 
+    void registerPcodeCallback (const string& nm, BreakCallBack* func);
     // Register an address based breakpoint
-    void registerAddressCallback (const Address& addr, BreakCallBack* func); 
+    void registerAddressCallback (const Address& addr, BreakCallBack* func);
     // Associate an emulator with all breakpoints in the table
-    virtual void setEmulate (Emulate* emu); 
+    virtual void setEmulate (Emulate* emu);
     // Invoke any breakpoints for the given pcode op
-    virtual bool doPcodeOpBreak (PcodeOpRaw* curop); 
+    virtual bool doPcodeOpBreak (PcodeOpRaw* curop);
     // Invoke any breakpoints for the given address
-    virtual bool doAddressBreak (const Address& addr); 
+    virtual bool doAddressBreak (const Address& addr);
 };
 
 /// The break table needs a translator object so user-defined pcode ops can be
@@ -189,13 +189,13 @@ protected:
     bool emu_halted;            // Set to \b true if the emulator is halted
     OpBehavior* currentBehave;  // Behavior of the next op to execute
     // Execute a unary arithmetic/logical operation
-    virtual void executeUnary (void) = 0;   
+    virtual void executeUnary (void) = 0;
     // Execute a binary arithmetic/logical operation
-    virtual void executeBinary (void) = 0; 
+    virtual void executeBinary (void) = 0;
     // Standard behavior for a p-code LOAD
-    virtual void executeLoad (void) = 0; 
+    virtual void executeLoad (void) = 0;
     // Standard behavior for a p-code STORE
-    virtual void executeStore (void) = 0; 
+    virtual void executeStore (void) = 0;
 
     /// \brief Standard behavior for a BRANCH
     ///
@@ -211,43 +211,43 @@ protected:
     /// indicated by the condition
     virtual bool executeCbranch (void) = 0;
     // Standard behavior for a BRANCHIND
-    virtual void executeBranchind (void) = 0; 
+    virtual void executeBranchind (void) = 0;
     // Standard behavior for a p-code CALL
-    virtual void executeCall (void) = 0; 
+    virtual void executeCall (void) = 0;
     // Standard behavior for a CALLIND
-    virtual void executeCallind (void) = 0; 
+    virtual void executeCallind (void) = 0;
     // Standard behavior for a user-defined p-code op
-    virtual void executeCallother (void) = 0; 
+    virtual void executeCallother (void) = 0;
     // Standard behavior for a MULTIEQUAL (phi-node)
-    virtual void executeMultiequal (void) = 0; 
+    virtual void executeMultiequal (void) = 0;
     // Standard behavior for an INDIRECT op
-    virtual void executeIndirect (void) = 0; 
+    virtual void executeIndirect (void) = 0;
     // Behavior for a SEGMENTOP
-    virtual void executeSegmentOp (void) = 0; 
+    virtual void executeSegmentOp (void) = 0;
     // Standard behavior for a CPOOLREF (constant pool reference) op
-    virtual void executeCpoolRef (void) = 0; 
+    virtual void executeCpoolRef (void) = 0;
     // Standard behavior for (low-level) NEW op
-    virtual void executeNew (void) = 0; 
+    virtual void executeNew (void) = 0;
     // Standard p-code fall-thru semantics
-    virtual void fallthruOp (void) = 0; 
+    virtual void fallthruOp (void) = 0;
 public:
     // generic emulator constructor
     Emulate (void)
     {
         emu_halted = true;
         currentBehave = (OpBehavior*)0;
-    } 
+    }
     virtual ~Emulate (void) {}
     // Set the \e halt state of the emulator
-    void setHalt (bool val); 
+    void setHalt (bool val);
     // Get the \e halt state of the emulator
-    bool getHalt (void) const; 
+    bool getHalt (void) const;
     // Set the address of the next instruction to emulate
-    virtual void setExecuteAddress (const Address& addr) = 0; 
+    virtual void setExecuteAddress (const Address& addr) = 0;
     // Get the address of the current instruction being executed
-    virtual Address getExecuteAddress (void) const = 0; 
+    virtual Address getExecuteAddress (void) const = 0;
     // Do a single pcode op step
-    void executeCurrentOp (void); 
+    void executeCurrentOp (void);
 };
 
 /// Applications and breakpoints can use this method and its companion getHalt()
@@ -313,7 +313,7 @@ public:
         currentOp = (PcodeOpRaw*)0;
     }
     // Get the emulator's memory state
-    MemoryState* getMemoryState (void) const; 
+    MemoryState* getMemoryState (void) const;
 };
 
 /// \return the memory state object which this emulator uses
@@ -332,15 +332,15 @@ class PcodeEmitCache : public PcodeEmit {
     vector<PcodeOpRaw*>& opcache;   ///< The cache of current p-code ops
     vector<VarnodeData*>& varcache; ///< The cache of current varnodes
     // Array of behaviors for translating OpCode
-    const vector<OpBehavior*>& inst; 
+    const vector<OpBehavior*>& inst;
     // Starting offset for defining temporaries in \e unique space
-    uintm uniq; 
+    uintm uniq;
     // Clone and cache a raw VarnodeData
-    VarnodeData* createVarnode (const VarnodeData* var); 
+    VarnodeData* createVarnode (const VarnodeData* var);
 public:
     // Constructor
     PcodeEmitCache (vector<PcodeOpRaw*>& ocache, vector<VarnodeData*>& vcache,
-                    const vector<OpBehavior*>& in, uintb uniqReserve); 
+                    const vector<OpBehavior*>& in, uintb uniqReserve);
     virtual void dump (const Address& addr, OpCode opc, VarnodeData* outvar,
                        VarnodeData* vars, int4 isize);
 };
@@ -355,54 +355,54 @@ public:
 class EmulatePcodeCache : public EmulateMemory {
 
     // The SLEIGH translator
-    Translate* trans; 
+    Translate* trans;
     // The cache of current p-code ops
-    vector<PcodeOpRaw*> opcache; 
+    vector<PcodeOpRaw*> opcache;
     // The cache of current varnodes
-    vector<VarnodeData*> varcache; 
+    vector<VarnodeData*> varcache;
     // Map from OpCode to OpBehavior
-    vector<OpBehavior*> inst; 
+    vector<OpBehavior*> inst;
     // The table of breakpoints
-    BreakTable* breaktable; 
+    BreakTable* breaktable;
     // Address of current instruction being executed
-    Address current_address; 
+    Address current_address;
     // \b true if next pcode op is start of instruction
-    bool instruction_start; 
+    bool instruction_start;
     // Index of current pcode op within machine instruction
-    int4 current_op; 
+    int4 current_op;
     // Length of current instruction in bytes
-    int4 instruction_length; 
+    int4 instruction_length;
     ///< Clear the p-code cache
-    void clearCache (void); 
+    void clearCache (void);
     // Cache pcode for instruction at given address
-    void createInstruction (const Address& addr); 
+    void createInstruction (const Address& addr);
     void establishOp (void);
 
 protected:
     // Execute fallthru semantics for the pcode cache
-    virtual void fallthruOp (void); 
+    virtual void fallthruOp (void);
     // Execute branch (including relative branches)
-    virtual void executeBranch (void); 
+    virtual void executeBranch (void);
     // Execute breakpoint for this user-defined op
-    virtual void executeCallother (void); 
+    virtual void executeCallother (void);
 public:
     // Pcode cache emulator constructor
-    EmulatePcodeCache (Translate* t, MemoryState* s, BreakTable* b); 
+    EmulatePcodeCache (Translate* t, MemoryState* s, BreakTable* b);
     ~EmulatePcodeCache (void);
     // Return \b true if we are at an instruction start
-    bool isInstructionStart (void) const; 
+    bool isInstructionStart (void) const;
     // Return number of pcode ops in translation of current instruction
-    int4 numCurrentOps (void) const; 
+    int4 numCurrentOps (void) const;
     // Get the index of current pcode op within current instruction
-    int4 getCurrentOpIndex (void) const; 
+    int4 getCurrentOpIndex (void) const;
     // Get pcode op in current instruction translation by index
-    PcodeOpRaw* getOpByIndex (int4 i) const; 
+    PcodeOpRaw* getOpByIndex (int4 i) const;
     // Set current execution address
-    virtual void setExecuteAddress (const Address& addr); 
+    virtual void setExecuteAddress (const Address& addr);
     // Get current execution address
-    virtual Address getExecuteAddress (void) const; 
+    virtual Address getExecuteAddress (void) const;
     // Execute (the rest of) a single machine instruction
-    void executeInstruction (void); 
+    void executeInstruction (void);
 };
 
 /// Since the emulator can single step through individual pcode operations, the
