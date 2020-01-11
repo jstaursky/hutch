@@ -79,10 +79,10 @@ public:
 class BreakCallBack {
 protected:
     // The emulator currently associated with this breakpoint
-    Emulate* emulate; 
+    Emulate* emulate;
 public:
     // Generic breakpoint constructor
-    BreakCallBack (void); 
+    BreakCallBack (void);
     virtual ~BreakCallBack (void) {}
     // Call back method for pcode based breakpoints
     virtual bool pcodeCallback (PcodeOpRaw* op); 
@@ -353,6 +353,7 @@ public:
 /// explicitly, or via branches and fallthrus. There are additional methods for
 /// inspecting the pcode ops in the current instruction as a sequence.
 class EmulatePcodeCache : public EmulateMemory {
+
     // The SLEIGH translator
     Translate* trans; 
     // The cache of current p-code ops

@@ -68,6 +68,21 @@ static bool print_vardata (ostream& s, VarnodeData* data)
     return true;
 }
 
+static Element* findTag (string tag, Element* root) {
+
+    Element *el = root;
+    while (el->getName() != tag) {
+        for (auto e : el->getChildren()) {
+            if (e->getName() == tag)
+                return e;
+            else
+                return findTag(tag, e);
+        }
+    }
+    cout << "could not find tag" << endl;
+    return nullptr;
+}
+
 static optional<Hutch_Data>
 _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
              bool (*manip) (PcodeData&, AssemblyString))
@@ -112,12 +127,11 @@ _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
 
     Hutch_Data result;
 
-
     // Begin translating (populate emit->rpcodes via
     // hutch_insn::dump()).
     auto len = emit->translate->oneInstruction (*emit, offset);
     // Get the asm statement as well;
-    hutch_asm assem;
+    Hutch_Asm assem;
     emit->translate->printAssembly(assem, offset);
 
     vector<PcodeData> pcodes;
@@ -145,6 +159,110 @@ _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
 
     return result;
 }
+
+//
+// * _Hutch_Emulate (This class is not in hutch.hpp)
+//
+class _Hutch_Emulate : public EmulatePcodeCache {
+public:
+    _Hutch_Emulate(Translate* trans, MemoryState* mem, BreakTableCallBack* brk)
+        : EmulatePcodeCache(trans, mem, brk)
+    {}
+};
+//
+// * Hutch_Emulate
+//
+Hutch_Emulate::~Hutch_Emulate (void)
+{
+    if (memstate)
+        delete memstate;
+    if (breaktable)
+        delete breaktable;
+    if (emulater)
+        delete emulater;
+}
+
+void Hutch_Emulate::preconfigure (Hutch* handle)
+{
+    this->hutch_ptr = handle;
+    this->memstate = new MemoryState(hutch_ptr->trans);
+    this->breaktable = new BreakTableCallBack(hutch_ptr->trans);
+    this->emulater = new _Hutch_Emulate (hutch_ptr->trans, memstate, breaktable);
+}
+
+void Hutch_Emulate::apply_settings ()
+{
+    for (auto value : memvalues) {
+        if (value.type() == typeid(tuple<const string&, uintb>)) {
+            auto [nm, cval] = any_cast<tuple<const string&, uintb>>(value);
+            memstate->setValue(nm, cval);
+        } else if (value.type() == typeid(tuple<AddrSpace*, uintb, int4, uintb>)) {
+            auto [spc, off, size, cval] = any_cast<tuple<AddrSpace*, uintb, int4, uintb>>(value);
+            memstate->setValue(spc, off, size, cval);
+        } else if (value.type() == typeid(tuple<const VarnodeData*, uintb>)) {
+            auto [vn, cval] = any_cast<tuple<const VarnodeData*, uintb>>(value);
+            memstate->setValue(vn, cval);
+        }
+    }
+
+    emulater->setExecuteAddress(Address (hutch_ptr->trans->getDefaultSpace(),
+                                         execute_address));
+}
+
+// hashsize has default of 4096.
+void Hutch_Emulate::emulate(int4 pagesize, int4 hashsize)
+{
+    int ws = findCpuWordSize (hutch_ptr);
+    Sleigh* trans = hutch_ptr->trans;
+
+    // Set up memory banks.
+    MemoryImage loadmemory (trans->getDefaultSpace (), ws, pagesize, hutch_ptr->loader);
+    MemoryPageOverlay ramstate (trans->getDefaultSpace (), ws, pagesize,
+                                &loadmemory);
+    MemoryHashOverlay registerstate (trans->getSpaceByName ("register"), ws,
+                                     pagesize, hashsize, (MemoryBank*)0);
+    MemoryHashOverlay tmpstate (trans->getUniqueSpace (), ws, pagesize,
+                                hashsize, (MemoryBank*)0);
+
+    memstate->setMemoryBank(&ramstate);
+    memstate->setMemoryBank(&registerstate);
+    memstate->setMemoryBank(&tmpstate);
+
+    apply_settings();
+
+    for (auto [addr, addr_callbk] : this->callbacks) {
+        this->breaktable->registerAddressCallback(Address (hutch_ptr->trans->getDefaultSpace(), addr), addr_callbk);
+    }
+
+    emulater->setHalt(false);
+    do {
+        cout << "current insn address" << endl;
+        cout << emulater->getExecuteAddress() << endl;
+
+        cout << memstate->getValue("ESP") << "<- ESP" << endl;
+        cout << memstate->getValue("ECX") << "<- ECX" << endl;
+        emulater->executeInstruction ();
+
+    } while (!emulater->getHalt());
+
+}
+
+int Hutch_Emulate::findCpuWordSize(Hutch* handle)
+{
+    Element* root = handle->docstorage.openDocument(handle->docname)->getRoot();
+    Element* el = findTag("spaces", root);
+    List spaces = el->getChildren();
+
+    for (auto spc : spaces) {
+        for (auto i = 0; i < spc->getNumAttributes(); ++i) {
+            if (spc->getAttributeValue(i) == handle->trans->getDefaultSpace()->getName())
+                return stoi(spc->getAttributeValue("size"));
+        }
+    }
+    return 0;
+}
+
+
 //
 // * DefaultLoadImage
 //
@@ -202,6 +320,7 @@ void AssemblyRaw::dump (const Address& addr, const string& mnem,
 {
     cout << mnem << ' ' << body << endl;
 }
+
 //
 // * hutch
 //
@@ -219,6 +338,7 @@ void Hutch::setArchContextInfo (int4 cpu)
     switch (cpu) {
     case IA32:
         cpu_context = { { "addrsize", 1 }, { "opsize", 1 } };
+
         break;
     default:
         // IA32 is default.
@@ -235,11 +355,11 @@ void Hutch::options (const uint1 opts)
 void Hutch::initialize (const uint1* buf, uintb bufsize, uintb begaddr)
 {
     if (this->isInitialized) {
-        delete this->image;
+        delete this->loader;
         delete this->trans;
     }
-    this->image = new DefaultLoadImage (begaddr, buf, bufsize);
-    this->trans = new Sleigh (this->image, &this->context);
+    this->loader = new DefaultLoadImage (begaddr, buf, bufsize);
+    this->trans = new Sleigh (this->loader, &this->context);
     this->trans->initialize (this->docstorage);
 
     for (auto [option, setting] : this->cpu_context)
@@ -253,11 +373,11 @@ void Hutch::disasm (DisasmUnit unit, uintb offset, uintb amount)
     PcodeRawOut pcodeemit;
     AssemblyRaw asmemit;
 
-    uintb baseaddr = this->image->getBaseAddr ();
+    uintb baseaddr = this->loader->getBaseAddr ();
 
     Address addr (this->trans->getDefaultSpace (), baseaddr);
     Address lastaddr (this->trans->getDefaultSpace (),
-                      baseaddr + this->image->getImageSize ());
+                      baseaddr + this->loader->getImageSize ());
 
     // Is offset in instruction units?
     if (unit == UNIT_INSN) {
@@ -293,6 +413,7 @@ void Hutch::disasm (DisasmUnit unit, uintb offset, uintb amount)
         }
     }
 }
+
 //
 // * hutch_insn
 //
@@ -306,6 +427,7 @@ Hutch_Insn::~Hutch_Insn (void)
     }
 }
 
+// Populates Hutch_Insn::rpcodes.
 void Hutch_Insn::dump (Address const& addr, OpCode opc, VarnodeData* outvar,
                        VarnodeData* vars, int4 isize)
 {
@@ -331,29 +453,6 @@ Hutch_Insn::expand_insn (Hutch* handle, uint1* code, uintb bufsize)
 {
     return _expand_insn(handle, this, code, bufsize, [](PcodeData&, AssemblyString) { return true; });
 }
-
-// optional<vector<PcodeData>>
-// hutch_insn::expand_to_pcode (hutch* handle, uint1* code, uintb bufsize)
-// {
-//     auto result = _expand_insnn (handle, this, code, bufsize,
-//                             [](PcodeData&, AssemblyString) { return true; });
-
-//     if (result)
-//         return result->second;
-//     else
-//         return nullopt;
-// }
-
-// optional<AssemblyString>
-// hutch_insn::disasm (hutch* handle, uint1* code, uintb bufsize)
-// {
-//     auto result = expand_insn (handle, this, code, bufsize,
-//                                [](PcodeData&, AssemblyString) { return false; });
-//     if (result)
-//         return result->first;
-//     else
-//         return nullopt;
-// }
 
 //
 // * regular functions.

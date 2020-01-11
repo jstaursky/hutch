@@ -358,8 +358,9 @@ EmulatePcodeCache::~EmulatePcodeCache(void)
   }
 }
 
-/// This is a private routine which does the work of translating a machine instruction
-/// into pcode, putting it into the cache, and setting up the iterators
+/// This is a private routine which does the work of translating a machine
+/// instruction into pcode, putting it into the cache, and setting up the
+/// iterators
 /// \param addr is the address of the instruction to translate
 void EmulatePcodeCache::createInstruction(const Address &addr)
 

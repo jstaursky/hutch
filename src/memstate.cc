@@ -16,15 +16,15 @@
 #include "memstate.hh"
 #include "translate.hh"
 
-/// This is a static convenience routine for decoding a value from a sequence of bytes depending
-/// on the desired endianness
+/// This is a static convenience routine for decoding a value from a sequence of
+/// bytes depending on the desired endianness
 /// \param ptr is the pointer to the bytes to decode
 /// \param size is the number of bytes
 /// \param bigendian is \b true if the bytes are encoded in big endian form
 /// \return the decoded value
 uintb MemoryBank::constructValue(const uint1 *ptr,int4 size,bool bigendian)
 
-{ 
+{
   uintb res = 0;
 
   if (bigendian) {
@@ -65,8 +65,9 @@ void MemoryBank::deconstructValue(uint1 *ptr,uintb val,int4 size,bool bigendian)
   }
 }
 
-/// A MemoryBank must be associated with a specific address space, have a preferred or natural
-/// \e wordsize and a natural \e pagesize.  Both the \e wordsize and \e pagesize must be a power of 2.
+/// A MemoryBank must be associated with a specific address space, have a
+/// preferred or natural \e wordsize and a natural \e pagesize. Both the \e
+/// wordsize and \e pagesize must be a power of 2.
 /// \param spc is the associated address space
 /// \param ws is the number of bytes in the preferred wordsize
 /// \param ps is the number of bytes in a page
@@ -241,54 +242,53 @@ void MemoryBank::setValue(uintb offset,int4 size,uintb val)
 }
 
 /// This routine gets the value from a range of bytes at an arbitrary address.
-/// It takes into account the endianness of the underlying space when decoding the value.
-/// The value is constructed by making one or more aligned word queries, using the find method.
-/// The desired value may span multiple words and is reconstructed properly.
+/// It takes into account the endianness of the underlying space when decoding
+/// the value. The value is constructed by making one or more aligned word
+/// queries, using the find method. The desired value may span multiple words
+/// and is reconstructed properly.
 /// \param offset is the start of the byte range encoding the value
 /// \param size is the number of bytes in the range
 /// \return the decoded value
 uintb MemoryBank::getValue(uintb offset,int4 size) const
 
 {
-  uintb res;
- 
-  uintb alignmask = (uintb) (wordsize-1);
-  uintb ind = offset & (~alignmask);
-  int4 skip = offset & alignmask;
-  int4 size1 = wordsize-skip;
-  int4 size2;
-  int4 gap;
-  uintb val1,val2;
-  if (size > size1) {		// We have spill over
-    size2 = size - size1;
-    val1 = find(ind);
-    val2 = find(ind+wordsize);
-    gap = wordsize - size2;
-  }
-  else {
-    val1 = find(ind);
-    val2 = 0;
-    if (size == wordsize)
-      return val1;
-    gap = size1-size;
-    size1 = size;
-    size2 = 0;
-  }
+    uintb res;
 
-  if (space->isBigEndian()) {
-    if (size2 == 0)
-      res = val1>>(8*gap);
-    else
-      res = (val1<<(8*size2)) | (val2 >> (8*gap));
-  }
-  else {
-    if (size2 == 0)
-      res = val1 >> (skip*8);
-    else
-      res = (val1>>(skip*8)) | (val2<<(size1*8) );
-  }
-  res &= (uintb)calc_mask(size);
-  return res;
+    uintb alignmask = (uintb) (wordsize - 1);
+    uintb ind = offset & (~alignmask);
+    int4 skip = offset & alignmask;
+    int4 size1 = wordsize - skip;
+    int4 size2;
+    int4 gap;
+    uintb val1, val2;
+    if (size > size1) { // We have spill over
+        size2 = size - size1;
+        val1 = find (ind);
+        val2 = find (ind + wordsize);
+        gap = wordsize - size2;
+    } else {
+        val1 = find (ind);
+        val2 = 0;
+        if (size == wordsize)
+            return val1;
+        gap = size1 - size;
+        size1 = size;
+        size2 = 0;
+    }
+
+    if (space->isBigEndian ()) {
+        if (size2 == 0)
+            res = val1 >> (8 * gap);
+        else
+            res = (val1 << (8 * size2)) | (val2 >> (8 * gap));
+    } else {
+        if (size2 == 0)
+            res = val1 >> (skip * 8);
+        else
+            res = (val1 >> (skip * 8)) | (val2 << (size1 * 8));
+    }
+    res &= (uintb)calc_mask (size);
+    return res;
 }
 
 /// This the most general method for writing a sequence of bytes into the memory bank.
@@ -356,8 +356,8 @@ void MemoryBank::getChunk(uintb offset,int4 size,uint1 *res) const
   }
 }
 
-/// Find an aligned word from the bank.  First an attempt is made to fetch the data from the
-/// LoadImage.  If this fails, the value is returned as 0.
+/// Find an aligned word from the bank. First an attempt is made to fetch the
+/// data from the LoadImage. If this fails, the value is returned as 0.
 /// \param addr is the address of the word to fetch
 /// \return the fetched value
 uintb MemoryImage::find(uintb addr) const
@@ -378,9 +378,9 @@ uintb MemoryImage::find(uintb addr) const
   return res;
 }
 
-/// Retrieve an aligned page from the bank.  First an attempt is made to retrieve the
-/// page from the LoadImage, which may do its own zero filling.  If the attempt fails, the
-/// page is entirely filled in with zeros.
+/// Retrieve an aligned page from the bank. First an attempt is made to retrieve
+/// the page from the LoadImage, which may do its own zero filling. If the
+/// attempt fails, the page is entirely filled in with zeros.
 void MemoryImage::getPage(uintb addr,uint1 *res,int4 skip,int4 size) const
 
 {  // Assume that -addr- is page aligned
@@ -396,10 +396,10 @@ void MemoryImage::getPage(uintb addr,uint1 *res,int4 skip,int4 size) const
   }
 }
 
-/// A MemoryImage needs everything a basic memory bank needs and is needs to know
-/// the underlying LoadImage object to forward read reqests to.
+/// A MemoryImage needs everything a basic memory bank needs and is needs to
+/// know the underlying LoadImage object to forward read reqests to.
 /// \param spc is the address space associated with the memory bank
-/// \param ws is the number of bytes in the preferred wordsize (must be power of 2)
+/// \param ws is the num of bytes in the preferred wordsize (must be power of 2)
 /// \param ps is the number of bytes in a page (must be power of 2)
 /// \param ld is the underlying LoadImage
 MemoryImage::MemoryImage(AddrSpace *spc,int4 ws,int4 ps,LoadImage *ld)
@@ -673,9 +673,9 @@ uintb MemoryState::getValue(AddrSpace *spc,uintb off,int4 size) const
   return mspace->getValue(off,size);
 }
 
-/// This is a convenience method for setting registers by name.
-/// Any register name known to the Translate object can be used as a write location.
-/// The associated address space, offset, and size is looked up and automatically
+/// This is a convenience method for setting registers by name. Any register
+/// name known to the Translate object can be used as a write location. The
+/// associated address space, offset, and size is looked up and automatically
 /// passed to the main setValue routine.
 /// \param nm is the name of the register
 /// \param cval is the value to write to the register

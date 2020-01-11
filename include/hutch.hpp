@@ -18,6 +18,10 @@
 
 #include "loadimage.hh"
 #include "sleigh.hh"
+#include "xml.hh"
+#include "emulate.hh"
+#include <initializer_list>
+#include <any>
 #include <memory>
 #include <optional>
 #include <fstream>
@@ -34,20 +38,23 @@ struct Hutch_Data {
 };
 // This will generate warnings about expand_insn being declared but undefined. A
 // necessary evil to have this compile correctly. The function was meant to be
-// file local in hutch.cpp and have other functions defined as instances of
+// file local in Hutch.cpp and have other functions defined as instances of
 // expand_insn with varying argument configurations--(*manip)() being the
 // primary method to accomplish this--but since it needs access to class
 // variables it needed to be declared as a friend function. Unfortunately this
-// prevented compilation as expand_insn() was appearing as extern in hutch.hpp
-// and static in hutch.cpp. Thus forcing the below forward declaration to solve
+// prevented compilation as _expand_insn() was appearing as extern in Hutch.hpp
+// and static in Hutch.cpp. Thus forcing the below forward declaration to solve
 // this.
+// ! It is important to note that functions defined in terms of _expand_insn
+// ! should not be used together. Reason being that they will either share or
+// ! override each others buffer inside _expand_insn(). _expand_insn is
+// ! basically a temporary hack to accelerate the defining of new functions
+// ! while I figure out what is and is not useful.
 static optional<Hutch_Data>
 _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
              bool (*manip) (PcodeData&, AssemblyString));
 
 
-
-// Necessary for C ffi, see more in hutch.cpp
 extern "C" {
     enum { IA32 };
     enum DisasmUnit { UNIT_BYTE, UNIT_INSN };
@@ -94,7 +101,7 @@ public:
 //
 // * hutch_asm
 //
-class hutch_asm : public AssemblyEmit {
+class Hutch_Asm : public AssemblyEmit {
     friend optional<Hutch_Data>
     _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
                  bool (*manip) (PcodeData&,AssemblyString));
@@ -115,12 +122,12 @@ class PcodeRawOut : public PcodeEmit {
 public:
     // Gets called multiple times through PcodeCacher::emit called by
     // trans.oneInstruction(pcodeemit, addr) -- which is called through
-    // hutch::disasm(). -- see sleigh.cc for more info on call process.
+    // Hutch::disasm(). -- see sleigh.cc for more info on call process.
     virtual void dump (Address const& addr, OpCode opc, VarnodeData* outvar,
                        VarnodeData* vars, int4 isize) override;
 };
 //
-// * hutch_insn
+// * Hutch_Insn
 //
 class Hutch_Insn : public PcodeEmit {
     // Read comment in forward declaration at top of this file.
@@ -128,10 +135,10 @@ class Hutch_Insn : public PcodeEmit {
     _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
                  bool (*manip) (PcodeData&,AssemblyString));
 
-    DocumentStorage insn_docstorage;
-    ContextInternal insn_context;
-    DefaultLoadImage* loader = nullptr;
-    Sleigh* translate = nullptr;
+    DocumentStorage   insn_docstorage;
+    ContextInternal   insn_context;
+    DefaultLoadImage* loader    = nullptr;
+    Sleigh*           translate = nullptr;
 
     // Multimap because asm -> pcode is typically a 1 to many mapping.
     multimap<Address, PcodeData> rpcodes;
@@ -139,37 +146,91 @@ class Hutch_Insn : public PcodeEmit {
 public:
     Hutch_Insn() = default;
     ~Hutch_Insn (void);
+    // Populates rpcodes.
     virtual void dump (Address const& addr, OpCode opc, VarnodeData* outvar,
                        VarnodeData* vars, int4 isize) override;
-    // Not the best interface but it works, follows a semantics similiar to
-    // strtok(). Also not very efficient, will rewrite in future. TODO
-    optional<vector<PcodeData>>
-    expand_to_pcode (Hutch* handle, uint1* code, uintb bufsize);
-
-    optional<AssemblyString> disasm(Hutch* handle, uint1* code, uintb bufsize);
 
     optional<Hutch_Data>
     expand_insn (Hutch* handle, uint1* code, uintb bufsize = 0);
 
+};
+//
+// * Hutch_Emulate
+//
+class _Hutch_Emulate;           // Hidden class defined only in hutch.cpp
+
+class Hutch_Emulate {
+    Hutch* hutch_ptr = nullptr;
+
+    MemoryState* memstate = nullptr;
+
+    vector<any> memvalues;
+
+    BreakTableCallBack* breaktable = nullptr;
+
+    _Hutch_Emulate* emulater = nullptr;
+
+    uintb execute_address = 0;
+
+    multimap<uintb, BreakCallBack*> callbacks;
+
+    int findCpuWordSize (Hutch* handle);
+
+    void apply_settings ();
+public:
+    Hutch_Emulate() = default;
+    ~Hutch_Emulate(void);
+
+    void preconfigure (Hutch* handle);
+
+    void add_address_callback (uintb addr, BreakCallBack* callback)
+    {
+        callbacks.insert(pair{addr,callback});
+    }
+
+    void set_execution_address (uintb off)
+    {
+        this->execute_address = off;
+    }
+
+    void set_emulater_value (const string& nm, uintb cval)
+    {
+        // Use verbose tuple<> here to ensure const string& is passed.
+        memvalues.push_back(tuple<const string&, uintb>{nm, cval});
+    }
+
+    void set_emulater_value (AddrSpace *spc,uintb off,int4 size,uintb cval)
+    {
+        memvalues.push_back(tuple{spc, off, size, cval});
+    }
+
+    void set_emulater_value (const VarnodeData *vn, uintb cval)
+    {
+        memvalues.push_back(tuple{vn, cval});
+    }
+
+    // Needed for emulation.
+    void emulate(int4 pagesize = 4096, int4 hashsize = 4096);
 
 };
 //
-// * hutch
+// * Hutch
 //
 class Hutch {
     friend class Hutch_Insn;    // Needs access to docname + cpu_context.
+    friend class Hutch_Emulate;
     // Read comment in forward declaration at top of this file.
     friend optional<Hutch_Data>
     _expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
-                 bool (*manip) (PcodeData&,AssemblyString));
+                  bool (*manip) (PcodeData&,AssemblyString));
 
-    string docname;
+    string          docname;
     DocumentStorage docstorage;
     ContextInternal context;
     // The sleigh translator.
     Sleigh* trans;
     // Stores the executable buffer passed to initialize();
-    DefaultLoadImage* image;
+    DefaultLoadImage* loader;
     // Check whether initialize() has already been called.
     bool isInitialized = false;
     // Disassembler options, e.g., OPT_IN_DISP_ADDR, OPT_IN_PCODE, ...
@@ -178,7 +239,6 @@ class Hutch {
     void setArchContextInfo (int4 cpu);
     // Stores the options set.
     vector<pair<string, int4>> cpu_context;
-
 public:
     Hutch () = default;
     ~Hutch () = default; // TODO
@@ -212,6 +272,7 @@ public:
     // - options such as whether or not to display the baseaddress + rawpcode
     //   must be previously set by the options() method.
     void disasm (DisasmUnit unit, uintb offset, uintb amount);
+
 };
 //
 // * Function prototypes.
