@@ -145,13 +145,20 @@ public:
   const FixedHandle &getFixedHandle(int4 i) const { return point->resolve[i]->hand; }
   AddrSpace *getCurSpace(void) const { return const_context->getCurSpace(); }
   AddrSpace *getConstSpace(void) const { return const_context->getConstSpace(); }
-  const Address &getAddr(void) const { if (cross_context != (const ParserContext *)0) { return cross_context->getAddr(); } return const_context->getAddr(); }
+  const Address &getAddr(void) const
+  {
+      if (cross_context != (const ParserContext *)0)
+          return cross_context->getAddr();
+      return const_context->getAddr();
+  }
   const Address &getNaddr(void) const { if (cross_context != (const ParserContext *)0) { return cross_context->getNaddr();} return const_context->getNaddr(); }
   const Address &getRefAddr(void) const { if (cross_context != (const ParserContext *)0) { return cross_context->getRefAddr();} return const_context->getRefAddr(); }
   const Address &getDestAddr(void) const { if (cross_context != (const ParserContext *)0) { return cross_context->getDestAddr();} return const_context->getDestAddr(); }
   int4 getLength(void) const { return const_context->getLength(); }
-  uintm getInstructionBytes(int4 byteoff,int4 numbytes) const {
-    return const_context->getInstructionBytes(byteoff,numbytes,point->offset); }
+  uintm getInstructionBytes(int4 byteoff,int4 numbytes) const
+  {
+      return const_context->getInstructionBytes(byteoff,numbytes,point->offset);
+  }
   uintm getContextBytes(int4 byteoff,int4 numbytes) const {
     return const_context->getContextBytes(byteoff,numbytes); }
   uintm getInstructionBits(int4 startbit,int4 size) const {

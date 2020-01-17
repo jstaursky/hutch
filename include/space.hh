@@ -144,7 +144,8 @@ public:
   virtual void saveXmlAttributes(ostream &s,uintb offset) const;  ///< Save an address as XML
   virtual void saveXmlAttributes(ostream &s,uintb offset,int4 size) const;   ///< Save an address and size as XML
   virtual uintb restoreXmlAttributes(const Element *el,uint4 &size) const;   ///< Recover an offset and size
-  virtual void printRaw(ostream &s,uintb offset) const;  ///< Write an address in this space to a stream
+  // Write an address in this space to a stream
+  virtual void printRaw(ostream &s,uintb offset) const;
   virtual uintb read(const string &s,int4 &size) const;  ///< Read in an address (and possible size) from a string
   virtual void saveXml(ostream &s) const; ///< Write the details of this space as XML
   virtual void restoreXml(const Element *el); ///< Recover the details of this space from XML

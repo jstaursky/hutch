@@ -1,12 +1,15 @@
 /* ###
  * IP: GHIDRA
  *
+ * Modifications:
+ * copyright (C) 2020 Joe Staursky
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,11 +28,36 @@ struct RelativeRecord {
   uintb calling_index;		// Index of instruction containing relative offset
 };
 
-struct PcodeData { // Data for building one pcode instruction
+// Data for building one pcode instruction
+struct PcodeData {
+    PcodeData() = default;
+    PcodeData(OpCode opc_, VarnodeData* outvar_, VarnodeData* invar_, int4 isize_) :
+        opc(opc_), outvar(outvar_), invar(invar_), isize(isize_) {}
     OpCode opc;
     VarnodeData* outvar = nullptr; // Points to outvar is there is an output
     VarnodeData* invar = nullptr;  // Inputs
-    int4 isize; // Number of inputs
+    int4 isize;                    // Number of inputs
+
+    bool operator==(const PcodeData &Pcode)
+    {
+        if ((outvar != nullptr) && (Pcode.outvar != nullptr)
+            ? (*outvar == *Pcode.outvar) ? true : false
+            : (outvar == nullptr) && (Pcode.outvar == nullptr) ? true : false)
+        {
+            if ((opc == Pcode.opc)
+                ? (isize == Pcode.isize) ? true : false
+                : false)
+            {
+                for (auto i = 0; i != isize; ++i) {
+                    if (invar[i] != Pcode.invar[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 class PcodeCacher { // Cached chunk of pcode, prior to emitting
@@ -126,7 +154,7 @@ public:
   virtual int4 instructionLength(const Address &baseaddr) const;
   virtual int4 oneInstruction(PcodeEmit &emit,const Address &baseaddr) const;
   virtual int4 printAssembly(AssemblyEmit &emit,const Address &baseaddr) const;
-  pair<vector<struct PcodeData>, int4> hutch_liftInstruction(const Address &baseaddr) const;
+    uintm getInstructionBytes (const Address& baseaddr) const;
 };
 
 /** \page sleigh SLEIGH

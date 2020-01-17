@@ -15,57 +15,42 @@
  */
 
 #include "hutch.hpp"
+#include "xml.hh"
+#include <iostream>
 
-// TODO FIX C FFI.
-// *****************************************************************************
-// Initial implementation of FFI
-// extern "C" {
-const uint1 OPT_IN_DISP_ADDR = (1 << 0);
-const uint1 OPT_IN_PCODE = (1 << 1);
-const uint1 OPT_IN_ASM = (1 << 2);
-
-const uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
-
-//     hutch* hutch_new (int4 cpu)
-//     {
-//         return new hutch (cpu);
-//     }
-//     void hutch_configure (hutch* hutch_h, char const* cpu)
-//     {
-//         hutch_h->configure (cpu);
-//     }
-//     void hutch_options (hutch* hutch_h, unsigned char const opt)
-//     {
-//         hutch_h->options (opt);
-//     }
-//     void hutch_disasm (hutch* hutch_h, unsigned char const* buf,
-//                        unsigned long bufsize)
-//     {
-//         hutch_h->disasm (buf, bufsize);
-//     }
-// } // end extern "C"
-
-// *****************************************************************************
+//*****************************************************************************/
+// * Functions
 //
-// * file local convienience function(s).
-//
-static bool print_vardata (ostream& s, VarnodeData* data)
+void printVarnodeData (ostream& s, VarnodeData* data)
 {
-    if (data == (VarnodeData*)0)
-        return false;
+    if (data == nullptr)
+        return;
+
+    s << '(' << data->space->getName () << ',';
 
     const Translate* trans = data->space->getTrans ();
 
-    s << '(' << data->space->getName () << ',';
     if (data->space->getName () == "register") {
         s << trans->getRegisterName (data->space, data->offset, data->size);
     } else {
         data->space->printOffset (s, data->offset);
     }
-
     s << ',' << dec << data->size << ')';
+    return;
+}
 
-    return true;
+void printPcode (PcodeData pcode)
+{
+    if (pcode.outvar) {
+        printVarnodeData(cout, pcode.outvar);
+        cout << " =  ";
+    }
+    cout << get_opname(pcode.opc);
+    for (auto i = 0; i < pcode.isize; ++i) {
+        cout << ' ';
+        printVarnodeData(cout, &pcode.invar[i]);
+    }
+    cout << endl;
 }
 
 static Element* findTag (string tag, Element* root) {
@@ -83,181 +68,7 @@ static Element* findTag (string tag, Element* root) {
     return nullptr;
 }
 
-static optional<Hutch_Data>
-_expand_insn (Hutch* handle, Hutch_Insn* emit, uint1* code, uintb bufsize,
-             bool (*manip) (PcodeData&, AssemblyString))
-{
-    // Remaining buffer size.
-    static uintb rsize = (code == nullptr) ? rsize : bufsize;
-
-    if (rsize == 0)
-        return nullopt;         // Have gone through the whole buffer.
-
-    if (code != nullptr) {
-        // Need to test whether rpcodes has already been populated.
-        if (!emit->rpcodes.empty()) {
-            for (auto [addr, pcode] : emit->rpcodes) {
-                if (pcode.outvar != nullptr)
-                    delete pcode.outvar;
-                if (pcode.invar != nullptr)
-                    delete[] pcode.invar;
-            }
-            emit->rpcodes.clear ();
-        }
-
-        if (emit->loader != nullptr)
-            delete emit->loader;
-        if (emit->translate != nullptr)
-            delete emit->translate;
-
-        // Start Fresh.
-        emit->insn_docstorage.registerTag (
-            emit->insn_docstorage.openDocument (handle->docname)->getRoot ());
-        emit->loader = new DefaultLoadImage ((uintb)0x00, code, bufsize);
-        emit->translate = new Sleigh (emit->loader, &emit->insn_context);
-
-        emit->translate->initialize (emit->insn_docstorage);
-
-        for (auto [opt, setting] : handle->cpu_context)
-            emit->insn_context.setVariableDefault (opt, setting);
-
-    }
-    Address offset (emit->translate->getDefaultSpace (), (uintb)(bufsize - rsize));
-    // Setup complete.
-
-    Hutch_Data result;
-
-    // Begin translating (populate emit->rpcodes via
-    // hutch_insn::dump()).
-    auto len = emit->translate->oneInstruction (*emit, offset);
-    // Get the asm statement as well;
-    Hutch_Asm assem;
-    emit->translate->printAssembly(assem, offset);
-
-    vector<PcodeData> pcodes;
-    for (auto [addr, pc] : emit->rpcodes) {
-        // Only interested in the pcodes relevant to the insn found at current
-        // offset.
-        if (addr < offset)
-            continue;
-        // Option to manip results before returning. Convention is that the
-        // function passed to manip returns true when it is desirable to pass
-        // whatever manipulations that took place inside *manip onto result; and
-        // return false when we would like to prevent pc from being passed onto
-        // result. Thus you can define a function in terms of _expand_insn()
-        // that has complete control over the number of pcode insns returned per
-        // asm instruction as well as control over each pcode instructions
-        // opcode, output varnode, and input varnodes.
-        if ((*manip)(pc, assem.asm_stmt))
-            pcodes.push_back (pc);
-    }
-
-    result.asm_stmt = assem.asm_stmt;
-    result.pcodes = pcodes;
-
-    rsize -= len;
-
-    return result;
-}
-
-//
-// * _Hutch_Emulate (This class is not in hutch.hpp)
-//
-class _Hutch_Emulate : public EmulatePcodeCache {
-public:
-    _Hutch_Emulate(Translate* trans, MemoryState* mem, BreakTableCallBack* brk)
-        : EmulatePcodeCache(trans, mem, brk)
-    {}
-};
-//
-// * Hutch_Emulate
-//
-Hutch_Emulate::~Hutch_Emulate (void)
-{
-    if (memstate)
-        delete memstate;
-    if (breaktable)
-        delete breaktable;
-    if (emulater)
-        delete emulater;
-}
-
-void Hutch_Emulate::preconfigure (Hutch* handle)
-{
-    this->hutch_ptr = handle;
-    this->memstate = new MemoryState(hutch_ptr->trans);
-    this->breaktable = new BreakTableCallBack(hutch_ptr->trans);
-    this->emulater = new _Hutch_Emulate (hutch_ptr->trans, memstate, breaktable);
-}
-
-void Hutch_Emulate::apply_settings ()
-{
-    for (auto value : memvalues) {
-        if (value.type() == typeid(tuple<const string&, uintb>)) {
-            auto [nm, cval] = any_cast<tuple<const string&, uintb>>(value);
-            memstate->setValue(nm, cval);
-        } else if (value.type() == typeid(tuple<AddrSpace*, uintb, int4, uintb>)) {
-            auto [spc, off, size, cval] = any_cast<tuple<AddrSpace*, uintb, int4, uintb>>(value);
-            memstate->setValue(spc, off, size, cval);
-        } else if (value.type() == typeid(tuple<const VarnodeData*, uintb>)) {
-            auto [vn, cval] = any_cast<tuple<const VarnodeData*, uintb>>(value);
-            memstate->setValue(vn, cval);
-        }
-    }
-
-    emulater->setExecuteAddress(Address (hutch_ptr->trans->getDefaultSpace(),
-                                         execute_address));
-}
-
-// hashsize has default of 4096.
-void Hutch_Emulate::emulate(int4 pagesize, int4 hashsize)
-{
-    int ws = findCpuWordSize (hutch_ptr);
-    Sleigh* trans = hutch_ptr->trans;
-
-    // Set up memory banks.
-    MemoryImage loadmemory (trans->getDefaultSpace (), ws, pagesize, hutch_ptr->loader);
-    MemoryPageOverlay ramstate (trans->getDefaultSpace (), ws, pagesize,
-                                &loadmemory);
-    MemoryHashOverlay registerstate (trans->getSpaceByName ("register"), ws,
-                                     pagesize, hashsize, (MemoryBank*)0);
-    MemoryHashOverlay tmpstate (trans->getUniqueSpace (), ws, pagesize,
-                                hashsize, (MemoryBank*)0);
-
-    memstate->setMemoryBank(&ramstate);
-    memstate->setMemoryBank(&registerstate);
-    memstate->setMemoryBank(&tmpstate);
-
-    apply_settings();
-
-    for (auto [addr, addr_callbk] : this->callbacks) {
-        this->breaktable->registerAddressCallback(Address (hutch_ptr->trans->getDefaultSpace(), addr), addr_callbk);
-    }
-
-    emulater->setHalt(false);
-    do {
-        emulater->executeInstruction ();
-    } while (!emulater->getHalt());
-
-}
-
-int Hutch_Emulate::findCpuWordSize(Hutch* handle)
-{
-    Element* root = handle->docstorage.openDocument(handle->docname)->getRoot();
-    Element* el = findTag("spaces", root);
-    List spaces = el->getChildren();
-
-    for (auto spc : spaces) {
-        for (auto i = 0; i < spc->getNumAttributes(); ++i) {
-            if (spc->getAttributeValue(i) == handle->trans->getDefaultSpace()->getName())
-                return stoi(spc->getAttributeValue("size"));
-        }
-    }
-    return 0;
-}
-
-
-//
+//*****************************************************************************/
 // * DefaultLoadImage
 //
 void DefaultLoadImage::loadFill (uint1* ptr, int4 size,
@@ -278,94 +89,34 @@ void DefaultLoadImage::loadFill (uint1* ptr, int4 size,
     }
 }
 
-string DefaultLoadImage::getArchType (void) const
-{
-    return "DefaultLoadImage";
-}
-
 void DefaultLoadImage::adjustVma (long adjust)
 {
     // TODO
 }
-//
-// * PcodeRawOut
-//
-void PcodeRawOut::dump (Address const& addr, OpCode opc,
-                                VarnodeData* outvar, VarnodeData* vars,
-                                int4 isize)
-{
-    if (outvar != (VarnodeData*)0) {
-        print_vardata (cout, outvar);
-        cout << " = ";
-    }
-    cout << get_opname (opc);
-    // Possibly check for a code reference or a space reference.
-    for (int4 i = 0; i < isize; ++i) {
-        cout << ' ';
-        print_vardata (cout, &vars[i]);
-    }
-    cout << endl;
-}
-//
-// * AssemblyRaw
-//
-void AssemblyRaw::dump (const Address& addr, const string& mnem,
-                                const string& body)
-{
-    cout << mnem << ' ' << body << endl;
-}
 
+//*****************************************************************************/
+// * Hutch
 //
-// * hutch
-//
-void Hutch::preconfigure (string const cpu, int4 arch)
-{
-    this->docname = cpu;
-    Element* ast_root = docstorage.openDocument (this->docname)->getRoot ();
-    docstorage.registerTag (ast_root);
-
-    setArchContextInfo (arch);
-}
-
-void Hutch::setArchContextInfo (int4 cpu)
-{
-    switch (cpu) {
-    case IA32:
-        cpu_context = { { "addrsize", 1 }, { "opsize", 1 } };
-
-        break;
-    default:
-        // IA32 is default.
-        cpu_context = { { "addrsize", 1 }, { "opsize", 1 } };
-        break;
-    }
-}
-
-void Hutch::options (const uint1 opts)
-{
-    optionlist = opts;
-}
-
 void Hutch::initialize (const uint1* buf, uintb bufsize, uintb begaddr)
 {
-    if (this->isInitialized) {
-        delete this->loader;
-        delete this->trans;
-    }
-    this->loader = new DefaultLoadImage (begaddr, buf, bufsize);
-    this->trans = new Sleigh (this->loader, &this->context);
+    this->loader = make_unique<DefaultLoadImage>(begaddr, buf, bufsize);
+    this->trans = make_unique<Sleigh>(this->loader.get(), &this->context);
     this->trans->initialize (this->docstorage);
 
-    for (auto [option, setting] : this->cpu_context)
+    for (auto [option, setting] : this->cpucontext)
         this->context.setVariableDefault (option, setting);
-
-    this->isInitialized = true;
 }
 
-void Hutch::disasm (DisasmUnit unit, uintb offset, uintb amount)
+int4 Hutch::instructionLength (const uintb addr)
 {
-    PcodeRawOut pcodeemit;
-    AssemblyRaw asmemit;
+    return trans->instructionLength(Address (trans->getDefaultSpace(),
+                                             this->loader->getBaseAddr() + addr));
+}
+
+void Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount)
+{
+    Hutch_PcodeEmit emitPcode;
+    Hutch_AssemblyEmit emitAsm;
 
     uintb baseaddr = this->loader->getBaseAddr ();
 
@@ -386,82 +137,176 @@ void Hutch::disasm (DisasmUnit unit, uintb offset, uintb amount)
     }
 
     // Set up default options if user has not;
-    optionlist =
-        (optionlist == -1) ? OPT_IN_ASM | OPT_IN_DISP_ADDR : optionlist;
+    optionslist =
+        (optionslist == -1) ? OPT_IN_ASM | OPT_IN_DISP_ADDR : optionslist;
 
     for (auto i = 0, len = 0; i < amount && addr < lastaddr;
          i += (unit == UNIT_BYTE) ? len : 1, addr = addr + len) {
         // Print hex Address?
-        if (optionlist & OPT_IN_DISP_ADDR) {
+        if (optionslist & OPT_IN_DISP_ADDR) {
             cout << "--- ";
             addr.printRaw (cout);
             cout << ":";
         }
         // Print assembly?
-        if (optionlist & OPT_IN_ASM) {
-            len = this->trans->printAssembly (asmemit, addr);
+        if (optionslist & OPT_IN_ASM) {
+            len = this->trans->printAssembly (emitAsm, addr);
         }
         // Print ir?
-        if (optionlist & OPT_IN_PCODE) {
-            len = this->trans->oneInstruction (pcodeemit, addr);
+        if (optionslist & OPT_IN_PCODE) {
+            len = this->trans->oneInstruction (emitPcode, addr);
         }
     }
 }
 
+void Hutch::preconfigure (string const sla_file, int4 cpu_arch)
+{
+    this->docname = sla_file;
+    Element* ast_root = docstorage.openDocument (this->docname)->getRoot ();
+    docstorage.registerTag (ast_root);
+
+    switch (cpu_arch) {
+    case IA32:
+        cpucontext = { { "addrsize", 1 }, { "opsize", 1 } };
+
+        break;
+    default:
+        // IA32 is default.
+        cpucontext = { { "addrsize", 1 }, { "opsize", 1 } };
+        break;
+    }
+
+}
+
+//*****************************************************************************/
+// * Hutch_PcodeEmit
 //
-// * hutch_insn
+void Hutch_PcodeEmit::dumpPcode (Address const& addr, OpCode opc,
+                                 VarnodeData* outvar, VarnodeData* vars,
+                                 int4 isize)
+{
+    if (outvar != (VarnodeData*)0) {
+        printVarnodeData (cout, outvar);
+        cout << " = ";
+    }
+    cout << get_opname (opc);
+    // Possibly check for a code reference or a space reference.
+    for (int4 i = 0; i < isize; ++i) {
+        cout << ' ';
+        printVarnodeData (cout, &vars[i]);
+    }
+    cout << endl;
+}
+
+//*****************************************************************************/
+// * Hutch_AssemblyEmit
+//
+void Hutch_AssemblyEmit::dumpAsm (const Address& addr, const string& mnem,
+                        const string& body)
+{
+    cout << mnem << ' ' << body << endl;
+}
+
+//*****************************************************************************/
+// * Hutch_Insn
 //
 Hutch_Insn::~Hutch_Insn (void)
 {
-    for (auto [addr, pdata] : rpcodes) {
-        if (pdata.outvar != nullptr)
-            delete pdata.outvar;
-        if (pdata.invar != nullptr)
-            delete[] pdata.invar;
+    for (auto [ addr, pcodes ] : pcode_insns) {
+        if (pcodes.outvar != nullptr)
+            delete pcodes.outvar;
+        delete[] pcodes.invar;
     }
 }
 
-// Populates Hutch_Insn::rpcodes.
-void Hutch_Insn::dump (Address const& addr, OpCode opc, VarnodeData* outvar,
-                       VarnodeData* vars, int4 isize)
+void Hutch_Insn::dumpPcode (Address const& addr, OpCode opc,
+                            VarnodeData* outvar, VarnodeData* vars,
+                            int4 isize)
 {
-    PcodeData node;
-    node.opc = opc;
-    node.outvar = new VarnodeData;
+    if (!pcode_insns.empty()) {
+        auto [start, finish] = this->pcode_insns.equal_range (addr);
+        if (start != finish) {
+            PcodeData tmp (opc, outvar, vars, isize);
+            do {
+                auto [address, pcode] = pair{ start->first, start->second };
+                if (pcode == tmp) {
+                    return;
+                }
+            } while (++start != finish);
+        }
+    }
+    PcodeData pcode;
+    pcode.opc = opc;
+    pcode.isize = isize;
 
-    if (outvar != (VarnodeData*)0) {
-        *node.outvar = *outvar;
-    } else {
-        node.outvar = (VarnodeData*)0;
+    if (outvar != nullptr) {
+        pcode.outvar = new VarnodeData;
+        *pcode.outvar = *outvar;
     }
-    node.isize = isize;
-    node.invar = new VarnodeData[isize];
-    for (auto i = 0; i != isize; ++i) {
-        node.invar[i] = vars[i];
+    else {
+        pcode.outvar = nullptr;
     }
-    rpcodes.insert ({ addr, node });
+    pcode.invar = new VarnodeData[isize];
+    for (auto i = 0; i != isize; ++i)
+        pcode.invar[i] = vars[i];
+
+    this->pcode_insns.insert({ addr, pcode });
 }
 
-optional<Hutch_Data>
-Hutch_Insn::expand_insn (Hutch* handle, uint1* code, uintb bufsize)
+void Hutch_Insn::dumpAsm (const Address& addr, const string& mnem,
+                          const string& body)
 {
-    return _expand_insn(handle, this, code, bufsize, [](PcodeData&, AssemblyString) { return true; });
+    this->asm_insns.insert({ addr, string (mnem + ' ' + body) });
 }
 
-//
-// * regular functions.
-//
-void hutch_print_pcodedata (ostream& s, PcodeData data)
+optional<vector<PcodeData>> Hutch_Insn::liftInstruction (Hutch* handle, any offset,
+                                                         uint1* code, uintb bufsize)
 {
+    // The remaining buffer size.
+    static uintb rbuffersize = (code == nullptr) ? rbuffersize : bufsize;
+    ssize_t off_set = (offset.type() == typeid(uintb)) ? any_cast<uintb>(offset)
+        : (offset.type() == typeid(int)) ? any_cast<int>(offset)
+        : (offset.type() == typeid(uintb*)) ? *any_cast<uintb*>(offset)
+        : -1;
 
-    if (print_vardata(s, data.outvar)) {
-        s << " = ";
+    if (off_set <= -1) {
+        cout << "invalid offset type";
+        return nullopt;
     }
-    s << get_opname(data.opc);
-    for (auto i = 0; i < data.isize; ++i) {
-        s << " ";
-        print_vardata(s, &data.invar[i]);
+
+    if (off_set > rbuffersize)
+        return nullopt;
+    else
+        rbuffersize -= off_set;
+
+    Address mover (handle->trans->getDefaultSpace (),
+                   handle->loader->getBaseAddr () + off_set);
+
+    off_set += handle->trans->oneInstruction (*this, mover);
+
+    vector<PcodeData> result;
+    auto [start, finish] = this->pcode_insns.equal_range (mover);
+
+    do {
+        auto [addr, pcode] = pair{ start->first, start->second };
+        result.push_back (pcode);
+    } while (++start != finish);
+
+    if (offset.type() == typeid(uintb))
+        return result;
+    if (offset.type() == typeid(uintb*)) {
+        uintb* p = any_cast<uintb*>(offset);
+        *p = off_set;
     }
-    s << endl;
+
+    return result;
 }
 
+void Hutch_Insn::printInstructionBytes (Hutch* handle, uintb offset)
+{
+    uintm res = handle->trans->getInstructionBytes (
+        Address (handle->trans->getDefaultSpace (),
+                 handle->loader->getBaseAddr () + offset));
+
+    cout << hex << res << endl;
+}
