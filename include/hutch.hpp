@@ -65,6 +65,7 @@ public:
 class Hutch {
     friend class Hutch_Insn;
     string docname;
+    int4 arch;
     DocumentStorage docstorage;
     ContextInternal context;
     // Stores the executable buffer passed to initialize();
@@ -78,6 +79,7 @@ class Hutch {
 
 public:
     Hutch () = default;
+    Hutch (string sladoc, int4 arch, const uint1* buf, uintb bufsize);
     ~Hutch () = default; // TODO
     // Sets up docstorage.
     void preconfigure (string const sla_file, int4 cpu_arch);
@@ -154,7 +156,9 @@ class Hutch_Insn : public Hutch_PcodeEmit, public Hutch_AssemblyEmit {
 public:
     Hutch_Insn() = default;
     ~Hutch_Insn(void);
-    // Also overrides Hutch_PcodeEmit::dump()
+    // dumpPcode
+    //   This method is used to populate pcode_insns from a call to trans.oneInstruction()
+    // Note: Also overrides Hutch_PcodeEmit::dump()
     virtual void dumpPcode (Address const& addr, OpCode opc, VarnodeData* outvar,
                             VarnodeData* vars, int4 isize) override;
     // Also overrides Hutch_AssemblyEmit::dump()

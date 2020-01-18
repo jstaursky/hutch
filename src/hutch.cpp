@@ -17,7 +17,7 @@
 #include "hutch.hpp"
 #include "xml.hh"
 #include <iostream>
-
+#include "types.h"
 //*****************************************************************************/
 // * Functions
 //
@@ -97,6 +97,12 @@ void DefaultLoadImage::adjustVma (long adjust)
 //*****************************************************************************/
 // * Hutch
 //
+Hutch::Hutch (string sladoc, int4 arch, const uint1* buf, uintb bufsize) : docname(sladoc)
+{
+    this->preconfigure(docname, arch);
+    this->initialize (buf, bufsize, 0x00000000);
+}
+
 void Hutch::initialize (const uint1* buf, uintb bufsize, uintb begaddr)
 {
     this->loader = make_unique<DefaultLoadImage>(begaddr, buf, bufsize);
@@ -165,6 +171,7 @@ void Hutch::preconfigure (string const sla_file, int4 cpu_arch)
     Element* ast_root = docstorage.openDocument (this->docname)->getRoot ();
     docstorage.registerTag (ast_root);
 
+    this->arch = cpu_arch;
     switch (cpu_arch) {
     case IA32:
         cpucontext = { { "addrsize", 1 }, { "opsize", 1 } };
@@ -262,42 +269,47 @@ void Hutch_Insn::dumpAsm (const Address& addr, const string& mnem,
 optional<vector<PcodeData>> Hutch_Insn::liftInstruction (Hutch* handle, any offset,
                                                          uint1* code, uintb bufsize)
 {
-    // The remaining buffer size.
-    static uintb rbuffersize = (code == nullptr) ? rbuffersize : bufsize;
-    ssize_t off_set = (offset.type() == typeid(uintb)) ? any_cast<uintb>(offset)
+    // TODO
+    // unique_ptr<Hutch> handle = make_unique<Hutch>(handle->docname, handle->arch, code, bufsize);
+
+    uintb* lenptr = nullptr;
+    if (offset.type() == typeid(uintb*))
+        lenptr = any_cast<uintb*>(offset);
+
+    ssize_t offsbegin = (offset.type() == typeid(uintb*)) ? *lenptr
+        : (offset.type() == typeid(uintb)) ? any_cast<uintb>(offset)
         : (offset.type() == typeid(int)) ? any_cast<int>(offset)
-        : (offset.type() == typeid(uintb*)) ? *any_cast<uintb*>(offset)
         : -1;
 
-    if (off_set <= -1) {
+    if (offsbegin == -1) {
         cout << "invalid offset type";
         return nullopt;
     }
-
-    if (off_set > rbuffersize)
-        return nullopt;
-    else
-        rbuffersize -= off_set;
-
+    // Need to setup prior to insn being expanded and stored.
     Address mover (handle->trans->getDefaultSpace (),
-                   handle->loader->getBaseAddr () + off_set);
+                   handle->loader->getBaseAddr () + offsbegin);
 
-    off_set += handle->trans->oneInstruction (*this, mover);
+    // Test whether or not the insn would be a valid insn.
+    auto len = handle->instructionLength(offsbegin);
+
+    if (offset.type() == typeid(uintb*)) {
+        *lenptr += len;
+    }
+
+    offsbegin += len;
+    if (offsbegin > bufsize) {
+        cout << "exceeded buffer size";
+        return nullopt;
+    }
+    // OK to expand and store the insn.
+    handle->trans->oneInstruction (*this, mover);
 
     vector<PcodeData> result;
     auto [start, finish] = this->pcode_insns.equal_range (mover);
-
     do {
         auto [addr, pcode] = pair{ start->first, start->second };
         result.push_back (pcode);
     } while (++start != finish);
-
-    if (offset.type() == typeid(uintb))
-        return result;
-    if (offset.type() == typeid(uintb*)) {
-        uintb* p = any_cast<uintb*>(offset);
-        *p = off_set;
-    }
 
     return result;
 }
@@ -308,5 +320,5 @@ void Hutch_Insn::printInstructionBytes (Hutch* handle, uintb offset)
         Address (handle->trans->getDefaultSpace (),
                  handle->loader->getBaseAddr () + offset));
 
-    cout << hex << res << endl;
+    cout << "0x" << hex << res << endl;
 }

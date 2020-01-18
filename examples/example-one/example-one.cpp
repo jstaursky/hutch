@@ -60,11 +60,17 @@ int main(int argc, char *argv[])
 
     // liftInstruction will also accept a simple int or uintb if you want to
     // manage which offsets to disassemble into pcode by yourself.
-    for (auto i = 0;
-         auto pcodes = insn.liftInstruction (&hutch_h, i, img, imgsize);
-         i += hutch_h.instructionLength (i))
+    for (auto [i, pcodes, buf] = tuple{ 0, (optional<vector<PcodeData>>)nullopt, img };
+         i < imgsize; i += 1, buf = nullptr)
     {
-        cout << "insn bytes: ";
+        auto k = i;
+        cout << "i is " << i << endl;
+
+        pcodes = insn.liftInstruction (&hutch_h, k, buf, imgsize);
+        if (pcodes == nullopt)
+            continue;
+
+        cout << "insn bytes @" << k << ": ";
         // Also able to print the raw bytes which are being disassembled.
         insn.printInstructionBytes (&hutch_h, i);
         for (auto p : *pcodes) {
