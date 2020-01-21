@@ -60,11 +60,6 @@ int main(int argc, char *argv[])
 
     hutch_h.preconfigure ("../../processors/x86/languages/x86.sla", IA32);
 
-    // Can display Address info, pcode, assembly alone or in combination with
-    // each other. Omission of hutch_h.options() will display a default of asm +
-    // address info.
-    hutch_h.options (OPT_IN_DISP_ADDR | OPT_IN_PCODE | OPT_IN_ASM);
-
     auto img = (argc == 2) ? fbytes : code;
     auto imgsize = (argc == 2) ? fsize : sizeof (code);
 
@@ -72,37 +67,18 @@ int main(int argc, char *argv[])
     // Loaded image is persistent.
     hutch_h.initialize (img, imgsize, 0x12345680);
 
-    // Able to disassemble at specific offset + length.
-    // The offset + length can be specified in terms bytes or instructions.
-    hutch_h.disassemble (UNIT_BYTE, 0, imgsize);
-
-    cout << "\nFOCUSING NOW ON PCODE" << endl;
-    // liftInstruction will update the offset according to the insn bytelength
-    // when passed as a pointer value.
-    uintb offset = 0;
-    while (auto pcodes =
-               insn.liftInstruction (&hutch_h, &offset, img, imgsize)) {
-        for (auto p : *pcodes) {
-            printPcode (p);
-        }
-        cout << "\nWill now dissassemble to pcode starting at byte " << offset
-             << endl;
-    }
-    cout << "Nothing left to dissassemble, onto next showcase!" << endl << endl;
-
-    // liftInstruction will also accept a simple int or uintb if you want to
-    // manage which offsets to disassemble into pcode by yourself.
-    for (auto i = 0;
-         auto pcodes = insn.liftInstruction (&hutch_h, i, img, imgsize);
-         i += hutch_h.instructionLength (i))
+    // insn.clearInstructions ();
+    for (auto [i, len, idx] = tuple{ 0, 0, 0 };
+         len = hutch_h.disassemble_iter (i, imgsize, &insn); i += len, ++idx)
     {
-        cout << "insn bytes: ";
-        // Also able to print the raw bytes which are being disassembled.
-        insn.printInstructionBytes (&hutch_h, i);
-        for (auto p : *pcodes) {
-            printPcode (p);
-        }
+        cout << "0x" << hex << insn(idx).address << endl;
+        cout << insn(idx).assembly << endl;
+        for (auto p : insn(idx).pcode)
+            printPcode(p);
+
+        cout << endl << "NEXT INSTRUCTION" << endl;
     }
+    cout << "FINISHED\n";
 
     return 0;
 }

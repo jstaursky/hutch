@@ -20,6 +20,7 @@
 #include "loadimage.hh"
 #include "sleigh.hh"
 
+#include <vector>
 #include <optional>
 #include <any>
 #include <memory>
@@ -164,42 +165,30 @@ public:
 // * Hutch_Insn
 //
 class Hutch_Insn : public Hutch_Emit {
-
-public:
-    Hutch_Insn() = default;
-    ~Hutch_Insn(void);
-
-    struct Hutch_Data {
+    struct Insn {
+        uintb address;
         string assembly;
-        vector<PcodeData> pcodes;
-        Hutch_Data() = default;
-        Hutch_Data(string assem, vector<PcodeData> pcode) : assembly(assem), pcodes(pcode){}
+        vector<PcodeData> pcode;
     };
 
-    map<uintb, string> assembly;
-    multimap<uintb, PcodeData> pcodes;
+    class Hidden {
+        vector<uintb>              addrss_;
+        map<uintb, string>         assembly_;
+        multimap<uintb, PcodeData> pcodes_;
+    public:
+        Hidden() = default;
+        ~Hidden() = default;
+        void insertInstruction (uintb addr, any insn);
+        Insn getInstruction(int);
+    };
 
-    Hutch_Data operator[] (uintb index)
-    {
-        vector<PcodeData> p;
-        uintb tmp;
-        string a;
-        auto idx = 0;
-        for (auto [addr, assm] : assembly ) {
-            if (idx++ == index) {
-                a = assm;
-                tmp = addr;
-            }
-        }
-        auto [begin, end] = pcodes.equal_range(tmp);
-        do {
-            auto [addr, pcode] = pair{begin->first, begin->second};
-            p.push_back(pcode);
-        } while (++begin != end);
-        return Hutch_Data(a,p);
-    }
+    Hidden insns;
+public:
+    Hutch_Insn() = default;
+    // TODO
+    // ~Hutch_Insn() = default;
 
-    void clearInstructions ();
+    Insn operator()(uintb);
 
     // dumpPcode
     //   This method is used to populate pcode_insns from a call to trans.oneInstruction()
@@ -210,13 +199,9 @@ public:
     virtual void dumpAsm (const Address& addr, const string& mnem,
                           const string& body) override;
 
-    optional<vector<PcodeData>> liftInstruction (Hutch* handle, any offset, uint1* code, uintb bufsize);
+    // TODO
+    // void printInstructionBytes (Hutch* handle, uintb offset);
 
-    void printInstructionBytes (Hutch* handle, uintb offset);
-
-    void printPcodeInstructions ();
-
-    void printAssemblyInstructions ();
 };
 
 
