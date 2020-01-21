@@ -67,7 +67,6 @@ int main(int argc, char *argv[])
     // Loaded image is persistent.
     hutch_h.initialize (img, imgsize, 0x12345680);
 
-    // insn.clearInstructions ();
     for (auto [i, len, idx] = tuple{ 0, 0, 0 };
          len = hutch_h.disassemble_iter (i, imgsize, &insn); i += len, ++idx)
     {
