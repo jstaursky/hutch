@@ -119,10 +119,10 @@ int4 Hutch::instructionLength (const uintb addr)
                                              this->loader->getBaseAddr() + addr));
 }
 
-void Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount)
+ssize_t Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter)
 {
-    Hutch_PcodeEmit emitPcode;
-    Hutch_AssemblyEmit emitAsm;
+    Hutch_Emit emitdefault;
+    Hutch_Emit* emit = (emitter) ? emitter : &emitdefault;
 
     uintb baseaddr = this->loader->getBaseAddr ();
 
@@ -141,29 +141,73 @@ void Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount)
         // Offset unit must be in bytes.
         addr = addr + offset;
     }
-
-    // Set up default options if user has not;
-    optionslist =
-        (optionslist == -1) ? OPT_IN_ASM | OPT_IN_DISP_ADDR : optionslist;
-
-    for (auto i = 0, len = 0; i < amount && addr < lastaddr;
+    auto i = 0;
+    for (auto len = 0; i < amount && addr < lastaddr;
          i += (unit == UNIT_BYTE) ? len : 1, addr = addr + len) {
-        // Print hex Address?
-        if (optionslist & OPT_IN_DISP_ADDR) {
+        if (auto e = dynamic_cast<Hutch_Insn*>(emit)) {
+            len = this->trans->printAssembly(*e, addr);
+            this->trans->oneInstruction(*e, addr);
+        }
+        else {
             cout << "--- ";
             addr.printRaw (cout);
             cout << ":";
-        }
-        // Print assembly?
-        if (optionslist & OPT_IN_ASM) {
-            len = this->trans->printAssembly (emitAsm, addr);
-        }
-        // Print ir?
-        if (optionslist & OPT_IN_PCODE) {
-            len = this->trans->oneInstruction (emitPcode, addr);
+            len = this->trans->printAssembly (*emit, addr);
+            this->trans->oneInstruction (*emit, addr);
         }
     }
+    return i;                   // Return the number of instructions disassembled.
 }
+
+uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
+{
+    static uintb bufcheck = 0;
+    static uintb ninsnbytes = 0;
+    ninsnbytes = (bufcheck == bufsize)
+        ? ninsnbytes : 0;
+    bufcheck = (bufcheck == 0)
+        ? bufsize : (bufcheck == bufsize) ? bufcheck : bufsize;
+
+    if (ninsnbytes > bufsize)
+        return 0;
+
+    Hutch_Emit emitdefault;
+    Hutch_Emit* emit = (emitter) ? emitter : &emitdefault;
+
+    uintb baseaddr = this->loader->getBaseAddr ();
+
+    Address addr (this->trans->getDefaultSpace (), baseaddr);
+    Address lastaddr (this->trans->getDefaultSpace (),
+                      baseaddr + this->loader->getImageSize ());
+
+    addr = addr + offset;
+
+    if (lastaddr <= addr) {
+        cout << "exceeded last available address\n";
+        return 0;
+    }
+
+    auto len = 0;
+    if (auto e = dynamic_cast<Hutch_Insn*>(emit)) {
+        len = this->trans->printAssembly(*e, addr);
+        this->trans->oneInstruction(*e, addr);
+    }
+    else {
+        cout << "--- ";
+        addr.printRaw (cout);
+        cout << ":";
+        len = this->trans->printAssembly (*emit, addr);
+        this->trans->oneInstruction (*emit, addr);
+    }
+
+    if ((ninsnbytes += len) > bufsize) {
+        cout << "exceeded buffer len\n";
+        return 0;
+    }
+    return len;
+}
+
+
 
 void Hutch::preconfigure (string const sla_file, int4 cpu_arch)
 {
@@ -188,7 +232,7 @@ void Hutch::preconfigure (string const sla_file, int4 cpu_arch)
 //*****************************************************************************/
 // * Hutch_PcodeEmit
 //
-void Hutch_PcodeEmit::dumpPcode (Address const& addr, OpCode opc,
+void Hutch_Emit::dumpPcode (Address const& addr, OpCode opc,
                                  VarnodeData* outvar, VarnodeData* vars,
                                  int4 isize)
 {
@@ -208,8 +252,8 @@ void Hutch_PcodeEmit::dumpPcode (Address const& addr, OpCode opc,
 //*****************************************************************************/
 // * Hutch_AssemblyEmit
 //
-void Hutch_AssemblyEmit::dumpAsm (const Address& addr, const string& mnem,
-                        const string& body)
+void Hutch_Emit::dumpAsm (const Address& addr, const string& mnem,
+                          const string& body)
 {
     cout << mnem << ' ' << body << endl;
 }
@@ -217,21 +261,13 @@ void Hutch_AssemblyEmit::dumpAsm (const Address& addr, const string& mnem,
 //*****************************************************************************/
 // * Hutch_Insn
 //
-Hutch_Insn::~Hutch_Insn (void)
-{
-    for (auto [ addr, pcodes ] : pcode_insns) {
-        if (pcodes.outvar != nullptr)
-            delete pcodes.outvar;
-        delete[] pcodes.invar;
-    }
-}
-
 void Hutch_Insn::dumpPcode (Address const& addr, OpCode opc,
                             VarnodeData* outvar, VarnodeData* vars,
                             int4 isize)
 {
-    if (!pcode_insns.empty()) {
-        auto [start, finish] = this->pcode_insns.equal_range (addr);
+    // Need to ensure that no duplicates can be inserted for a given address.
+    if (!pcodes.empty()) {
+        auto [start, finish] = this->pcodes.equal_range (addr.getOffset());
         if (start != finish) {
             PcodeData tmp (opc, outvar, vars, isize);
             do {
@@ -257,14 +293,25 @@ void Hutch_Insn::dumpPcode (Address const& addr, OpCode opc,
     for (auto i = 0; i != isize; ++i)
         pcode.invar[i] = vars[i];
 
-    this->pcode_insns.insert({ addr, pcode });
+    this->pcodes.insert({ addr.getOffset(), pcode });
 }
 
 void Hutch_Insn::dumpAsm (const Address& addr, const string& mnem,
                           const string& body)
 {
-    this->asm_insns.insert({ addr, string (mnem + ' ' + body) });
+    this->assembly.insert({ addr.getOffset(), string (mnem + ' ' + body) });
 }
+
+void Hutch_Insn::clearInstructions ()
+{
+    assembly.clear();
+    for (auto [ addr, pcode ] : pcodes) {
+        if (pcode.outvar != nullptr)
+            delete pcode.outvar;
+        delete[] pcode.invar;
+    }
+}
+
 
 optional<vector<PcodeData>> Hutch_Insn::liftInstruction (Hutch* handle, any offset,
                                                          uint1* code, uintb bufsize)
@@ -305,7 +352,7 @@ optional<vector<PcodeData>> Hutch_Insn::liftInstruction (Hutch* handle, any offs
     handle->trans->oneInstruction (*this, mover);
 
     vector<PcodeData> result;
-    auto [start, finish] = this->pcode_insns.equal_range (mover);
+    auto [start, finish] = this->pcodes.equal_range (mover.getOffset());
     do {
         auto [addr, pcode] = pair{ start->first, start->second };
         result.push_back (pcode);
@@ -322,3 +369,28 @@ void Hutch_Insn::printInstructionBytes (Hutch* handle, uintb offset)
 
     cout << "0x" << hex << res << endl;
 }
+
+void Hutch_Insn::printPcodeInstructions ()
+{
+    for (auto [addr, pcode] : pcodes) {
+        // addr.printRaw(cout);
+        cout << "0x" << hex << addr << endl;
+        cout << " ";
+        printPcode(pcode);
+    }
+}
+
+void Hutch_Insn::printAssemblyInstructions ()
+{
+    for (auto [addr, insn] : assembly) {
+        // addr.printRaw(cout);
+        cout << "0x" << hex << addr << endl;
+        cout << " " + insn << endl;
+    }
+}
+
+Hutch_Insn::~Hutch_Insn (void)
+{
+    this->clearInstructions();
+}
+

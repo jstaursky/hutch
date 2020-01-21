@@ -24,6 +24,9 @@
 #include <any>
 #include <memory>
 
+// Forward Declaration(s)
+class Hutch_Emit;
+/*****************************************************************************/
 enum { IA32, AMD64 };
 enum DisassemblyUnit { UNIT_BYTE, UNIT_INSN };
 
@@ -33,13 +36,13 @@ const uint1 OPT_IN_ASM       = (1 << 2);
 
 const uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
 
-//*****************************************************************************/
+/*****************************************************************************/
 // * Function Declarations.
 //
 void printVarnodeData (ostream& s, VarnodeData* data);
 void printPcode (PcodeData pcode);
 
-//*****************************************************************************/
+/*****************************************************************************/
 // * DefaultLoadImage
 //
 class DefaultLoadImage : public LoadImage {
@@ -59,7 +62,7 @@ public:
     virtual void adjustVma (long adjust) override; // TODO
 };
 
-//*****************************************************************************/
+/*****************************************************************************/
 // * Hutch
 //
 class Hutch {
@@ -90,20 +93,22 @@ public:
 
     int4 instructionLength (const uintb baseaddr);
 
-    void disassemble (DisassemblyUnit unit, uintb offset, uintb amount);
-};
-// *****************************************************************************
+    ssize_t disassemble (DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter = nullptr);
 
+    uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter = nullptr);
+
+};
+/*****************************************************************************/
 // THE FOLLOWING HACK ENABLES MULTIPLE INHERITANCE THROUGH AssemblyEmit + PcodeEmit.
 
-//*****************************************************************************/
+/*****************************************************************************/
 // * Hutch_PcodeEmit
 //     Hack to enable multiple inheritance (PcodeEmit + AssemblyEmit both have
-//     dump() that needs to be override'd).
+//     dump() that needs to be override-n).
 class Hutch_PcodeEmit : public PcodeEmit {
 public:
     virtual void dumpPcode (Address const& addr, OpCode opc, VarnodeData* outvar,
-                            VarnodeData* vars, int4 isize);
+                            VarnodeData* vars, int4 isize) = 0;
 
     // Gets called multiple times through PcodeCacher::emit called by
     // trans.oneInstruction(pcodeemit, addr) -- which is called through
@@ -116,14 +121,14 @@ public:
     }
 };
 
-//*****************************************************************************/
+/*****************************************************************************/
 // * Hutch_AssemblyEmit
 //     Hack to enable multiple inheritance (PcodeEmit + AssemblyEmit both have
-//     dump() that needs to be override'd).
+//     dump() that needs to be override-n).
 class Hutch_AssemblyEmit : public AssemblyEmit {
 public:
     virtual void dumpAsm (const Address& addr, const string& mnem,
-                          const string& body);
+                          const string& body) = 0;
 
     // Gets called through trans.printAssembly(asmemit, addr).
     void dump (const Address& addr, const string& mnem,
@@ -135,7 +140,15 @@ public:
 
 };
 
-// BEGIN MULTIPLE INHERITANCE DEFINITION
+class Hutch_Emit : public Hutch_PcodeEmit, public Hutch_AssemblyEmit {
+public:
+    virtual void dumpPcode (Address const& addr, OpCode opc, VarnodeData* outvar,
+                            VarnodeData* vars, int4 isize) override;
+    virtual void dumpAsm (const Address& addr, const string& mnem,
+                          const string& body) override;
+
+};
+
 // * Usage w/ trans.oneInstruction() + trans.printAssembly():
 //     Hutch_PcodeEmit *pcode_emit = new Hutch_Insn;
 //     trans.oneInstruction (*pcode_emit, someaddr);
@@ -147,15 +160,47 @@ public:
 //     Hutch_Insn emit;
 //     trans.oneInstruction (emit, someaddr);
 //     trans.printAssembly (emit, some addr);
-//*****************************************************************************/
+/*****************************************************************************/
 // * Hutch_Insn
 //
-class Hutch_Insn : public Hutch_PcodeEmit, public Hutch_AssemblyEmit {
-    map<Address, string> asm_insns;
-    multimap<Address, PcodeData> pcode_insns;
+class Hutch_Insn : public Hutch_Emit {
+
 public:
     Hutch_Insn() = default;
     ~Hutch_Insn(void);
+
+    struct Hutch_Data {
+        string assembly;
+        vector<PcodeData> pcodes;
+        Hutch_Data() = default;
+        Hutch_Data(string assem, vector<PcodeData> pcode) : assembly(assem), pcodes(pcode){}
+    };
+
+    map<uintb, string> assembly;
+    multimap<uintb, PcodeData> pcodes;
+
+    Hutch_Data operator[] (uintb index)
+    {
+        vector<PcodeData> p;
+        uintb tmp;
+        string a;
+        auto idx = 0;
+        for (auto [addr, assm] : assembly ) {
+            if (idx++ == index) {
+                a = assm;
+                tmp = addr;
+            }
+        }
+        auto [begin, end] = pcodes.equal_range(tmp);
+        do {
+            auto [addr, pcode] = pair{begin->first, begin->second};
+            p.push_back(pcode);
+        } while (++begin != end);
+        return Hutch_Data(a,p);
+    }
+
+    void clearInstructions ();
+
     // dumpPcode
     //   This method is used to populate pcode_insns from a call to trans.oneInstruction()
     // Note: Also overrides Hutch_PcodeEmit::dump()
@@ -168,6 +213,10 @@ public:
     optional<vector<PcodeData>> liftInstruction (Hutch* handle, any offset, uint1* code, uintb bufsize);
 
     void printInstructionBytes (Hutch* handle, uintb offset);
+
+    void printPcodeInstructions ();
+
+    void printAssemblyInstructions ();
 };
 
 

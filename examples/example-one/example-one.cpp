@@ -28,11 +28,6 @@ int main(int argc, char *argv[])
 
     hutch_h.preconfigure ("../../processors/x86/languages/x86.sla", IA32);
 
-    // Can display Address info, pcode, assembly alone or in combination with
-    // each other. Omission of hutch_h.options() will display a default of asm +
-    // address info.
-    hutch_h.options (OPT_IN_DISP_ADDR | OPT_IN_PCODE | OPT_IN_ASM);
-
     auto img = (argc == 2) ? fbytes : code;
     auto imgsize = (argc == 2) ? fsize : sizeof (code);
 
@@ -40,43 +35,18 @@ int main(int argc, char *argv[])
     // Loaded image is persistent.
     hutch_h.initialize (img, imgsize, 0x12345680);
 
-    // Able to disassemble at specific offset + length.
-    // The offset + length can be specified in terms bytes or instructions.
-    hutch_h.disassemble (UNIT_BYTE, 0, imgsize);
-
-    cout << "\nFOCUSING NOW ON PCODE" << endl;
-    // liftInstruction will update the offset according to the insn bytelength
-    // when passed as a pointer value.
-    uintb offset = 0;
-    while (auto pcodes =
-               insn.liftInstruction (&hutch_h, &offset, img, imgsize)) {
-        for (auto p : *pcodes) {
-            printPcode (p);
-        }
-        cout << "\nWill now dissassemble to pcode starting at byte " << offset
-             << endl;
-    }
-    cout << "Nothing left to dissassemble, onto next showcase!" << endl << endl;
-
-    // liftInstruction will also accept a simple int or uintb if you want to
-    // manage which offsets to disassemble into pcode by yourself.
-    for (auto [i, pcodes, buf] = tuple{ 0, (optional<vector<PcodeData>>)nullopt, img };
-         i < imgsize; i += 1, buf = nullptr)
+    insn.clearInstructions ();
+    for (auto [i, len] = pair{ 2, 0 };
+         len = hutch_h.disassemble_iter (i, imgsize, &insn); i += len)
     {
-        auto k = i;
-        cout << "i is " << i << endl;
-
-        pcodes = insn.liftInstruction (&hutch_h, k, buf, imgsize);
-        if (pcodes == nullopt)
-            continue;
-
-        cout << "insn bytes @" << k << ": ";
-        // Also able to print the raw bytes which are being disassembled.
-        insn.printInstructionBytes (&hutch_h, i);
-        for (auto p : *pcodes) {
-            printPcode (p);
-        }
+        insn.printAssemblyInstructions ();
+        insn.printPcodeInstructions ();
+        cout << "NEXT INSTRUCTION\n";
     }
+    cout << "FINISHED\n";
 
+    cout << insn[0].assembly;
+
+//    cout << insn.assembly[0x12345680] << "\n";
     return 0;
 }
