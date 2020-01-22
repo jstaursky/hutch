@@ -1,4 +1,6 @@
 * Dependency graph
+#+begin_src python
+"""
 heritage.hh
 └── block.hh
     └── jumptable.hh
@@ -20,3 +22,5 @@ heritage.hh
                         └── varnode.hh (also depends on pcoderaw.hh in src/Sleigh)
                             └── cover.hh
                                 └── type.hh 
+"""
+#+end_src
