@@ -1,4 +1,4 @@
-VPATH = parser-tools include src src/build processors/x86/languages processors/8085/languages
+VPATH = parser-tools include src src/Sleigh src/build processors/x86/languages processors/8085/languages
 
 CC       = gcc
 CXX      = g++
@@ -8,8 +8,8 @@ CXXFLAGS_SHARED = -O2 -Wall -Wno-sign-compare -fPIC -std=c++17
 PARSER_TOOLS        = parser-tools
 BUILD_DIR           = src/build
 BUILD_SHARED_DIR    = src/build-shared
-PUB_INCLUDE_DIR         = include # Plan to eventually separate headers into public and
-                          # private headers. Where private headers reside in src
+SLGH_INCLUDE_DIR    = src/Sleigh/include
+
 SRC_DIR          = src
 LIB_DIR          = lib
 BIN_DIR          = bin
@@ -45,17 +45,17 @@ PARSING_FILES = xml  slghparse  pcodeparse  slghscan
 
 # PARSING ######################################################################
 xml.o: xml.cc
-	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I$(SLGH_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 # For creating shared library.
-	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
+	$(CXX) $(CXXFLAGS_SHARED) -I$(SLGH_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
 	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
 xml.cc: xml.y
 	$(YACC) -p xml -o $(BUILD_DIR)/$@ $<
 
 slghparse.o: slghparse.cc
-	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I$(SLGH_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 # For creating shared library.
-	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
+	$(CXX) $(CXXFLAGS_SHARED) -I$(SLGH_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
 	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
 
 slghparse.cc: slghparse.y
@@ -63,9 +63,9 @@ slghparse.cc: slghparse.y
 	mv $(BUILD_DIR)/slghparse.hh $(BUILD_DIR)/slghparse.tab.hh
 
 pcodeparse.o: pcodeparse.cc
-	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I$(SLGH_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 # For creating shared library.
-	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
+	$(CXX) $(CXXFLAGS_SHARED) -I$(SLGH_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
 	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
 
 pcodeparse.cc: pcodeparse.y
@@ -74,9 +74,9 @@ pcodeparse.cc: pcodeparse.y
 
 # LEXING #######################################################################
 slghscan.o: slghscan.cc
-	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I$(SLGH_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
 # For creating shared library.
-	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
+	$(CXX) $(CXXFLAGS_SHARED) -I$(SLGH_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o \
 	$(BUILD_SHARED_DIR)/$(basename $@).cc.o
 
 slghscan.cc: slghscan.l
@@ -88,11 +88,11 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 $(BUILD_DIR)/%.o: %.cc
-	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -I$(SLGH_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
 
 # For Hutch addons
 $(BUILD_DIR)/%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -Iinclude -I$(SLGH_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
 
 
 # FOR SHARED LIBRARY VERSION ###################################################
@@ -100,11 +100,11 @@ $(BUILD_SHARED_DIR):
 	mkdir -p $(BUILD_SHARED_DIR)
 
 $(BUILD_SHARED_DIR)/%.cc.o: %.cc
-	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
+	$(CXX) $(CXXFLAGS_SHARED) -I$(SLGH_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
 
 # For Hutch addons
 $(BUILD_SHARED_DIR)/%.cpp.o: %.cpp
-	$(CXX) $(CXXFLAGS_SHARED) -I$(PUB_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
+	$(CXX) $(CXXFLAGS_SHARED) -Iinclude -I$(SLGH_INCLUDE_DIR) -I$(SRC_DIR) -c $< -o $@
 
 
 

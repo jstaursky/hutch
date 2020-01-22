@@ -3,7 +3,7 @@ CXX=g++
 
 CXXFLAGS=-g3 -Wall -Wno-sign-compare -std=c++17
 
-INCLUDES=-I../../include
+INCLUDES=-I../../include -I../../src/Sleigh/include
 
 LNK=../../lib/libsla.a
 

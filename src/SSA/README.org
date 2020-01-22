@@ -1,0 +1,22 @@
+* Dependency graph
+heritage.hh
+└── block.hh
+    └── jumptable.hh
+        ├── emulateutil.hh (also depends on emulate.hh in src/Sleigh)
+        │   └── op.hh
+        └── rangeutil.hh
+            └── op.hh
+                └── typeop.hh
+                    ├── cpool.hh 
+                    │   └── type.hh (depends on address.hh in src/Sleigh)
+                    ├── opbehavior.hh (depends on error.hh and opcodes.hh in src/Sleigh)
+                    ├── printlanguage.hh
+                    │   ├── capability.hh (depends on types.h in src/Sleigh)
+                    │   ├── cast.hh
+                    │   │   └── type.hh
+                    │   └── prettyprint.hh
+                    │       └── type.hh
+                    └── variable.hh
+                        └── varnode.hh (also depends on pcoderaw.hh in src/Sleigh)
+                            └── cover.hh
+                                └── type.hh 
