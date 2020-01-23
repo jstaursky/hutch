@@ -333,6 +333,10 @@ Hutch_Insn::Insn Hutch_Insn::operator()(uintb i)
     return insns.getInstruction(i);
 }
 
+// Manages;
+//   addrss_   (vector holds all addresses where disassembly has taken place)
+//   assembly_ (map's addresses to asm)
+//   pcodes_   (multimap's address to pcode sequences)
 void Hutch_Insn::Hidden::insertInstruction (uintb addr, any insn)
 {
     if (addrss_.size() == 0) { addrss_.push_back(addr); }
