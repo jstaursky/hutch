@@ -344,11 +344,16 @@ void Hutch_Insn::Hidden::insertInstruction (uintb addr, any insn)
             addrss_.insert(addrss_.begin() + 1, addr);
         }
     }
-
+    // index is the distance between the begining iterator "addrss_.begin()" and the iterator
+    // pointing to the first element in the range [addrss_.begin(), addrss_.end()] which does
+    // not compare less than addr (i.e., "lower_bound(addrss_.begin(), addrss_.end(), addr)".
+    // This is done to ensure that "addrss_" vector is sorted by increasing addresses.
     auto index = distance(addrss_.begin(), lower_bound(addrss_.begin(), addrss_.end(), addr));
     if (addrss_[index] == addr) {
+        // There can be multiple pcode statements associated with a given address.
         if (insn.type() == typeid(PcodeData)) {
             auto pc = any_cast<PcodeData>(insn);
+            // Ensure that the pcode statement is in fact distinct at this address.
             for (auto [adr, pcode] : pcodes_) {
                 if (pc == pcode) {
                     if (pcode.outvar != nullptr)
