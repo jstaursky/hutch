@@ -18,7 +18,7 @@
  */
 #ifndef __SLEIGH__
 #define __SLEIGH__
-
+#include <iostream>
 #include "sleighbase.hh"
 
 class LoadImage;
@@ -31,12 +31,14 @@ struct RelativeRecord {
 // Data for building one pcode instruction
 struct PcodeData {
     PcodeData() = default;
-    PcodeData(OpCode opc_, VarnodeData* outvar_, VarnodeData* invar_, int4 isize_) :
-        opc(opc_), outvar(outvar_), invar(invar_), isize(isize_) {}
     OpCode opc;
     VarnodeData* outvar = nullptr; // Points to outvar is there is an output
     VarnodeData* invar = nullptr;  // Inputs
     int4 isize;                    // Number of inputs
+
+    // Convenience methods for hutch library.
+    PcodeData(OpCode opc_, VarnodeData* outvar_, VarnodeData* invar_, int4 isize_) :
+        opc(opc_), outvar(outvar_), invar(invar_), isize(isize_) {}
 
     bool operator==(const PcodeData &Pcode)
     {
@@ -57,6 +59,24 @@ struct PcodeData {
             }
         }
         return false;
+    }
+    // This will be managed by the Hutch_Instructions object.
+    void store (VarnodeData* outv, VarnodeData* inv)
+    {
+        if (outv != nullptr) {
+            this->outvar = new VarnodeData;
+            *this->outvar = *outv;
+        }
+        invar = new VarnodeData[isize];
+        for (auto i = 0; i != isize; ++i)
+            this->invar[i] = inv[i];
+    }
+    void release ()
+    {
+        if (this->outvar != nullptr) {
+            delete outvar;
+        }
+        delete[] invar;
     }
 };
 

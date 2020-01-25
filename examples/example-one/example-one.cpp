@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     }
 
     Hutch hutch_h;
-    Hutch_Insn insn;
+    Hutch_Instructions insn;
 
     hutch_h.preconfigure ("../../processors/x86/languages/x86.sla", IA32);
 

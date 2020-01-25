@@ -67,7 +67,7 @@ public:
 // * Hutch
 //
 class Hutch {
-    friend class Hutch_Insn;
+    friend class Hutch_Instructions;
     string docname;
     int4 arch;
     DocumentStorage docstorage;
@@ -164,31 +164,25 @@ public:
 /*****************************************************************************/
 // * Hutch_Insn
 //
-class Hutch_Insn : public Hutch_Emit {
-    struct Insn {
+class Hutch_Instructions : public Hutch_Emit {
+    struct Instruction {
         uintb address;
-        string assembly;
-        vector<PcodeData> pcode;
-    };
+        string assembly = "";    // in dumpAsm check if assembly == ""
+        vector<PcodeData> pcode; // in dumpPcode check if pcode.empty
 
-    class Hidden {
-        vector<uintb>              addrss_;
-        map<uintb, string>         assembly_;
-        multimap<uintb, PcodeData> pcodes_;
-    public:
-        Hidden() = default;
-        ~Hidden() = default;
-        void insertInstruction (uintb addr, any insn);
-        Insn getInstruction(int);
+        bool operator< (const Instruction&);
+        bool operator< (const uintb&);
     };
+    vector<Instruction> instructions;
+    void storeInstruction (Address const&, any);
 
-    Hidden insns;
+
 public:
-    Hutch_Insn() = default;
+    Hutch_Instructions() = default;
     // TODO
     // ~Hutch_Insn() = default;
 
-    Insn operator()(uintb);
+    Instruction operator()(uintb);
 
     // dumpPcode
     //   This method is used to populate pcode_insns from a call to trans.oneInstruction()
