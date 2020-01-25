@@ -262,102 +262,20 @@ void Hutch_Emit::dumpAsm (const Address& addr, const string& mnem,
 /*****************************************************************************/
 // * Hutch_Insn
 //
-// These operators are needed by lower_bound function used in dumpPcode &
-// dumpAsm.
-bool Hutch_Instructions::Instruction::operator< (const Instruction &insn)
-{
-    return (this->address < insn.address ? true : false);
-}
-
-bool Hutch_Instructions::Instruction::operator< (const uintb& address)
-{
-    return (this->address < address ? true : false);
-}
-
 void Hutch_Instructions::dumpPcode (Address const& addr, OpCode opc,
                                     VarnodeData* outvar, VarnodeData* vars,
                                     int4 isize)
 {
-    // This a convenience constructor, will still need to allocate heap space
-    // for "vars" and "outvar" if pcode satisfies following test.
     PcodeData pcode (opc, outvar, vars, isize);
-
-    if (instructions.empty ()) {
-        Instruction finsn; // First instruction.
-        pcode.store (outvar, vars);
-        finsn.pcode.push_back (pcode);
-        finsn.address = addr.getOffset ();
-        instructions.push_back (finsn);
-        return;
-    } else if (instructions.front ().pcode.empty ()) {
-        pcode.store (outvar, vars);
-        instructions.front ().pcode.push_back (pcode);
-        return;
-    }
-
-    for (auto i = 0; i != instructions.size (); ++i) {
-        // If we find a duplicate pcode in the pcode array @ address, we
-        // disregard it and return.
-        if ((instructions[i].address == addr.getOffset ()) and
-            (find (instructions[i].pcode.begin (), instructions[i].pcode.end (),
-                   pcode) != instructions[i].pcode.end ())) {
-            return;
-            // If we do not find a duplicate pcode in the array @ address, then
-            // it must be added in.
-        } else if (instructions[i].address == addr.getOffset ()) {
-            pcode.store(outvar, vars);
-            instructions[i].pcode.push_back(pcode);
-        }
-    }
-
-    // There is no instruction @ addr. Therefore this must be a new instruction.
-    Instruction insn;
-    pcode.store (outvar, vars);
-    insn.pcode.push_back (pcode);
-    insn.address = addr.getOffset ();
-
-    // Now need to find where this insn should be placed.
-    auto index =
-        distance (instructions.begin (),
-                  lower_bound (instructions.begin (), instructions.end (),
-                               addr.getOffset ()));
-    if (instructions[index].address != addr.getOffset())
-        instructions.insert(instructions.begin() + index, insn);
+    pcode.store(outvar, vars);
+    storeInstruction(addr, pcode);
 }
 
 void Hutch_Instructions::dumpAsm (const Address& addr, const string& mnem,
                           const string& body)
 {
-    if (instructions.empty ()) {
-        Instruction finsn;
-        finsn.address = addr.getOffset ();
-        finsn.assembly = string (mnem + ' ' + body);
-        instructions.push_back (finsn);
-        return;
-    }
-
-    // Prevent duplicates from overwriting pre-existing insns and creating memory leak.
-    for (auto i = 0; i != instructions.size (); ++i) {
-        if ((instructions[i].address == addr.getOffset ()) and
-            (instructions[i].assembly == string (mnem + ' ' + body))) {
-            return; // This asm is already accounted for.
-        } else if ((instructions[i].address == addr.getOffset ()) and
-                   (instructions[i].assembly == "")) {
-            instructions[i].assembly = string (mnem + ' ' + body);
-            return;
-        }
-    }
-    // There is no instruction @ addr. Therefore this must be a new instruction.
-    Instruction insn;
-    insn.address = addr.getOffset ();
-    insn.assembly = string (mnem + ' ' + body);
-
-    auto index =
-        distance (instructions.begin (),
-                  lower_bound (instructions.begin (), instructions.end (),
-                               addr.getOffset ()));
-    if (instructions[index].address != addr.getOffset())
-        instructions.insert (instructions.begin () + index, insn);
+    string assembly(mnem + " " + body);
+    storeInstruction(addr, assembly);
 }
 
 Hutch_Instructions::Instruction Hutch_Instructions::operator()(uintb i)
@@ -365,48 +283,67 @@ Hutch_Instructions::Instruction Hutch_Instructions::operator()(uintb i)
     return instructions[i];
 }
 
-// void Hutch_Instructions::Instruction::storeInstruction (Address const& addr, any insn)
-// {
+void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
+{
+    if (instructions.empty ()) {
+        Instruction instr;
+        instr.address = addr.getOffset ();
+        if (insn.type () == typeid (string)) {
+            instr.assembly = any_cast<string> (insn);
+        }
+        if (insn.type () == typeid (PcodeData)) {
+            instr.pcode.push_back (any_cast<PcodeData> (insn));
+        }
+        instructions.push_back (instr);
+        return;
+    } else if ((insn.type () == typeid (PcodeData)) and
+               (instructions.front ().pcode.empty ())) {
+        instructions.front ().pcode.push_back (any_cast<PcodeData> (insn));
+        return;
+    }
 
-// }
+    for (auto i = 0; i != instructions.size (); ++i) {
+        if ((instructions[i].address == addr.getOffset ()) and
+            (insn.type () == typeid (string))) {
+            if (instructions[i].assembly == any_cast<string> (insn))
+                return;
+            if (instructions[i].assembly == "") {
+                instructions[i].assembly = any_cast<string> (insn);
+                return;
+            }
+        }
+        if ((instructions[i].address == addr.getOffset ()) and
+            (insn.type () == typeid (PcodeData))) {
+            auto pcode = any_cast<PcodeData> (insn);
+            if (find (instructions[i].pcode.begin (),
+                      instructions[i].pcode.end (),
+                      pcode) != instructions[i].pcode.end ()) {
+                pcode.release ();
+                return;
+            } else {
+                instructions[i].pcode.push_back (any_cast<PcodeData> (insn));
+                return;
+            }
+        }
+    }
 
+    Instruction instr;
 
+    instr.address = addr.getOffset ();
 
+    if (insn.type () == typeid (string))
+        instr.assembly = any_cast<string> (insn);
+    if (insn.type () == typeid (PcodeData))
+        instr.pcode.push_back (any_cast<PcodeData> (insn));
 
+    auto index = distance (
+        instructions.begin (),
+        lower_bound (instructions.begin (), instructions.end (),
+                     addr.getOffset (),
+                     [](const Instruction& lhs, const uintb& rhs) -> bool {
+                         return lhs.address < rhs;
+                     }));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    if (instructions[index].address != addr.getOffset ())
+        instructions.insert (instructions.begin () + index, instr);
+}

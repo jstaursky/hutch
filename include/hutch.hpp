@@ -167,11 +167,8 @@ public:
 class Hutch_Instructions : public Hutch_Emit {
     struct Instruction {
         uintb address;
-        string assembly = "";    // in dumpAsm check if assembly == ""
-        vector<PcodeData> pcode; // in dumpPcode check if pcode.empty
-
-        bool operator< (const Instruction&);
-        bool operator< (const uintb&);
+        string assembly = "";
+        vector<PcodeData> pcode;
     };
     vector<Instruction> instructions;
     void storeInstruction (Address const&, any);
@@ -195,7 +192,6 @@ public:
 
     // TODO
     // void printInstructionBytes (Hutch* handle, uintb offset);
-
 };
 
 
