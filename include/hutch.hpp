@@ -173,6 +173,13 @@ class Hutch_Instructions : public Hutch_Emit {
     vector<Instruction> instructions;
     void storeInstruction (Address const&, any);
 
+    // fills in Instruction::pcode via trans.oneInstruction()
+    virtual void dumpPcode (Address const& addr, OpCode opc, VarnodeData* outvar,
+                            VarnodeData* vars, int4 isize) override;
+    // fills in Instruction::assembly via trans.printAssembly()
+    virtual void dumpAsm (const Address& addr, const string& mnem,
+                          const string& body) override;
+
 
 public:
     Hutch_Instructions() = default;
@@ -180,15 +187,6 @@ public:
     // ~Hutch_Insn() = default;
 
     Instruction operator()(uintb);
-
-    // dumpPcode
-    //   This method is used to populate pcode_insns from a call to trans.oneInstruction()
-    // Note: Also overrides Hutch_PcodeEmit::dump()
-    virtual void dumpPcode (Address const& addr, OpCode opc, VarnodeData* outvar,
-                            VarnodeData* vars, int4 isize) override;
-    // Also overrides Hutch_AssemblyEmit::dump()
-    virtual void dumpAsm (const Address& addr, const string& mnem,
-                          const string& body) override;
 
     // TODO
     // void printInstructionBytes (Hutch* handle, uintb offset);
