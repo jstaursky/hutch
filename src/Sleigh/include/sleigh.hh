@@ -18,7 +18,7 @@
  */
 #ifndef __SLEIGH__
 #define __SLEIGH__
-#include <iostream>
+
 #include "sleighbase.hh"
 
 class LoadImage;
