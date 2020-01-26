@@ -285,8 +285,11 @@ Hutch_Instructions::Instruction Hutch_Instructions::operator()(uintb i)
 
 void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
 {
+    auto len = addr.getSpace()->getTrans()->instructionLength(addr);
+
     if (instructions.empty ()) {
         Instruction instr;
+        instr.bytelength = len;
         instr.address = addr.getOffset ();
         if (insn.type () == typeid (string)) {
             instr.assembly = any_cast<string> (insn);
@@ -299,6 +302,7 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
     } else if ((insn.type () == typeid (PcodeData)) and
                (instructions.front ().pcode.empty ())) {
         instructions.front ().pcode.push_back (any_cast<PcodeData> (insn));
+        instructions.front ().bytelength = len;
         return;
     }
 
@@ -309,6 +313,7 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
                 return;
             if (instructions[i].assembly == "") {
                 instructions[i].assembly = any_cast<string> (insn);
+                instructions[i].bytelength = len;
                 return;
             }
         }
@@ -322,6 +327,7 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
                 return;
             } else {
                 instructions[i].pcode.push_back (any_cast<PcodeData> (insn));
+                instructions[i].bytelength = len;
                 return;
             }
         }
@@ -330,6 +336,7 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
     Instruction instr;
 
     instr.address = addr.getOffset ();
+    instr.bytelength = len;
 
     if (insn.type () == typeid (string))
         instr.assembly = any_cast<string> (insn);

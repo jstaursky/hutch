@@ -169,6 +169,7 @@ class Hutch_Instructions : public Hutch_Emit {
         uintb address;
         string assembly = "";
         vector<PcodeData> pcode;
+        size_t bytelength = 0;
     };
     vector<Instruction> instructions;
     void storeInstruction (Address const&, any);
@@ -187,6 +188,8 @@ public:
     // ~Hutch_Insn() = default;
 
     Instruction operator()(uintb);
+
+    uint4 count() { return instructions.size(); }
 
     // TODO
     // void printInstructionBytes (Hutch* handle, uintb offset);
