@@ -64,42 +64,6 @@ public:
 };
 
 /*****************************************************************************/
-// * Hutch
-//
-class Hutch {
-    friend class Hutch_Instructions;
-    string docname;
-    int4 arch;
-    DocumentStorage docstorage;
-    ContextInternal context;
-    // Stores the executable buffer passed to initialize();
-    unique_ptr<DefaultLoadImage> loader;
-    // The sleigh translator.
-    unique_ptr<Sleigh> trans;
-    // Stores the options set.
-    vector<pair<string, int4>> cpucontext;
-    // Disassembler options, e.g., OPT_IN_DISP_ADDR, OPT_IN_PCODE, ...
-    ssize_t optionslist = -1;
-
-public:
-    Hutch () = default;
-    Hutch (string sladoc, int4 arch, const uint1* buf, uintb bufsize);
-    ~Hutch () = default; // TODO
-    // Sets up docstorage.
-    void preconfigure (string const sla_file, int4 cpu_arch);
-    // Gets passed an bitwise OR to decide disassemble display options.
-    void options (const uint1 options) { optionslist = options; }
-    // Creates image of executable.
-    void initialize (uint1 const* buf, uintb bufsize, uintb baseaddr);
-
-    int4 instructionLength (const uintb baseaddr);
-
-    ssize_t disassemble (DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter = nullptr);
-
-    uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter = nullptr);
-
-};
-/*****************************************************************************/
 // THE FOLLOWING HACK ENABLES MULTIPLE INHERITANCE THROUGH AssemblyEmit + PcodeEmit.
 
 /*****************************************************************************/
@@ -165,6 +129,7 @@ public:
 // * Hutch_Insn
 //
 class Hutch_Instructions : public Hutch_Emit {
+    friend class Hutch;
     struct Instruction {
         uintb address;
         string assembly = "";
@@ -195,5 +160,46 @@ public:
     // void printInstructionBytes (Hutch* handle, uintb offset);
 };
 
+/*****************************************************************************/
+// * Hutch
+//
+class Hutch {
+    friend class Hutch_Instructions;
+    string docname;
+    int4 arch;
+    DocumentStorage docstorage;
+    ContextInternal context;
+    // Stores the executable buffer passed to initialize();
+    unique_ptr<DefaultLoadImage> loader;
+    // The sleigh translator.
+    unique_ptr<Sleigh> trans;
+    // Stores the options set.
+    vector<pair<string, int4>> cpucontext;
+    // Disassembler options, e.g., OPT_IN_DISP_ADDR, OPT_IN_PCODE, ...
+    ssize_t optionslist = -1;
+
+public:
+    Hutch () = default;
+    Hutch (string sladoc, int4 arch, const uint1* buf, uintb bufsize);
+    ~Hutch () = default; // TODO
+    // Sets up docstorage.
+    void preconfigure (string const sla_file, int4 cpu_arch);
+    // Gets passed an bitwise OR to decide disassemble display options.
+    void options (const uint1 options) { optionslist = options; }
+    // Creates image of executable.
+    void initialize (uint1 const* buf, uintb bufsize, uintb baseaddr);
+
+    int4 instructionLength (const uintb baseaddr);
+
+    ssize_t disassemble (DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter = nullptr);
+
+    uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter = nullptr);
+
+    void printInstructionBytes (const Hutch_Instructions::Instruction& insn)
+    {
+        return trans->printInstructionBytes( Address (trans->getDefaultSpace(), insn.address) );
+    }
+
+};
 
 #endif

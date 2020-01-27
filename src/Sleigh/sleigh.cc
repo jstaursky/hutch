@@ -18,6 +18,8 @@
  */
 #include "sleigh.hh"
 #include "loadimage.hh"
+#include <cstring>
+#include <iostream>
 
 PcodeCacher::PcodeCacher (void)
 
@@ -645,14 +647,29 @@ int4 Sleigh::instructionLength (const Address& baseaddr) const
     return pos->getLength ();
 }
 
-uintm Sleigh::getInstructionBytes (const Address& baseaddr) const
+void Sleigh::printInstructionBytes (const Address& baseaddr) const
 
 {
     ParserContext* pos = obtainContext (baseaddr, ParserContext::disassembly);
     ParserWalker walker(pos);
     walker.baseState();
+
     auto len = pos->getLength();
-    return walker.getInstructionBytes(0, len);
+
+    uint1* ptr = new uint1[len];
+    uintm tmp;
+    int4 bytestart = 0;
+    do {
+        tmp = walker.getInstructionBytes(bytestart,sizeof(uint1));
+        memcpy(&ptr[bytestart], (uint1*)&tmp, sizeof(uint1));
+    } while (bytestart += 1, bytestart != len);
+
+    for (auto i = 0; i != len; ++i) {
+        cout << "0x" << (int)ptr[i] << " ";
+    }
+    cout << endl;
+
+    delete[] ptr;
 }
 
 
@@ -694,7 +711,8 @@ int4 Sleigh::oneInstruction (PcodeEmit& emit, const Address& baseaddr) const
     if (pos->getDelaySlot () > 0) {
         int4 bytecount = 0;
         do {
-            // Do not pass pos->getNaddr() to obtainContext, as pos may have been previously cached and had naddr adjusted
+            // Do not pass pos->getNaddr() to obtainContext, as pos may have
+            // been previously cached and had naddr adjusted
             ParserContext* delaypos = obtainContext (
                 pos->getAddr () + fallOffset, ParserContext::pcode);
             delaypos->applyCommits ();
@@ -709,6 +727,7 @@ int4 Sleigh::oneInstruction (PcodeEmit& emit, const Address& baseaddr) const
     pcode_cache.clear ();
     SleighBuilder builder (&walker, discache, &pcode_cache, getConstantSpace (),
                            getUniqueSpace (), unique_allocatemask);
+
     try {
         builder.build (walker.getConstructor ()->getTempl (), -1);
         pcode_cache.resolveRelatives ();

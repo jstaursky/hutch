@@ -88,7 +88,7 @@ typedef uint4 uintp;
 
 #if defined (__linux__) && defined (__x86_64__)
 #define HOST_ENDIAN 0
-typedef unsigned long uintm;
+typedef unsigned int uintm;
 typedef int intm;
 typedef unsigned long uint8;
 typedef long int8;
