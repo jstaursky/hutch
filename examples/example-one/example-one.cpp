@@ -35,11 +35,13 @@ int main(int argc, char *argv[])
     // Loaded image is persistent.
     hutch_h.initialize (img, imgsize, 0x12345680);
 
-    // insn.clearInstructions ();
+
     for (auto [i, len, idx] = tuple{ 0, 0, 0 };
          len = hutch_h.disassemble_iter (i, imgsize, &insn); i += len, ++idx)
     {
         cout << "0x" << hex << insn(idx).address << endl;
+        cout << "number of bytes in insn = " << insn(idx).bytelength << endl;
+        hutch_h.printInstructionBytes(insn(idx));
         cout << insn(idx).assembly << endl;
         for (auto p : insn(idx).pcode)
             printPcode(p);

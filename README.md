@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     }
 
     Hutch hutch_h;
-    Hutch_Insn insn;
+    Hutch_Instructions insn;
 
     hutch_h.preconfigure ("../../processors/x86/languages/x86.sla", IA32);
 
@@ -67,10 +67,13 @@ int main(int argc, char *argv[])
     // Loaded image is persistent.
     hutch_h.initialize (img, imgsize, 0x12345680);
 
+
     for (auto [i, len, idx] = tuple{ 0, 0, 0 };
          len = hutch_h.disassemble_iter (i, imgsize, &insn); i += len, ++idx)
     {
         cout << "0x" << hex << insn(idx).address << endl;
+        cout << "number of bytes in insn = " << insn(idx).bytelength << endl;
+        hutch_h.printInstructionBytes(insn(idx));
         cout << insn(idx).assembly << endl;
         for (auto p : insn(idx).pcode)
             printPcode(p);
@@ -82,7 +85,35 @@ int main(int argc, char *argv[])
     return 0;
 }
 ```
+outputs
 
+```
+0x12345680
+number of bytes in insn = 1
+0x55 
+PUSH EBP
+(unique,0x1b50,4) =  COPY (register,EBP,4)
+(register,ESP,4) =  INT_SUB (register,ESP,4) (const,0x4,4)
+STORE (const,0x559cf7bd76e0,8) (register,ESP,4) (unique,0x1b50,4)
+
+NEXT INSTRUCTION
+0x12345681
+number of bytes in insn = 2
+0x89 0xe5 
+MOV EBP,ESP
+(register,EBP,4) =  COPY (register,ESP,4)
+
+NEXT INSTRUCTION
+0x12345683
+number of bytes in insn = 5
+0xb8 0x78 0x56 0x34 0x12 
+MOV EAX,0x12345678
+(register,EAX,4) =  COPY (const,0x12345678,4)
+
+NEXT INSTRUCTION
+exceeded last available address
+FINISHED
+```
 # MISC
 Expect bindings found in `test` to be broken fairly often until a stable version number is released.
 
