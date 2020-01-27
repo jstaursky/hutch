@@ -650,13 +650,17 @@ int4 Sleigh::instructionLength (const Address& baseaddr) const
 void Sleigh::printInstructionBytes (const Address& baseaddr) const
 
 {
+    enum { INSN_MAX_LEN = 15 };
     ParserContext* pos = obtainContext (baseaddr, ParserContext::disassembly);
     ParserWalker walker(pos);
     walker.baseState();
 
     auto len = pos->getLength();
 
-    uint1* ptr = new uint1[len];
+    if (len >= 16)
+        throw BadDataError("Instruction is using more than 15 bytes");
+
+    uint1 ptr[INSN_MAX_LEN] = { }; // aggregate initialization, all entries set to zero.
     uintm tmp;
     int4 bytestart = 0;
     do {
@@ -668,8 +672,6 @@ void Sleigh::printInstructionBytes (const Address& baseaddr) const
         cout << "0x" << (int)ptr[i] << " ";
     }
     cout << endl;
-
-    delete[] ptr;
 }
 
 
