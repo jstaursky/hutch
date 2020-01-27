@@ -195,10 +195,7 @@ public:
 
     uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter = nullptr);
 
-    void printInstructionBytes (const Hutch_Instructions::Instruction& insn)
-    {
-        return trans->printInstructionBytes( Address (trans->getDefaultSpace(), insn.address) );
-    }
+    void printInstructionBytes (const Hutch_Instructions::Instruction& insn);
 
 };
 

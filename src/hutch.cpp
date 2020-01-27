@@ -120,6 +120,11 @@ int4 Hutch::instructionLength (const uintb addr)
                                              this->loader->getBaseAddr() + addr));
 }
 
+void Hutch::printInstructionBytes (const Hutch_Instructions::Instruction& insn)
+{
+    return trans->printInstructionBytes( Address (trans->getDefaultSpace(), insn.address) );
+}
+
 ssize_t Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter)
 {
     Hutch_Emit emitdefault;
@@ -260,7 +265,7 @@ void Hutch_Emit::dumpAsm (const Address& addr, const string& mnem,
 }
 
 /*****************************************************************************/
-// * Hutch_Insn
+// * Hutch_Instructions
 //
 void Hutch_Instructions::dumpPcode (Address const& addr, OpCode opc,
                                     VarnodeData* outvar, VarnodeData* vars,
