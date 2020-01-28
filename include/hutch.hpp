@@ -133,10 +133,12 @@ class Hutch_Instructions : public Hutch_Emit {
     struct Instruction {
         uintb address;
         string assembly = "";
-        vector<PcodeData> pcode;
         size_t bytelength = 0;
+        vector<PcodeData> pcode;
     };
+
     vector<Instruction> instructions;
+
     void storeInstruction (Address const&, any);
 
     // fills in Instruction::pcode via trans.oneInstruction()
@@ -151,6 +153,8 @@ public:
     Hutch_Instructions() = default;
     // TODO
     // ~Hutch_Insn() = default;
+    // - Hutch_Instructions::Instruction.pcode needs to be released
+    //   (cannot write a destructor for PcodeData, need to manage it manually)
 
     Instruction operator()(uintb);
 
