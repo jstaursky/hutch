@@ -122,7 +122,8 @@ int4 Hutch::instructionLength (const uintb addr)
 
 void Hutch::printInstructionBytes (const Hutch_Instructions::Instruction& insn)
 {
-    return trans->printInstructionBytes( Address (trans->getDefaultSpace(), insn.address) );
+    trans->printInstructionBytes( Address (trans->getDefaultSpace(), insn.address) );
+    return;
 }
 
 ssize_t Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter)
@@ -303,22 +304,31 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
             instr.pcode.push_back (any_cast<PcodeData> (insn));
         }
         instructions.push_back (instr);
+        this->current.instruction = &instructions.back();
+        this->current.index = instructions.size() - 1;
         return;
     } else if ((insn.type () == typeid (PcodeData)) and
                (instructions.front ().pcode.empty ())) {
         instructions.front ().pcode.push_back (any_cast<PcodeData> (insn));
         instructions.front ().bytelength = len;
+        this->current.instruction = &instructions.front();
+        this->current.index = 0;
         return;
     }
 
     for (auto i = 0; i != instructions.size (); ++i) {
         if ((instructions[i].address == addr.getOffset ()) and
             (insn.type () == typeid (string))) {
-            if (instructions[i].assembly == any_cast<string> (insn))
+            if (instructions[i].assembly == any_cast<string> (insn)) {
+                this->current.instruction = &instructions[i];
+                this->current.index = i;
                 return;
+            }
             if (instructions[i].assembly == "") {
                 instructions[i].assembly = any_cast<string> (insn);
                 instructions[i].bytelength = len;
+                this->current.instruction = &instructions[i];
+                this->current.index = i;
                 return;
             }
         }
@@ -329,10 +339,14 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
                       instructions[i].pcode.end (),
                       pcode) != instructions[i].pcode.end ()) {
                 pcode.release ();
+                this->current.instruction = &instructions.data()[i];
+                this->current.index = i;
                 return;
             } else {
                 instructions[i].pcode.push_back (any_cast<PcodeData> (insn));
                 instructions[i].bytelength = len;
+                this->current.instruction = &instructions.data()[i];
+                this->current.index = i;
                 return;
             }
         }
@@ -356,6 +370,13 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
                          return lhs.address < rhs;
                      }));
 
-    if (instructions[index].address != addr.getOffset ())
+    if (instructions[index].address != addr.getOffset ()) {
         instructions.insert (instructions.begin () + index, instr);
+        this->current.instruction = &instructions.data()[index - 1];
+        this->current.index = index - 1;
+        return;
+    }
+    this->current.instruction = &instructions.data()[index];
+    this->current.index = index;
+
 }

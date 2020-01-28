@@ -136,6 +136,10 @@ class Hutch_Instructions : public Hutch_Emit {
         size_t bytelength = 0;
         vector<PcodeData> pcode;
     };
+    struct {
+        Instruction* instruction = nullptr;
+        int index = 0;
+    } current;
 
     vector<Instruction> instructions;
 
@@ -160,6 +164,7 @@ public:
 
     uint4 count() { return instructions.size(); }
 
+    Instruction getCurrentInstruction () { return *current.instruction; }
     // TODO
     // void printInstructionBytes (Hutch* handle, uintb offset);
 };
