@@ -669,7 +669,7 @@ void Sleigh::printInstructionBytes (const Address& baseaddr) const
     } while (bytestart += 1, bytestart != len);
 
     for (auto i = 0; i != len; ++i) {
-        cout << "0x" << (int)ptr[i] << " ";
+        cout << "0x" << hex << (int)ptr[i] << " ";
     }
     cout << endl;
 }
