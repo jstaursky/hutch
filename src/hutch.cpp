@@ -69,6 +69,7 @@ static Element* findTag (string tag, Element* root) {
     return nullptr;
 }
 
+
 /*****************************************************************************/
 // * DefaultLoadImage
 //
@@ -98,9 +99,9 @@ void DefaultLoadImage::adjustVma (long adjust)
 /*****************************************************************************/
 // * Hutch
 //
-Hutch::Hutch (string sladoc, int4 arch, const uint1* buf, uintb bufsize) : docname(sladoc)
+Hutch::Hutch (int4 arch, const uint1* buf, uintb bufsize)
 {
-    this->preconfigure(docname, arch);
+    this->preconfigure(arch);
     this->initialize (buf, bufsize, 0x00000000);
 }
 
@@ -120,9 +121,18 @@ int4 Hutch::instructionLength (const uintb addr)
                                              this->loader->getBaseAddr() + addr));
 }
 
+void Hutch::storeRawInstructionBytes (const Hutch_Instructions::Instruction& insn)
+{
+    trans->getInstructionBytes( Address (trans->getDefaultSpace(), insn.address), insn.raw);
+    return;
+}
+
 void Hutch::printInstructionBytes (const Hutch_Instructions::Instruction& insn)
 {
-    trans->printInstructionBytes( Address (trans->getDefaultSpace(), insn.address) );
+    for (auto i = 0; i < insn.bytelength; ++i) {
+        cout << "0x" << hex << (int)insn.raw[i] << " ";
+    }
+    cout << endl;
     return;
 }
 
@@ -198,6 +208,7 @@ uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
     if (auto e = dynamic_cast<Hutch_Instructions*>(emit)) {
         len = this->trans->printAssembly(*e, addr);
         this->trans->oneInstruction(*e, addr);
+        storeRawInstructionBytes(*e->currentinsn);
     }
     else {
         cout << "--- ";
@@ -216,15 +227,12 @@ uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
 
 
 
-void Hutch::preconfigure (string const sla_file, int4 cpu_arch)
+void Hutch::preconfigure (int4 cpu_arch)
 {
-    this->docname = sla_file;
-    Element* ast_root = docstorage.openDocument (this->docname)->getRoot ();
-    docstorage.registerTag (ast_root);
-
     this->arch = cpu_arch;
     switch (cpu_arch) {
     case IA32:
+        docname    = "../../processors/x86/languages/x86.sla";
         cpucontext = { { "addrsize", 1 }, { "opsize", 1 } };
 
         break;
@@ -234,6 +242,8 @@ void Hutch::preconfigure (string const sla_file, int4 cpu_arch)
         break;
     }
 
+    Element* ast_root = docstorage.openDocument (this->docname)->getRoot ();
+    docstorage.registerTag (ast_root);
 }
 
 /*****************************************************************************/
@@ -284,7 +294,19 @@ void Hutch_Instructions::dumpAsm (const Address& addr, const string& mnem,
     storeInstruction(addr, assembly);
 }
 
-Hutch_Instructions::Instruction Hutch_Instructions::operator()(uintb i)
+Hutch_Instructions::Instruction Hutch_Instructions::current (int relpos)
+{
+    // current index position.
+    auto cindex = currentinsn - &instructions[0];
+    try {
+        return instructions.at(cindex + relpos);
+    } catch (const out_of_range& e) {
+        cout << "Out of range error" << endl;
+        exit (1);
+    }
+}
+
+Hutch_Instructions::Instruction Hutch_Instructions::operator()(int i)
 {
     return instructions[i];
 }
@@ -304,15 +326,13 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
             instr.pcode.push_back (any_cast<PcodeData> (insn));
         }
         instructions.push_back (instr);
-        this->current.instruction = &instructions.back();
-        this->current.index = instructions.size() - 1;
+        this->currentinsn = &instructions.back();
         return;
     } else if ((insn.type () == typeid (PcodeData)) and
                (instructions.front ().pcode.empty ())) {
         instructions.front ().pcode.push_back (any_cast<PcodeData> (insn));
         instructions.front ().bytelength = len;
-        this->current.instruction = &instructions.front();
-        this->current.index = 0;
+        this->currentinsn = &instructions.front();
         return;
     }
 
@@ -320,15 +340,13 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
         if ((instructions[i].address == addr.getOffset ()) and
             (insn.type () == typeid (string))) {
             if (instructions[i].assembly == any_cast<string> (insn)) {
-                this->current.instruction = &instructions[i];
-                this->current.index = i;
+                this->currentinsn = &instructions[i];
                 return;
             }
             if (instructions[i].assembly == "") {
                 instructions[i].assembly = any_cast<string> (insn);
                 instructions[i].bytelength = len;
-                this->current.instruction = &instructions[i];
-                this->current.index = i;
+                this->currentinsn = &instructions[i];
                 return;
             }
         }
@@ -339,14 +357,12 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
                       instructions[i].pcode.end (),
                       pcode) != instructions[i].pcode.end ()) {
                 pcode.release ();
-                this->current.instruction = &instructions.data()[i];
-                this->current.index = i;
+                this->currentinsn = &instructions[i];
                 return;
             } else {
                 instructions[i].pcode.push_back (any_cast<PcodeData> (insn));
                 instructions[i].bytelength = len;
-                this->current.instruction = &instructions.data()[i];
-                this->current.index = i;
+                this->currentinsn = &instructions[i];
                 return;
             }
         }
@@ -372,11 +388,9 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
 
     if (instructions[index].address != addr.getOffset ()) {
         instructions.insert (instructions.begin () + index, instr);
-        this->current.instruction = &instructions.data()[index - 1];
-        this->current.index = index - 1;
+        this->currentinsn = &instructions[index - 1];
         return;
     }
-    this->current.instruction = &instructions.data()[index];
-    this->current.index = index;
+    this->currentinsn = &instructions[index];
 
 }

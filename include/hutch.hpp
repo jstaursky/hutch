@@ -126,22 +126,26 @@ public:
 //     trans.oneInstruction (emit, someaddr);
 //     trans.printAssembly (emit, some addr);
 /*****************************************************************************/
-// * Hutch_Insn
+// * Hutch_Instructions
 //
 class Hutch_Instructions : public Hutch_Emit {
     friend class Hutch;
+    enum {MAX_INSN_LEN = 16};   // Really 15 but include room for byte '\0' for
+                                // easy printing.
+
     struct Instruction {
+        // Aggregate initialization ensures this is initialized with all zeros.
+        mutable uint1 raw[MAX_INSN_LEN] = {};
         uintb address;
         string assembly = "";
         size_t bytelength = 0;
         vector<PcodeData> pcode;
     };
-    struct {
-        Instruction* instruction = nullptr;
-        int index = 0;
-    } current;
 
     vector<Instruction> instructions;
+
+    // For tracking the most recent disassembled instruction.
+    Instruction* currentinsn = nullptr;
 
     void storeInstruction (Address const&, any);
 
@@ -160,13 +164,11 @@ public:
     // - Hutch_Instructions::Instruction.pcode needs to be released
     //   (cannot write a destructor for PcodeData, need to manage it manually)
 
-    Instruction operator()(uintb);
+    Instruction operator()(int);
 
     uint4 count() { return instructions.size(); }
 
-    Instruction getCurrentInstruction () { return *current.instruction; }
-    // TODO
-    // void printInstructionBytes (Hutch* handle, uintb offset);
+    Instruction current (int relpos = 0);
 };
 
 /*****************************************************************************/
@@ -187,12 +189,14 @@ class Hutch {
     // Disassembler options, e.g., OPT_IN_DISP_ADDR, OPT_IN_PCODE, ...
     ssize_t optionslist = -1;
 
+    void storeRawInstructionBytes (const Hutch_Instructions::Instruction& insn);
+
 public:
     Hutch () = default;
-    Hutch (string sladoc, int4 arch, const uint1* buf, uintb bufsize);
+    Hutch (int4 arch, const uint1* buf, uintb bufsize);
     ~Hutch () = default; // TODO
     // Sets up docstorage.
-    void preconfigure (string const sla_file, int4 cpu_arch);
+    void preconfigure (int4 cpu_arch);
     // Gets passed an bitwise OR to decide disassemble display options.
     void options (const uint1 options) { optionslist = options; }
     // Creates image of executable.
@@ -205,6 +209,8 @@ public:
     uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter = nullptr);
 
     void printInstructionBytes (const Hutch_Instructions::Instruction& insn);
+
+
 
 };
 
