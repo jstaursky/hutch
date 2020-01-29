@@ -42,6 +42,7 @@ const uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
 //
 void printVarnodeData (ostream& s, VarnodeData* data);
 void printPcode (PcodeData pcode);
+uintmax_t bytePosition (char const* byte, uint1* buf, size_t sz);
 
 /*****************************************************************************/
 // * DefaultLoadImage
@@ -130,11 +131,15 @@ public:
 //
 class Hutch_Instructions : public Hutch_Emit {
     friend class Hutch;
-    enum {MAX_INSN_LEN = 16};   // Really 15 but include room for byte '\0' for
-                                // easy printing.
+    enum { MAX_INSN_LEN = 16 }; // Really 15 but include room for byte '\0' for
+        // easy printing.
 
     struct Instruction {
-        // Aggregate initialization ensures this is initialized with all zeros.
+        // - Aggregate initialization ensures "raw" is initialized with all
+        //   zeros.
+        // - Sleigh::getInstructionBytes() const forces this to be mutable, but
+        //   not sure whether I like it. Might instead remove const from
+        //   Sleigh::getInstructionBytes()
         mutable uint1 raw[MAX_INSN_LEN] = {};
         uintb address;
         string assembly = "";
@@ -145,30 +150,42 @@ class Hutch_Instructions : public Hutch_Emit {
     vector<Instruction> instructions;
 
     // For tracking the most recent disassembled instruction.
+    // Gets set in disassemble_iter.
     Instruction* currentinsn = nullptr;
 
     void storeInstruction (Address const&, any);
 
+    // Logic is present to track when/if vector "instructions" relocates.
+    Instruction* mark = nullptr;
+
     // fills in Instruction::pcode via trans.oneInstruction()
-    virtual void dumpPcode (Address const& addr, OpCode opc, VarnodeData* outvar,
-                            VarnodeData* vars, int4 isize) override;
+    virtual void dumpPcode (Address const& addr, OpCode opc,
+                            VarnodeData* outvar, VarnodeData* vars,
+                            int4 isize) override;
     // fills in Instruction::assembly via trans.printAssembly()
     virtual void dumpAsm (const Address& addr, const string& mnem,
                           const string& body) override;
 
-
 public:
-    Hutch_Instructions() = default;
+    Hutch_Instructions () = default;
     // TODO
     // ~Hutch_Insn() = default;
     // - Hutch_Instructions::Instruction.pcode needs to be released
     //   (cannot write a destructor for PcodeData, need to manage it manually)
 
-    Instruction operator()(int);
+    Instruction operator() (int);
 
-    uint4 count() { return instructions.size(); }
+    uint4 count () { return instructions.size (); }
 
-    Instruction current (int relpos = 0);
+    vector<Instruction>::iterator current ();
+
+    // setMark + resetMark are apart of class Hutch
+    auto getMark () -> vector<Hutch_Instructions::Instruction>::iterator
+    { return instructions.begin() + distance (instructions.data(), mark); }
+    auto begin () { return instructions.begin (); }
+    auto end () { return instructions.end (); }
+    auto rbegin () { return instructions.rbegin (); }
+    auto rend () { return instructions.rend (); }
 };
 
 /*****************************************************************************/
@@ -206,11 +223,25 @@ public:
 
     ssize_t disassemble (DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter = nullptr);
 
-    uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter = nullptr);
+    uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit& emitter);
 
     void printInstructionBytes (const Hutch_Instructions::Instruction& insn);
 
+    void setMark (uintb position,
+                  Hutch_Instructions& insn)
+    {
+        this->disassemble_iter(position, loader->getImageSize(), insn);
+        insn.mark = insn.instructions.data()
+                     + distance(insn.instructions.data(), insn.currentinsn);
+    }
 
+    void resetMark (uintb position,
+                    Hutch_Instructions& insn)
+    {
+        this->disassemble_iter(position, loader->getImageSize(), insn);
+        insn.mark = insn.instructions.data()
+                     + distance(insn.instructions.data(), insn.currentinsn);
+    }
 
 };
 

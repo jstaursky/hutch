@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Joe Staursky
+ * Copyright 2020 Joe Staursky
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,34 @@
 #include <iostream>
 #include "types.h"
 #include <algorithm>
+#include <iterator>
+#include <cstring>
 /*****************************************************************************/
 // * Functions
 //
+// Returns to position of "byte" inside buffer "buf" of size "sz".
+// ex.
+//     for (auto [pos, buf] = pair{ 0, img };
+//     pos = bytePosition ("\xc3", buf, imgsize); buf = nullptr)
+uintmax_t bytePosition (char const* byte, uint1* buf, size_t sz)
+{
+    static uint1* sbufp = nullptr;
+    static uintmax_t spos = 0;  // i.e., s(aved)pos(ition)
+
+    sbufp = (buf != nullptr) ? buf : sbufp;
+    spos = (buf != nullptr) ? 0 : spos;
+
+    for (; spos <= sz; ++spos) {
+        if (0 == memcmp((uint1*)byte, &sbufp[spos], sizeof(uint1))) {
+            return spos++;      // Post increment side effect is important here.
+        }
+    }
+
+    return 0;
+}
+
+
+
 void printVarnodeData (ostream& s, VarnodeData* data)
 {
     if (data == nullptr)
@@ -176,7 +201,7 @@ ssize_t Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount, Hut
     return i;                   // Return the number of instructions disassembled.
 }
 
-uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
+uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit& emitter)
 {
     static uintb bufcheck = 0;
     static uintb ninsnbytes = 0;
@@ -189,7 +214,6 @@ uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
         return 0;
 
     Hutch_Emit emitdefault;
-    Hutch_Emit* emit = (emitter) ? emitter : &emitdefault;
 
     uintb baseaddr = this->loader->getBaseAddr ();
 
@@ -205,17 +229,13 @@ uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
     }
 
     auto len = 0;
-    if (auto e = dynamic_cast<Hutch_Instructions*>(emit)) {
-        len = this->trans->printAssembly(*e, addr);
-        this->trans->oneInstruction(*e, addr);
-        storeRawInstructionBytes(*e->currentinsn);
-    }
-    else {
-        cout << "--- ";
-        addr.printRaw (cout);
-        cout << ":";
-        len = this->trans->printAssembly (*emit, addr);
-        this->trans->oneInstruction (*emit, addr);
+    len = this->trans->printAssembly(emitter, addr);
+    this->trans->oneInstruction(emitter, addr);
+    try {
+        auto e = dynamic_cast<Hutch_Instructions&>(emitter);
+        storeRawInstructionBytes(*e.currentinsn);
+    } catch (const bad_cast&) {
+        // Do nothing.
     }
 
     if ((ninsnbytes += len) > bufsize) {
@@ -224,7 +244,6 @@ uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
     }
     return len;
 }
-
 
 
 void Hutch::preconfigure (int4 cpu_arch)
@@ -294,16 +313,9 @@ void Hutch_Instructions::dumpAsm (const Address& addr, const string& mnem,
     storeInstruction(addr, assembly);
 }
 
-Hutch_Instructions::Instruction Hutch_Instructions::current (int relpos)
+auto Hutch_Instructions::current () -> vector<Hutch_Instructions::Instruction>::iterator
 {
-    // current index position.
-    auto cindex = currentinsn - &instructions[0];
-    try {
-        return instructions.at(cindex + relpos);
-    } catch (const out_of_range& e) {
-        cout << "Out of range error" << endl;
-        exit (1);
-    }
+    return instructions.begin() + distance(instructions.data(), currentinsn);
 }
 
 Hutch_Instructions::Instruction Hutch_Instructions::operator()(int i)
@@ -313,8 +325,16 @@ Hutch_Instructions::Instruction Hutch_Instructions::operator()(int i)
 
 void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
 {
-    auto len = addr.getSpace()->getTrans()->instructionLength(addr);
+    auto len = addr.getSpace ()->getTrans ()->instructionLength (addr);
 
+    // Keep track of vector relocations for Hutch_Instructions::mark.
+    auto ofront = (!instructions.empty ()) ? instructions.data () : 0;
+    auto oback = (!instructions.empty ()) ?
+                     instructions.data () + instructions.size () - 1 :
+                     0;
+    size_t fdiff, bdiff;
+
+    // Do not need to track very initial run (when instructions.empty ())
     if (instructions.empty ()) {
         Instruction instr;
         instr.bytelength = len;
@@ -326,13 +346,22 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
             instr.pcode.push_back (any_cast<PcodeData> (insn));
         }
         instructions.push_back (instr);
-        this->currentinsn = &instructions.back();
+        this->currentinsn = &instructions.back ();
         return;
     } else if ((insn.type () == typeid (PcodeData)) and
                (instructions.front ().pcode.empty ())) {
         instructions.front ().pcode.push_back (any_cast<PcodeData> (insn));
         instructions.front ().bytelength = len;
-        this->currentinsn = &instructions.front();
+        this->currentinsn = &instructions.front ();
+
+        // Move mark if vector instructions has moved.
+        fdiff = instructions.data () - ofront;
+        bdiff = (instructions.data () + instructions.size () - 1) - oback;
+        mark = (mark != nullptr) ?
+                     (fdiff != 0) || (bdiff != 0) ?
+                     (fdiff > bdiff) ? mark + fdiff : mark + bdiff :
+                     mark :
+                     nullptr;
         return;
     }
 
@@ -363,6 +392,15 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
                 instructions[i].pcode.push_back (any_cast<PcodeData> (insn));
                 instructions[i].bytelength = len;
                 this->currentinsn = &instructions[i];
+                // Move mark if vector instructions has moved.
+                fdiff = instructions.data () - ofront;
+                bdiff =
+                    (instructions.data () + instructions.size () - 1) - oback;
+                mark = (mark != nullptr) ?
+                             (fdiff != 0) || (bdiff != 0) ?
+                             (fdiff > bdiff) ? mark + fdiff : mark + bdiff :
+                             mark :
+                             nullptr;
                 return;
             }
         }
@@ -388,9 +426,19 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
 
     if (instructions[index].address != addr.getOffset ()) {
         instructions.insert (instructions.begin () + index, instr);
-        this->currentinsn = &instructions[index - 1];
+        if (index > 0)
+            this->currentinsn = &instructions[index - 1];
+        else
+            this->currentinsn = &instructions[index];
+        // Move mark if vector instructions has moved.
+        fdiff = instructions.data () - ofront;
+        bdiff = (instructions.data () + instructions.size () - 1) - oback;
+        mark = (mark != nullptr) ?
+                     (fdiff != 0) || (bdiff != 0) ?
+                     (fdiff > bdiff) ? mark + fdiff : mark + bdiff :
+                     mark :
+                     nullptr;
         return;
     }
     this->currentinsn = &instructions[index];
-
 }
