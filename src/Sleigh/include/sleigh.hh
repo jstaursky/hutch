@@ -174,7 +174,8 @@ public:
   virtual int4 instructionLength(const Address &baseaddr) const;
   virtual int4 oneInstruction(PcodeEmit &emit,const Address &baseaddr) const;
   virtual int4 printAssembly(AssemblyEmit &emit,const Address &baseaddr) const;
-    void printInstructionBytes (const Address& baseaddr) const;
+    void getInstructionBytes (const Address& baseaddr, uint1* buf) const;
+
 };
 
 /** \page sleigh SLEIGH
