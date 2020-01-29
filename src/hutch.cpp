@@ -201,14 +201,18 @@ ssize_t Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount, Hut
     return i;                   // Return the number of instructions disassembled.
 }
 
-uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit& emitter)
+uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
 {
-    static uintb bufcheck = 0;
+    static Hutch_Emit* emit = nullptr;
     static uintb ninsnbytes = 0;
-    ninsnbytes = (bufcheck == bufsize)
-        ? ninsnbytes : 0;
-    bufcheck = (bufcheck == 0)
-        ? bufsize : (bufcheck == bufsize) ? bufcheck : bufsize;
+
+    ninsnbytes = (emitter != nullptr)
+        ? 0
+        : ninsnbytes;
+
+    emit = (emitter != nullptr)
+        ? emitter
+        : (emit != nullptr) ? emit : nullptr;
 
     if (ninsnbytes > bufsize)
         return 0;
@@ -229,13 +233,11 @@ uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit& emitter)
     }
 
     auto len = 0;
-    len = this->trans->printAssembly(emitter, addr);
-    this->trans->oneInstruction(emitter, addr);
-    try {
-        auto e = dynamic_cast<Hutch_Instructions&>(emitter);
-        storeRawInstructionBytes(*e.currentinsn);
-    } catch (const bad_cast&) {
-        // Do nothing.
+    len = this->trans->printAssembly(*emit, addr);
+    this->trans->oneInstruction(*emit, addr);
+
+    if (auto e = dynamic_cast<Hutch_Instructions*>(emit)) {
+        storeRawInstructionBytes(*e->currentinsn);
     }
 
     if ((ninsnbytes += len) > bufsize) {

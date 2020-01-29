@@ -223,14 +223,14 @@ public:
 
     ssize_t disassemble (DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter = nullptr);
 
-    uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit& emitter);
+    uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter);
 
     void printInstructionBytes (const Hutch_Instructions::Instruction& insn);
 
     void setMark (uintb position,
                   Hutch_Instructions& insn)
     {
-        this->disassemble_iter(position, loader->getImageSize(), insn);
+        this->disassemble_iter(position, loader->getImageSize(), &insn);
         insn.mark = insn.instructions.data()
                      + distance(insn.instructions.data(), insn.currentinsn);
     }
@@ -238,7 +238,7 @@ public:
     void resetMark (uintb position,
                     Hutch_Instructions& insn)
     {
-        this->disassemble_iter(position, loader->getImageSize(), insn);
+        this->disassemble_iter(position, loader->getImageSize(), &insn);
         insn.mark = insn.instructions.data()
                      + distance(insn.instructions.data(), insn.currentinsn);
     }
