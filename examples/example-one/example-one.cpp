@@ -9,7 +9,7 @@
 // move ebp, esp       \x89\xe5
 // mov eax, 0x12345678 \xb8\x78\x56\x34\x12
 //
-static uint1 code[] = { 0x55, 0x89, 0xe5, 0xb8, 0x78, 0x56, 0x34, 0x12 };
+static uint1 code[] = { 0x55, 0x89, 0xe5, 0xb8, 0x78, 0x56, 0x34, 0x12, 0xc3 };
 
 int main(int argc, char *argv[])
 {
@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     Hutch hutch_h;
     Hutch_Instructions insn;
 
-    hutch_h.preconfigure ("../../processors/x86/languages/x86.sla", IA32);
+    hutch_h.preconfigure (IA32);
 
     auto img = (argc == 2) ? fbytes : code;
     auto imgsize = (argc == 2) ? fsize : sizeof (code);
@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
     // Need to translate the buffer into internal representation prior to use.
     // Loaded image is persistent.
     hutch_h.initialize (img, imgsize, 0x12345680);
-
 
     for (auto [i, len, idx] = tuple{ 0, 0, 0 };
          len = hutch_h.disassemble_iter (i, imgsize, &insn); i += len, ++idx)
