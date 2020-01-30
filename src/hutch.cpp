@@ -196,6 +196,44 @@ uint Hutch::disassemble_iter(uintb offset, Hutch_Emit* emitter)
     return len;
 }
 
+vector<Instruction>
+Hutch::inspectPreviousInstruction (uintb offset, uintb limit,
+                                   Hutch_Instructions& insn,
+                                   bool (*select) (PcodeData))
+{
+    vector<Instruction> res;
+
+    resetMark (offset, insn);
+    if (insn.getMark()->address - 1 == 0)
+        return {};
+
+    for (auto r = 1; (r != limit) && ((offset - r ) > 0) && disassemble_iter (offset - r, &insn); ++r)
+        cout << "inside 1st loop, here is insn.current().address " << insn.current()->address << endl;
+
+    for (auto rinsn = insn.getMark () - 1; rinsn != insn.current (); --rinsn) {
+        if (select == nullptr) {
+            if ((rinsn->address + rinsn->bytelength) == insn.getMark ()->address)
+                res.push_back (*rinsn);
+            continue;
+        }
+        if (bool isSelected = false; (rinsn->address + rinsn->bytelength) == insn.getMark ()->address) {
+            cout << "alive 1" << endl;
+            for (auto p : rinsn->pcode) {
+                isSelected = select (p);
+                if (isSelected) {
+                    res.push_back (*rinsn);
+                    cout << "alive 2" << endl;
+                    break; }
+            }
+        }
+    }
+    for (auto i : res) {
+        cout << "@0x" << i.address << endl;
+        printInstructionBytes(i);
+        cout << i.assembly << endl;
+    }
+    return res;
+}
 
 void Hutch::preconfigure (int4 cpu_arch)
 {
@@ -392,31 +430,4 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
         return;
     }
     this->currentinsn = &instructions[index];
-}
-
-vector<Instruction>
-Hutch::inspectPreviousInstruction (uintb offset, uintb limit,
-                                   Hutch_Instructions& insn,
-                                   bool (*select) (PcodeData))
-{
-    vector<Instruction> res;
-
-    resetMark (offset, insn);
-    for (auto r = 1; (r != limit) && disassemble_iter (offset - r, &insn); ++r)
-        ;
-
-    for (auto rinsn = insn.getMark () - 1; rinsn != insn.current (); --rinsn) {
-        if (select == nullptr) {
-            if ((rinsn->address + rinsn->bytelength) == insn.getMark ()->address)
-                res.push_back (*rinsn);
-            continue;
-        }
-        if (bool isSelected = false; (rinsn->address + rinsn->bytelength) == insn.getMark ()->address) {
-            for (auto p : rinsn->pcode) {
-                isSelected = select (p);
-                if (isSelected) { res.push_back (*rinsn); break; }
-            }
-        }
-    }
-    return res;
 }

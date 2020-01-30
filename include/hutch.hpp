@@ -166,6 +166,7 @@ struct Instruction {
     }
 };
 
+class Hutch;
 // * Hutch_Instructions
 //
 class Hutch_Instructions : public Hutch_Emit {
@@ -197,12 +198,12 @@ public:
     // - Hutch_Instructions::Instruction.pcode needs to be released
     //   (cannot write a destructor for PcodeData, need to manage it manually)
 
+    // This can only tell you about the insns processed so far, so for example,
+    // if you have disassembled some offset into the buffer skipping the
+    // beginning, then isns(0) != instruction at the beginning of the buffer.
     Instruction operator() (int);
 
     uint4 count () { return instructions.size (); }
-
-//    Instruction previousInstruction
-
 
     vector<Instruction>::iterator current ();
 
