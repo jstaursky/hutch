@@ -43,7 +43,7 @@ const uint1 OPT_OUT_DISP_ADDR = 0, OPT_OUT_PCODE = 0, OPT_OUT_ASM = 0;
 //
 void printVarnodeData (ostream& s, VarnodeData* data);
 void printPcode (PcodeData pcode);
-uintmax_t bytePosition (char const* byte, uint1* buf, size_t sz);
+uintmax_t bytePosition (string byte, uint1* buf, size_t sz);
 
 /*****************************************************************************/
 // * DefaultLoadImage

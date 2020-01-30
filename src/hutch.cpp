@@ -38,7 +38,7 @@
 // ex.
 //     for (auto [pos, buf] = pair{ 0, img };
 //     pos = bytePosition ("\xc3", buf, imgsize); buf = nullptr)
-uintmax_t bytePosition (char const* byte, uint1* buf, size_t sz)
+uintmax_t bytePosition (string byte, uint1* buf, size_t sz)
 {
     static uint1* sbufp = nullptr;
     static uintmax_t spos = 0;  // i.e., s(aved)pos(ition)
@@ -47,7 +47,7 @@ uintmax_t bytePosition (char const* byte, uint1* buf, size_t sz)
     spos = (buf != nullptr) ? 0 : spos;
 
     for (; spos <= sz; ++spos) {
-        if (0 == memcmp((uint1*)byte, &sbufp[spos], sizeof(uint1))) {
+        if (0 == memcmp((uint1*)byte.c_str(), &sbufp[spos], sizeof(uint1))) {
             return spos++;      // Post increment side effect is important here.
         }
     }
@@ -210,18 +210,27 @@ Hutch::inspectPreviousInstruction (uintb offset, uintb limit,
     vector<Instruction> res;
 
     resetMark (offset, insn);
-    if (insn.getMark()->address - 1 == 0)
+    if (insn.getMark ()->address - 1 == 0)
         return {};
 
-    for (auto r = 1; (r != limit) && ((offset - r ) > 0) && disassemble_iter (offset - r, &insn); ++r)
+    for (auto r = 1; (r != limit) && ((offset - r) > 0) &&
+                     disassemble_iter (offset - r, &insn);
+         ++r)
         ;
     for (auto rinsn = insn.getMark () - 1; rinsn != insn.current (); --rinsn) {
+        // For ROP:
+        // Need to determine whether the instruction ends immediately prior to
+        // the marked/c3(ret) instruction for instruction to be useful.
         if (select == nullptr) {
-            if ((rinsn->address + rinsn->bytelength) == insn.getMark ()->address)
+            if ((rinsn->address + rinsn->bytelength) ==
+                insn.getMark ()->address)
                 res.push_back (*rinsn);
             continue;
         }
-        if (bool isSelected = false; (rinsn->address + rinsn->bytelength) == insn.getMark ()->address) {
+        // Only add those instructions that meet the alignment requirement
+        // described above AND satisfy whatever condition the fptr "select" imposes.
+        if (bool isSelected = false;
+            (rinsn->address + rinsn->bytelength) == insn.getMark ()->address) {
             for (auto p : rinsn->pcode) {
                 isSelected = select (p);
                 if (isSelected) {
