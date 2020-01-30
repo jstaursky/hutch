@@ -127,25 +127,27 @@ public:
 //     trans.oneInstruction (emit, someaddr);
 //     trans.printAssembly (emit, some addr);
 /*****************************************************************************/
+
+enum { MAX_INSN_LEN = 16 }; // Really 15 but include room for byte '\0' for
+// easy printing.
+
+struct Instruction {
+    // - Aggregate initialization ensures "raw" is initialized with all
+    //   zeros.
+    // - Sleigh::getInstructionBytes() const forces this to be mutable, but
+    //   not sure whether I like it. Might instead remove const from
+    //   Sleigh::getInstructionBytes()
+    mutable uint1 raw[MAX_INSN_LEN] = {};
+    uintb address;
+    string assembly = "";
+    size_t bytelength = 0;
+    vector<PcodeData> pcode;
+};
+
 // * Hutch_Instructions
 //
 class Hutch_Instructions : public Hutch_Emit {
     friend class Hutch;
-    enum { MAX_INSN_LEN = 16 }; // Really 15 but include room for byte '\0' for
-        // easy printing.
-
-    struct Instruction {
-        // - Aggregate initialization ensures "raw" is initialized with all
-        //   zeros.
-        // - Sleigh::getInstructionBytes() const forces this to be mutable, but
-        //   not sure whether I like it. Might instead remove const from
-        //   Sleigh::getInstructionBytes()
-        mutable uint1 raw[MAX_INSN_LEN] = {};
-        uintb address;
-        string assembly = "";
-        size_t bytelength = 0;
-        vector<PcodeData> pcode;
-    };
 
     vector<Instruction> instructions;
 
@@ -180,7 +182,7 @@ public:
     vector<Instruction>::iterator current ();
 
     // setMark + resetMark are apart of class Hutch
-    auto getMark () -> vector<Hutch_Instructions::Instruction>::iterator
+    auto getMark () -> vector<Instruction>::iterator
     { return instructions.begin() + distance (instructions.data(), mark); }
     auto begin () { return instructions.begin (); }
     auto end () { return instructions.end (); }
@@ -206,7 +208,7 @@ class Hutch {
     // Disassembler options, e.g., OPT_IN_DISP_ADDR, OPT_IN_PCODE, ...
     ssize_t optionslist = -1;
 
-    void storeRawInstructionBytes (const Hutch_Instructions::Instruction& insn);
+    void storeRawInstructionBytes (const Instruction& insn);
 
 public:
     Hutch () = default;
@@ -225,7 +227,7 @@ public:
 
     uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter);
 
-    void printInstructionBytes (const Hutch_Instructions::Instruction& insn);
+    void printInstructionBytes (const Instruction& insn);
 
     void setMark (uintb position,
                   Hutch_Instructions& insn)

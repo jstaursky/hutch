@@ -24,6 +24,18 @@
 /*****************************************************************************/
 // * Functions
 //
+
+
+ 
+
+
+
+
+
+
+
+
+
 // Returns to position of "byte" inside buffer "buf" of size "sz".
 // ex.
 //     for (auto [pos, buf] = pair{ 0, img };
@@ -146,13 +158,13 @@ int4 Hutch::instructionLength (const uintb addr)
                                              this->loader->getBaseAddr() + addr));
 }
 
-void Hutch::storeRawInstructionBytes (const Hutch_Instructions::Instruction& insn)
+void Hutch::storeRawInstructionBytes (const Instruction& insn)
 {
     trans->getInstructionBytes( Address (trans->getDefaultSpace(), insn.address), insn.raw);
     return;
 }
 
-void Hutch::printInstructionBytes (const Hutch_Instructions::Instruction& insn)
+void Hutch::printInstructionBytes (const Instruction& insn)
 {
     for (auto i = 0; i < insn.bytelength; ++i) {
         cout << "0x" << hex << (int)insn.raw[i] << " ";
@@ -298,12 +310,12 @@ void Hutch_Instructions::dumpAsm (const Address& addr, const string& mnem,
     storeInstruction(addr, assembly);
 }
 
-auto Hutch_Instructions::current () -> vector<Hutch_Instructions::Instruction>::iterator
+auto Hutch_Instructions::current () -> vector<Instruction>::iterator
 {
     return instructions.begin() + distance(instructions.data(), currentinsn);
 }
 
-Hutch_Instructions::Instruction Hutch_Instructions::operator()(int i)
+Instruction Hutch_Instructions::operator()(int i)
 {
     return instructions[i];
 }
