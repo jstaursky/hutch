@@ -129,35 +129,39 @@ public:
 //     trans.printAssembly (emit, some addr);
 /*****************************************************************************/
 
-
-
 struct Instruction {
-enum { MAX_INSN_LEN = 16 }; // Really 15 but include room for byte '\0' for easy
-                            // printing.
+    // Really 15 but include room for byte '\0' for easy printing.
+    enum {
+        MAX_INSN_LEN = 16
+    };
+
+    uintb address;
+    size_t bytelength = 0;
+    string assembly = "";
+    vector<PcodeData> pcode;
+
     // - Aggregate initialization ensures "raw" is initialized with all
     //   zeros.
     // - Sleigh::getInstructionBytes() const forces this to be mutable, but
     //   not sure whether I like it. Might instead remove const from
     //   Sleigh::getInstructionBytes()
     mutable uint1 raw[MAX_INSN_LEN] = {};
-    uintb address;
-    string assembly = "";
-    size_t bytelength = 0;
-    vector<PcodeData> pcode;
-    Instruction() = default;
-    Instruction (const Instruction& other) : address (other.address), bytelength (other.bytelength)
+
+    Instruction () = default;
+    Instruction (const Instruction& other) :
+        address (other.address), bytelength (other.bytelength),
+        assembly (other.assembly)
     {
+        for (auto i : other.pcode)
+            pcode.push_back (PcodeData (i));
         for (auto i = 0; i < MAX_INSN_LEN; ++i)
             raw[i] = other.raw[i];
-        for (auto i : other.pcode) {
-            pcode.push_back(PcodeData(i));
-        }
     }
 
     ~Instruction (void)
     {
         for (auto p : pcode) {
-            p.release();
+            p.release ();
         }
     }
 };
@@ -246,9 +250,12 @@ public:
 
     int4 instructionLength (const uintb baseaddr);
 
-    ssize_t disassemble (DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter = nullptr);
-
     uint disassemble_iter(uintb offset, Hutch_Emit* emitter);
+
+    vector<Instruction>
+    inspectPreviousInstruction (uintb offset, uintb limit,
+                                 Hutch_Instructions& insn,
+                                 bool (*select) (PcodeData));
 
     void printInstructionBytes (const Instruction& insn);
 

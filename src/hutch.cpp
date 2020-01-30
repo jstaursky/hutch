@@ -171,47 +171,7 @@ void Hutch::printInstructionBytes (const Instruction& insn)
     return;
 }
 
-ssize_t Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter)
-{
-    Hutch_Emit emitdefault;
-    Hutch_Emit* emit = (emitter) ? emitter : &emitdefault;
-
-    uintb baseaddr = this->loader->getBaseAddr ();
-
-    Address addr (this->trans->getDefaultSpace (), baseaddr);
-    Address lastaddr (this->trans->getDefaultSpace (),
-                      baseaddr + this->loader->getBufferSize ());
-
-    // Is offset in instruction units?
-    if (unit == UNIT_INSN) {
-        // If so we want to move addr forward by offset amount of instructions.
-        for (auto moveaddr = 0, insnlen = 0;
-             moveaddr < offset && addr < lastaddr; addr = addr + insnlen) {
-            moveaddr += insnlen = this->trans->instructionLength (addr);
-        }
-    } else {
-        // Offset unit must be in bytes.
-        addr = addr + offset;
-    }
-    auto i = 0;
-    for (auto len = 0; i < amount && addr < lastaddr;
-         i += (unit == UNIT_BYTE) ? len : 1, addr = addr + len) {
-        if (auto e = dynamic_cast<Hutch_Instructions*>(emit)) {
-            len = this->trans->printAssembly(*e, addr);
-            this->trans->oneInstruction(*e, addr);
-        }
-        else {
-            cout << "--- ";
-            addr.printRaw (cout);
-            cout << ":";
-            len = this->trans->printAssembly (*emit, addr);
-            this->trans->oneInstruction (*emit, addr);
-        }
-    }
-    return i;                   // Return the number of instructions disassembled.
-}
-
-// Disassemble at offset "offset" the buffer passed to Hutch::initialize.
+//pDisassemble at offset "offset" the buffer passed to Hutch::initialize.
 uint Hutch::disassemble_iter(uintb offset, Hutch_Emit* emitter)
 {
     uintb baseaddr = this->loader->getBaseAddr ();
@@ -434,73 +394,29 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
     this->currentinsn = &instructions[index];
 }
 
-
-
-// Instruction previousInstruction (uintb offset, Hutch& hutch, Hutch_Instructions& insn)
-// {
-//     hutch.setMark(offset, insn);
-//     hutch.disassemble_iter(offset, insn);
-// }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+vector<Instruction>
+Hutch::inspectPreviousInstruction (uintb offset, uintb limit,
+                                   Hutch_Instructions& insn,
+                                   bool (*select) (PcodeData))
+{
+    vector<Instruction> res;
+
+    resetMark (offset, insn);
+    for (auto r = 1; (r != limit) && disassemble_iter (offset - r, &insn); ++r)
+        ;
+
+    for (auto rinsn = insn.getMark () - 1; rinsn != insn.current (); --rinsn) {
+        if (select == nullptr) {
+            if ((rinsn->address + rinsn->bytelength) == insn.getMark ()->address)
+                res.push_back (*rinsn);
+            continue;
+        }
+        if (bool isSelected = false; (rinsn->address + rinsn->bytelength) == insn.getMark ()->address) {
+            for (auto p : rinsn->pcode) {
+                isSelected = select (p);
+                if (isSelected) { res.push_back (*rinsn); break; }
+            }
+        }
+    }
+    return res;
+}
