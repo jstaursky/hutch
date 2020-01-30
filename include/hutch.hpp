@@ -106,8 +106,19 @@ public:
     }
 
 };
-
+struct Instruction;
 class Hutch_Emit : public Hutch_PcodeEmit, public Hutch_AssemblyEmit {
+    friend class Hutch;
+    vector<Instruction> instructions;
+
+    // For tracking the most recent disassembled instruction.
+    // Gets set in disassemble_iter.
+    Instruction* currentinsn = nullptr;
+
+    virtual void storeInstruction (Address const&, any) = 0;
+
+    virtual void removeBadInstruction () = 0;
+
 public:
     virtual void dumpPcode (Address const& addr, OpCode opc, VarnodeData* outvar,
                             VarnodeData* vars, int4 isize) override;
@@ -178,7 +189,9 @@ class Hutch_Instructions : public Hutch_Emit {
     // Gets set in disassemble_iter.
     Instruction* currentinsn = nullptr;
 
-    void storeInstruction (Address const&, any);
+    void storeInstruction (Address const&, any) override;
+
+    void removeBadInstruction () override;
 
     // Logic is present to track when/if vector "instructions" relocates.
     Instruction* mark = nullptr;

@@ -186,9 +186,15 @@ uint Hutch::disassemble_iter(uintb offset, Hutch_Emit* emitter)
         cout << "exceeded last available address\n";
         return 0;
     }
+    auto len = 0;
 
-    auto len = this->trans->printAssembly(*emitter, addr);
-    this->trans->oneInstruction(*emitter, addr);
+    try {
+        len = this->trans->printAssembly(*emitter, addr);
+        this->trans->oneInstruction(*emitter, addr);
+    } catch (const BadDataError&) {
+        len = 0;
+        emitter->removeBadInstruction ();
+    }
 
     if (auto e = dynamic_cast<Hutch_Instructions*>(emitter))
         storeRawInstructionBytes(*e->currentinsn);
@@ -208,8 +214,7 @@ Hutch::inspectPreviousInstruction (uintb offset, uintb limit,
         return {};
 
     for (auto r = 1; (r != limit) && ((offset - r ) > 0) && disassemble_iter (offset - r, &insn); ++r)
-        cout << "inside 1st loop, here is insn.current().address " << insn.current()->address << endl;
-
+        ;
     for (auto rinsn = insn.getMark () - 1; rinsn != insn.current (); --rinsn) {
         if (select == nullptr) {
             if ((rinsn->address + rinsn->bytelength) == insn.getMark ()->address)
@@ -217,20 +222,13 @@ Hutch::inspectPreviousInstruction (uintb offset, uintb limit,
             continue;
         }
         if (bool isSelected = false; (rinsn->address + rinsn->bytelength) == insn.getMark ()->address) {
-            cout << "alive 1" << endl;
             for (auto p : rinsn->pcode) {
                 isSelected = select (p);
                 if (isSelected) {
                     res.push_back (*rinsn);
-                    cout << "alive 2" << endl;
                     break; }
             }
         }
-    }
-    for (auto i : res) {
-        cout << "@0x" << i.address << endl;
-        printInstructionBytes(i);
-        cout << i.assembly << endl;
     }
     return res;
 }
@@ -430,4 +428,15 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
         return;
     }
     this->currentinsn = &instructions[index];
+}
+
+void Hutch_Instructions::removeBadInstruction ()
+{
+    auto after = instructions.erase(current());
+    auto index = distance(instructions.begin(), after);
+    if (after == instructions.end()) {
+        currentinsn = instructions.data() + index - 1;
+    } else {
+        currentinsn = instructions.data() + index;
+    }
 }
