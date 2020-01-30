@@ -201,24 +201,11 @@ ssize_t Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount, Hut
     return i;                   // Return the number of instructions disassembled.
 }
 
+// Disassemble at offset "offset" the buffer passed to Hutch::initialize.
+// Setting 
+//   - 
 uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
 {
-    static Hutch_Emit* emit = nullptr;
-    static uintb ninsnbytes = 0;
-
-    ninsnbytes = (emitter != nullptr)
-        ? 0
-        : ninsnbytes;
-
-    emit = (emitter != nullptr)
-        ? emitter
-        : (emit != nullptr) ? emit : nullptr;
-
-    if (ninsnbytes > bufsize)
-        return 0;
-
-    Hutch_Emit emitdefault;
-
     uintb baseaddr = this->loader->getBaseAddr ();
 
     Address addr (this->trans->getDefaultSpace (), baseaddr);
@@ -232,15 +219,13 @@ uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
         return 0;
     }
 
-    auto len = 0;
-    len = this->trans->printAssembly(*emit, addr);
-    this->trans->oneInstruction(*emit, addr);
+    auto len = this->trans->printAssembly(*emitter, addr);
+    this->trans->oneInstruction(*emitter, addr);
 
-    if (auto e = dynamic_cast<Hutch_Instructions*>(emit)) {
+    if (auto e = dynamic_cast<Hutch_Instructions*>(emitter))
         storeRawInstructionBytes(*e->currentinsn);
-    }
 
-    if ((ninsnbytes += len) > bufsize) {
+    if (len > bufsize) {
         cout << "exceeded buffer len\n";
         return 0;
     }
