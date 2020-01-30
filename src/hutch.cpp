@@ -202,8 +202,6 @@ ssize_t Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount, Hut
 }
 
 // Disassemble at offset "offset" the buffer passed to Hutch::initialize.
-// Setting 
-//   - 
 uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
 {
     uintb baseaddr = this->loader->getBaseAddr ();
