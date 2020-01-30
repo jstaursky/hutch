@@ -171,7 +171,17 @@ void Hutch::printInstructionBytes (const Instruction& insn)
     return;
 }
 
-//pDisassemble at offset "offset" the buffer passed to Hutch::initialize.
+void Hutch::printInstructionBytes (vector<Instruction>::iterator instr)
+{
+    for (auto i = 0; i < instr->bytelength; ++i) {
+        cout << "0x" << hex << (int)instr->raw[i] << " ";
+    }
+    cout << endl;
+    return;
+}
+
+
+// Disassemble at offset "offset" the buffer passed to Hutch::initialize.
 uint Hutch::disassemble_iter(uintb offset, Hutch_Emit* emitter)
 {
     uintb baseaddr = this->loader->getBaseAddr ();

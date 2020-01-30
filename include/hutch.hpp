@@ -273,6 +273,8 @@ public:
 
     void printInstructionBytes (const Instruction& insn);
 
+    void printInstructionBytes (vector<Instruction>::iterator instr);
+
     void setMark (uintb position,
                   Hutch_Instructions& insn)
     {
