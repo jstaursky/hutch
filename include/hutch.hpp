@@ -21,6 +21,7 @@
 #include "sleigh.hh"
 
 #include <vector>
+#include <cstring>
 #include <optional>
 #include <any>
 #include <memory>
@@ -128,10 +129,11 @@ public:
 //     trans.printAssembly (emit, some addr);
 /*****************************************************************************/
 
-enum { MAX_INSN_LEN = 16 }; // Really 15 but include room for byte '\0' for
-// easy printing.
+
 
 struct Instruction {
+enum { MAX_INSN_LEN = 16 }; // Really 15 but include room for byte '\0' for easy
+                            // printing.
     // - Aggregate initialization ensures "raw" is initialized with all
     //   zeros.
     // - Sleigh::getInstructionBytes() const forces this to be mutable, but
@@ -142,6 +144,22 @@ struct Instruction {
     string assembly = "";
     size_t bytelength = 0;
     vector<PcodeData> pcode;
+    Instruction() = default;
+    Instruction (const Instruction& other) : address (other.address), bytelength (other.bytelength)
+    {
+        for (auto i = 0; i < MAX_INSN_LEN; ++i)
+            raw[i] = other.raw[i];
+        for (auto i : other.pcode) {
+            pcode.push_back(PcodeData(i));
+        }
+    }
+
+    ~Instruction (void)
+    {
+        for (auto p : pcode) {
+            p.release();
+        }
+    }
 };
 
 // * Hutch_Instructions
@@ -178,6 +196,9 @@ public:
     Instruction operator() (int);
 
     uint4 count () { return instructions.size (); }
+
+//    Instruction previousInstruction
+
 
     vector<Instruction>::iterator current ();
 

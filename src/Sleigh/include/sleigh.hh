@@ -39,6 +39,12 @@ struct PcodeData {
     // Convenience methods for hutch library.
     PcodeData(OpCode opc_, VarnodeData* outvar_, VarnodeData* invar_, int4 isize_) :
         opc(opc_), outvar(outvar_), invar(invar_), isize(isize_) {}
+    PcodeData(const PcodeData& other)
+    {
+        opc = other.opc;
+        isize = other.isize;
+        this->store(other.outvar, other.invar);
+    }
 
     bool operator==(const PcodeData &Pcode)
     {

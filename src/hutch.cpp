@@ -26,12 +26,6 @@
 //
 
 
-// Instruction locateInstruction (uintb offset, Hutch& hutch, Hutch_Instructions& insn)
-// {
-//     hutch.setMark(offset, insn);
-//     hutch.disassemble_iter(offset, uintb bufsize, Hutch_Emit *emitter)
-// }
-
 
 
 
@@ -225,7 +219,7 @@ uint Hutch::disassemble_iter(uintb offset, Hutch_Emit* emitter)
     Address addr (this->trans->getDefaultSpace (), baseaddr);
     Address lastaddr (this->trans->getDefaultSpace (),
                       baseaddr + this->loader->getBufferSize ());
- 
+
     addr = addr + offset;
 
     if (lastaddr <= addr) {
@@ -439,3 +433,74 @@ void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
     }
     this->currentinsn = &instructions[index];
 }
+
+
+
+// Instruction previousInstruction (uintb offset, Hutch& hutch, Hutch_Instructions& insn)
+// {
+//     hutch.setMark(offset, insn);
+//     hutch.disassemble_iter(offset, insn);
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
