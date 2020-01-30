@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
              << "semantics" << endl;
         for (auto p : insn.current()->pcode)
             printPcode(p);
+        cout << endl;
     }
 
     return 0;
