@@ -26,7 +26,11 @@
 //
 
 
- 
+// Instruction locateInstruction (uintb offset, Hutch& hutch, Hutch_Instructions& insn)
+// {
+//     hutch.setMark(offset, insn);
+//     hutch.disassemble_iter(offset, uintb bufsize, Hutch_Emit *emitter)
+// }
 
 
 
@@ -182,7 +186,7 @@ ssize_t Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount, Hut
 
     Address addr (this->trans->getDefaultSpace (), baseaddr);
     Address lastaddr (this->trans->getDefaultSpace (),
-                      baseaddr + this->loader->getImageSize ());
+                      baseaddr + this->loader->getBufferSize ());
 
     // Is offset in instruction units?
     if (unit == UNIT_INSN) {
@@ -214,14 +218,14 @@ ssize_t Hutch::disassemble(DisassemblyUnit unit, uintb offset, uintb amount, Hut
 }
 
 // Disassemble at offset "offset" the buffer passed to Hutch::initialize.
-uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
+uint Hutch::disassemble_iter(uintb offset, Hutch_Emit* emitter)
 {
     uintb baseaddr = this->loader->getBaseAddr ();
 
     Address addr (this->trans->getDefaultSpace (), baseaddr);
     Address lastaddr (this->trans->getDefaultSpace (),
-                      baseaddr + this->loader->getImageSize ());
-
+                      baseaddr + this->loader->getBufferSize ());
+ 
     addr = addr + offset;
 
     if (lastaddr <= addr) {
@@ -235,10 +239,6 @@ uint Hutch::disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter)
     if (auto e = dynamic_cast<Hutch_Instructions*>(emitter))
         storeRawInstructionBytes(*e->currentinsn);
 
-    if (len > bufsize) {
-        cout << "exceeded buffer len\n";
-        return 0;
-    }
     return len;
 }
 

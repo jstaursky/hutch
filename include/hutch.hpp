@@ -56,7 +56,7 @@ public:
         LoadImage ("nofile"), baseaddr (baseaddr), buf (buf), bufsize (bufsize)
     {
     }
-    inline uintb getImageSize () { return bufsize; }
+    inline uintb getBufferSize () { return bufsize; }
     inline uintb getBaseAddr () { return baseaddr; }
 
     virtual void loadFill (uint1* ptr, int4 size, const Address& addr) override;
@@ -221,18 +221,20 @@ public:
     // Creates image of executable.
     void initialize (uint1 const* buf, uintb bufsize, uintb baseaddr);
 
+    uintb getBufferSize () { return loader->getBufferSize(); }
+
     int4 instructionLength (const uintb baseaddr);
 
     ssize_t disassemble (DisassemblyUnit unit, uintb offset, uintb amount, Hutch_Emit* emitter = nullptr);
 
-    uint disassemble_iter(uintb offset, uintb bufsize, Hutch_Emit* emitter);
+    uint disassemble_iter(uintb offset, Hutch_Emit* emitter);
 
     void printInstructionBytes (const Instruction& insn);
 
     void setMark (uintb position,
                   Hutch_Instructions& insn)
     {
-        this->disassemble_iter(position, loader->getImageSize(), &insn);
+        this->disassemble_iter(position, &insn);
         insn.mark = insn.instructions.data()
                      + distance(insn.instructions.data(), insn.currentinsn);
     }
@@ -240,7 +242,7 @@ public:
     void resetMark (uintb position,
                     Hutch_Instructions& insn)
     {
-        this->disassemble_iter(position, loader->getImageSize(), &insn);
+        this->disassemble_iter(position, &insn);
         insn.mark = insn.instructions.data()
                      + distance(insn.instructions.data(), insn.currentinsn);
     }
