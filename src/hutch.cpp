@@ -170,7 +170,7 @@ void Hutch::printInstructionBytes (const Instruction& insn)
     cout << endl;
     return;
 }
- 
+
 //pDisassemble at offset "offset" the buffer passed to Hutch::initialize.
 uint Hutch::disassemble_iter(uintb offset, Hutch_Emit* emitter)
 {
@@ -226,7 +226,8 @@ Hutch::inspectPreviousInstruction (uintb offset, uintb limit,
                 isSelected = select (p);
                 if (isSelected) {
                     res.push_back (*rinsn);
-                    break; }
+                    break;
+                }
             }
         }
     }
