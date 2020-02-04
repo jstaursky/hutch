@@ -48,5 +48,15 @@ int main(int argc, char *argv[])
         cout << endl;
     }
 
+    cout << "\n\n\n";
+    cout << "will now output the raw binary valus for each insn" << endl;
+
+    auto [length, mover] = pair{ 0, 0 };
+    while (mover += length, length = hutch_h.disassemble_iter(mover, &insn)) {
+        cout << insn.current()->rawBytes ();
+    }
+
+
+
     return 0;
 }

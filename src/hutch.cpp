@@ -193,7 +193,7 @@ uint Hutch::disassemble_iter(uintb offset, Hutch_Emit* emitter)
     addr = addr + offset;
 
     if (lastaddr <= addr) {
-        cout << "exceeded last available address\n";
+        // cout << "exceeded last available address\n";
         return 0;
     }
     auto len = 0;
@@ -323,11 +323,6 @@ void Hutch_Instructions::dumpAsm (const Address& addr, const string& mnem,
 auto Hutch_Instructions::current () -> vector<Instruction>::iterator
 {
     return instructions.begin() + distance(instructions.data(), currentinsn);
-}
-
-Instruction Hutch_Instructions::operator()(int i)
-{
-    return instructions[i];
 }
 
 void Hutch_Instructions::storeInstruction (Address const& addr, any insn)
