@@ -26,6 +26,88 @@
 #include <any>
 #include <memory>
 
+class Hutch_PcodeData {
+public:
+    Hutch_PcodeData () = delete;
+    Hutch_PcodeData (Address const& addr, OpCode opc, VarnodeData* outvar,
+                     VarnodeData* vars, int4 isize) :
+    opcode (opc),
+        in_size (isize), address (addr)
+    {
+        if (outvar != nullptr) {
+            this->out_var = new VarnodeData;
+            *this->out_var = *outvar;
+        }
+        in_var = new VarnodeData;
+        for (auto i = 0; i != isize; ++i)
+            this->in_var[i] = vars[i];
+    }
+
+    //! Copy constructor
+    Hutch_PcodeData (const Hutch_PcodeData& other) :
+    opcode (other.opcode), in_size (other.in_size), address (other.address)
+    {
+        if (other.out_var != nullptr) {
+            this->out_var = new VarnodeData;
+            *this->out_var = *other.out_var;
+        }
+        this->in_var = new VarnodeData;
+        for (auto i = 0; i != other.in_size; ++i)
+            this->in_var[i] = other.in_var[i];
+    }
+
+    //! Move constructor
+    Hutch_PcodeData (Hutch_PcodeData&& other) noexcept : opcode(other.opcode), in_size(other.in_size), address(other.address){
+        out_var = other.out_var;
+        in_var = other.in_var;
+        other.out_var = nullptr;
+        other.in_var = nullptr;
+    }
+
+    //! Destructor
+    virtual ~Hutch_PcodeData () noexcept {
+        if (this->out_var)
+            delete this->out_var;
+        for (auto i = 0; i != this->in_size; ++i)
+            delete[] this->in_var;
+    }
+
+    bool operator==(const Hutch_PcodeData &other) {
+        if ((out_var != nullptr) && (other.out_var != nullptr)
+            ? (*out_var == *other.out_var) ? true : false
+            : (out_var == nullptr) && (other.out_var == nullptr) ? true : false)
+        {
+            if ((opcode == other.opcode)
+                ? (in_size == other.in_size) ? true : false
+                : false)
+            {
+                for (auto i = 0; i != in_size; ++i) {
+                    if (in_var[i] != other.in_var[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    //! Copy assignment operator
+    Hutch_PcodeData& operator= (const Hutch_PcodeData& other);
+
+    //! Move assignment operator
+    Hutch_PcodeData& operator= (Hutch_PcodeData&& other) noexcept;
+
+protected:
+private:
+    OpCode opcode;
+    VarnodeData* out_var = nullptr; // Points to outvar if there is an output
+    VarnodeData* in_var = nullptr; // Inputs
+    int4 in_size; // Number of inputs
+    Address address;
+};
+
 // Forward Declaration(s)
 class Hutch_Emit;
 /*****************************************************************************/
