@@ -26,131 +26,6 @@
 #include <any>
 #include <memory>
 
-class Hutch_PcodeData {
-private:
-    OpCode opcode;
-    VarnodeData* out_var = nullptr; // Points to outvar if there is an output
-    VarnodeData* in_var = nullptr; // Inputs
-    int4 in_size; // Number of inputs
-    Address address;
-
-public:
-    Hutch_PcodeData () = delete;
-    // Very first initialization happens through a "dump" procedure.
-    Hutch_PcodeData (Address const& addr, OpCode opc, VarnodeData* outvar,
-                     VarnodeData* vars, int4 isize) :
-    opcode (opc),
-        in_size (isize), address (addr)
-    {
-        if (outvar != nullptr) {
-            this->out_var = new VarnodeData;
-            *this->out_var = *outvar;
-        }
-        in_var = new VarnodeData;
-        for (auto i = 0; i != isize; ++i)
-            this->in_var[i] = vars[i];
-    }
-
-    // Copy constructor
-    Hutch_PcodeData (const Hutch_PcodeData& other) :
-    opcode (other.opcode), in_size (other.in_size), address (other.address)
-    {
-        if (other.out_var != nullptr) {
-            this->out_var = new VarnodeData;
-            *this->out_var = *other.out_var;
-        }
-        this->in_var = new VarnodeData;
-        for (auto i = 0; i != other.in_size; ++i)
-            this->in_var[i] = other.in_var[i];
-    }
-
-    // Move constructor
-    Hutch_PcodeData (Hutch_PcodeData&& other) noexcept :
-    opcode (other.opcode), in_size (other.in_size), address (other.address)
-    {
-        out_var = other.out_var;
-        in_var = other.in_var;
-        other.out_var = nullptr;
-        other.in_var = nullptr;
-    }
-
-    // Destructor
-    virtual ~Hutch_PcodeData () noexcept
-    {
-        if (this->out_var)
-            delete this->out_var;
-        delete[] this->in_var;
-    }
-
-    bool operator== (const Hutch_PcodeData& other)
-    {
-        if ((out_var != nullptr) && (other.out_var != nullptr) ?
-                (*out_var == *other.out_var) ? true : false :
-                (out_var == nullptr) && (other.out_var == nullptr) ? true :
-                                                                     false) {
-            if ((opcode == other.opcode) ?
-                    (in_size == other.in_size) ? true : false :
-                    false) {
-                for (auto i = 0; i != in_size; ++i) {
-                    if (in_var[i] != other.in_var[i]) {
-                        return false;
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Copy assignment operator - Not sure when or if this will ever be used,
-    //                            but better to be proactive than reactive.
-    Hutch_PcodeData& operator= (const Hutch_PcodeData& other)
-    {
-        // Handle self assignment.
-        if (this != &other) {
-            if (this->out_var) {
-                delete this->out_var;
-                this->out_var = new VarnodeData;
-                *this->out_var = *other.out_var;
-            }
-
-            delete[] this->in_var;
-            this->in_var = new VarnodeData[other.in_size];
-
-            for (auto i = 0; i != this->in_size; ++i)
-                this->in_var[i] = other.in_var[i];
-
-            this->opcode = other.opcode;
-            this->in_size = other.in_size;
-            this->address = other.address;
-        }
-        return *this;
-    }
-
-    // Move assignment operator
-    Hutch_PcodeData& operator= (Hutch_PcodeData&& other) noexcept
-    {
-        // Handle self assignment.
-        if (this != &other) {
-            delete this->out_var;
-            this->out_var = nullptr;
-
-            if (other.out_var)
-                this->out_var = other.out_var;
-
-            delete[] this->in_var;
-            this->in_var = other.in_var;
-            other.in_var = nullptr;
-
-            this->opcode = other.opcode;
-            this->in_size = other.in_size;
-            this->address = other.address;
-        }
-        return *this;
-    }
-
-};
-
 // Forward Declaration(s)
 class Hutch_Emit;
 /*****************************************************************************/
@@ -309,6 +184,11 @@ struct Instruction {
 };
 
 class Hutch;
+/* Hutch_Instructions
+ *   Holds addresses, the instructions (both asm and their pcode equivalents).
+ */
+
+
 // * Hutch_Instructions
 //
 class Hutch_Instructions : public Hutch_Emit {
@@ -324,7 +204,17 @@ class Hutch_Instructions : public Hutch_Emit {
 
     void removeBadInstruction () override;
 
-    // Logic is present to track when/if vector "instructions" relocates.
+    // A mark is used as a point of reference as you disassemble. The way
+    // disassembling works in Hutch, (or really in Sleigh) is decoding each
+    // address _instruction by instruction_. Note the emphasis on *instruction*
+    // rather than decoding being based on a byte by byte level. Hutch allows
+    // you to force disassembling on a byte by byte basis, but the idea to keep
+    // in mind is that you can only set a mark at a known instruction address.
+    // *
+    // Maintenance NOTE: mark is made possible, despite instructions being
+    //   stored in a vector, by logic present in
+    //   Hutch_Instructions::storeInstruction. to track when/if vector
+    //   "instructions" dynamically relocates in memory.
     Instruction* mark = nullptr;
 
     // fills in Instruction::pcode via trans.oneInstruction()
@@ -347,6 +237,7 @@ public:
     vector<Instruction>::iterator current ();
 
     // setMark + resetMark are apart of class Hutch
+    // but mark is located here.
     auto getMark () -> vector<Instruction>::iterator
     { return instructions.begin() + distance (instructions.data(), mark); }
     auto begin () { return instructions.begin (); }
@@ -355,9 +246,9 @@ public:
     auto rend () { return instructions.rend (); }
 };
 
-/*****************************************************************************/
-// * Hutch
-//
+/* Hutch
+ *   Manages Hutch_Instructions and holds buffer, translator, context info.
+ */
 class Hutch {
     friend class Hutch_Instructions;
     string docname;
@@ -409,8 +300,7 @@ public:
                      + distance(insn.instructions.data(), insn.currentinsn);
     }
 
-    void resetMark (uintb position,
-                    Hutch_Instructions& insn)
+    void resetMark (uintb position, Hutch_Instructions& insn)
     {
         this->disassemble_iter(position, &insn);
         insn.mark = insn.instructions.data()
