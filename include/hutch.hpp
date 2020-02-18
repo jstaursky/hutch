@@ -109,14 +109,6 @@ public:
 struct Instruction;
 class Hutch_Emit : public Hutch_PcodeEmit, public Hutch_AssemblyEmit {
     friend class Hutch;
-    // vector<Instruction> instructions;
-
-    // // For tracking the most recent disassembled instruction.
-    // // Gets set in disassemble_iter.
-    // Instruction* currentinsn = nullptr;
-
-    // virtual void storeInstruction (Address const&, any) = 0;
-
     virtual void removeBadInstruction () = 0;
 
 public:
@@ -187,10 +179,6 @@ class Hutch;
 /* Hutch_Instructions
  *   Holds addresses, the instructions (both asm and their pcode equivalents).
  */
-
-
-// * Hutch_Instructions
-//
 class Hutch_Instructions : public Hutch_Emit {
     friend class Hutch;
 

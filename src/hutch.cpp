@@ -24,16 +24,6 @@
 /*****************************************************************************/
 // * Functions
 //
-
-
-
-
-
-
-
-
-
-
 // Returns to position of "byte" inside buffer "buf" of size "sz".
 // ex.
 //     for (auto [pos, buf] = pair{ 0, img };
