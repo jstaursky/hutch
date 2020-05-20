@@ -1,7 +1,7 @@
 VPATH = parser-tools include src src/Sleigh src/build processors/x86/languages processors/8085/languages
 
-CC       = gcc
-CXX      = g++
+CC       = gcc -ggdb 
+CXX      = g++ -ggdb 
 CXXFLAGS = -O2 -Wall -Wno-sign-compare -std=c++17
 CXXFLAGS_SHARED = -O2 -Wall -Wno-sign-compare -fPIC -std=c++17
 
