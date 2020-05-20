@@ -1,5 +1,5 @@
-CC=gcc
-CXX=g++
+CC=gcc -ggdb 
+CXX=g++ -ggdb 
 
 CXXFLAGS=-g3 -Wall -Wno-sign-compare -std=c++17
 
