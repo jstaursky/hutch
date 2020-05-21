@@ -27,18 +27,21 @@
 
 class XmlScan {
 public:
-  enum mode { CharDataMode, CDataMode, AttValueSingleMode,
-	      AttValueDoubleMode, CommentMode, CharRefMode,
-	      NameMode, SNameMode, SingleMode };
-  enum token { CharDataToken = 258,
-	       CDataToken = 259,
-	       AttValueToken = 260,
-	       CommentToken =261,
-	       CharRefToken = 262,
-	       NameToken = 263,
-	       SNameToken = 264,
-	       ElementBraceToken = 265,
-	       CommandBraceToken = 266 };
+  enum mode {
+      CharDataMode,        CDataMode,    AttValueSingleMode,
+      AttValueDoubleMode,  CommentMode,  CharRefMode,
+      NameMode,            SNameMode,    SingleMode
+  };
+  enum token {
+      CharDataToken     = 258,
+      CDataToken        = 259,
+      AttValueToken     = 260,
+      CommentToken      = 261,
+      CharRefToken      = 262,
+      NameToken         = 263,
+      SNameToken        = 264,
+      ElementBraceToken = 265,
+      CommandBraceToken = 266 };
 private:
   mode curmode;
   istream &s;
@@ -48,7 +51,7 @@ private:
   bool endofstream;		// Has end of stream been reached
   void clearlvalue(void);
   int4 getxmlchar(void) {
-    char c;	    
+    char c;
     int4 ret=lookahead[pos];
     if (!endofstream) {
       s.get(c); 
@@ -66,7 +69,7 @@ private:
   }
   int4 next(int4 i) { return lookahead[(pos+i)&3]; }
   bool isLetter(int4 val) { return (((val>=0x41)&&(val<=0x5a))||((val>=0x61)&&(val<=0x7a))); }
-  bool isInitialNameChar(int4 val);			  
+  bool isInitialNameChar(int4 val);
   bool isNameChar(int4 val);
   bool isChar(int4 val);
   int4 scanSingle(void);
@@ -82,7 +85,8 @@ public:
   ~XmlScan(void);
   void setmode(mode m) { curmode = m; }
   int4 nexttoken(void);		// Interface for bison
-  string *lval(void) { string *ret = lvalue; lvalue = (string *)0; return ret; }
+  string *lval(void)
+  { string *ret = lvalue; lvalue = (string *)0; return ret; }
 };
 
 struct NameValue {
