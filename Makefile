@@ -25,8 +25,13 @@ SLEIGH := context  filemanage  pcodecompile    pcodeparse   semantics   \
 
 HUTCH_LIB_ADDONS := hutch
 
+ALL := sleigh-compile x86.sla 8085.sla libsla.a libsla.so
+
 # BUILD EVERYTHING #############################################################
-all: sleigh-compile x86.sla 8085.sla libsla.a libsla.so
+all: $(ALL)
+
+# Ensure that build-directories are used as dependency only once.
+$(ALL): | $(BUILD_DIR) $(BUILD_SHARED_DIR)
 
 examples: all
 	$(MAKE) -C examples/example-one
@@ -36,6 +41,10 @@ x86.sla: x86.slaspec
 
 8085.sla: 8085.slaspec
 	./bin/sleigh-compile -a processors/8085/languages
+
+# SLEIGH COMPILER ##############################################################
+slgh_compile.o: slgh_compile.cc
+	$(CXX) $(CXXFLAGS) -I$(SLGH_INCLUDE_DIR) -c $< -o $(BUILD_DIR)/$@
 
 # Parsing + Lexing #############################################################
 LEX  = flex
@@ -114,11 +123,10 @@ SLEIGH_COMP := slgh_compile  slghparse  slghscan
 
 # Collect all the requisite .o files, less the parsing ones. Those are handled
 # separately.
-SLEIGH_COMP_OBJS := $(addsuffix .o, $(addprefix $(BUILD_DIR)/, \
-	$(filter-out $(PARSING_FILES), $(CORE) $(SLEIGH) $(SLEIGH_COMP))))
+SLEIGH_COMP_OBJS := $(addsuffix .o, $(CORE) $(SLEIGH) $(SLEIGH_COMP))
 
-$(SLEIGH_COMP_OBJS): | $(BUILD_DIR) $(BUILD_SHARED_DIR) $(addsuffix .o, $(PARSING_FILES))
-# No actions. Messes up build process.
+# Creates directories to hold compiled files + build the parsing-related files.
+$(SLEIGH_COMP_OBJS): | $(BUILD_DIR) $(BUILD_SHARED_DIR)
 
 
 sleigh-compile: $(SLEIGH_COMP_OBJS)
