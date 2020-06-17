@@ -27,9 +27,9 @@ class PatternBlock
     vector<uintm> valvec;		// Value
     void normalize(void);
 public:
-    PatternBlock(int4 off,uintm msk,uintm val);
+    PatternBlock(int4 off, uintm msk, uintm val);
     PatternBlock(bool tf);
-    PatternBlock(const PatternBlock *a,const PatternBlock *b);
+    PatternBlock(const PatternBlock *a, const PatternBlock *b);
     PatternBlock(vector<PatternBlock *> &list);
     PatternBlock *commonSubPattern(const PatternBlock *b) const;
     PatternBlock *intersect(const PatternBlock *b) const;
@@ -43,17 +43,17 @@ public:
     }
     int4 getLength(void) const
     {
-        return offset+nonzerosize;
+        return offset + nonzerosize;
     }
-    uintm getMask(int4 startbit,int4 size) const;
-    uintm getValue(int4 startbit,int4 size) const;
+    uintm getMask(int4 startbit, int4 size) const;
+    uintm getValue(int4 startbit, int4 size) const;
     bool alwaysTrue(void) const
     {
-        return (nonzerosize==0);
+        return (nonzerosize == 0);
     }
     bool alwaysFalse(void) const
     {
-        return (nonzerosize==-1);
+        return (nonzerosize == -1);
     }
     bool isInstructionMatch(ParserWalker &walker) const;
     bool isContextMatch(ParserWalker &walker) const;
@@ -66,24 +66,24 @@ class Pattern
 {
 public:
     virtual ~Pattern(void) {}
-    virtual Pattern *simplifyClone(void) const=0;
-    virtual void shiftInstruction(int4 sa)=0;
-    virtual Pattern *doOr(const Pattern *b,int4 sa) const=0;
-    virtual Pattern *doAnd(const Pattern *b,int4 sa) const=0;
-    virtual Pattern *commonSubPattern(const Pattern *b,int4 sa) const=0;
-    virtual bool isMatch(ParserWalker &walker) const=0; // Does this pattern match context
-    virtual int4 numDisjoint(void) const=0;
-    virtual DisjointPattern *getDisjoint(int4 i) const=0;
-    virtual bool alwaysTrue(void) const=0;
-    virtual bool alwaysFalse(void) const=0;
-    virtual bool alwaysInstructionTrue(void) const=0;
-    virtual void saveXml(ostream &s) const=0;
-    virtual void restoreXml(const Element *el)=0;
+    virtual Pattern *simplifyClone(void) const = 0;
+    virtual void shiftInstruction(int4 sa) = 0;
+    virtual Pattern *doOr(const Pattern *b, int4 sa) const = 0;
+    virtual Pattern *doAnd(const Pattern *b, int4 sa) const = 0;
+    virtual Pattern *commonSubPattern(const Pattern *b, int4 sa) const = 0;
+    virtual bool isMatch(ParserWalker &walker) const = 0; // Does this pattern match context
+    virtual int4 numDisjoint(void) const = 0;
+    virtual DisjointPattern *getDisjoint(int4 i) const = 0;
+    virtual bool alwaysTrue(void) const = 0;
+    virtual bool alwaysFalse(void) const = 0;
+    virtual bool alwaysInstructionTrue(void) const = 0;
+    virtual void saveXml(ostream &s) const = 0;
+    virtual void restoreXml(const Element *el) = 0;
 };
 
 class DisjointPattern : public Pattern   // A pattern with no ORs in it
 {
-    virtual PatternBlock *getBlock(bool context) const=0;
+    virtual PatternBlock *getBlock(bool context) const = 0;
 public:
     virtual int4 numDisjoint(void) const
     {
@@ -93,12 +93,12 @@ public:
     {
         return (DisjointPattern *)0;
     }
-    uintm getMask(int4 startbit,int4 size,bool context) const;
-    uintm getValue(int4 startbit,int4 size,bool context) const;
+    uintm getMask(int4 startbit, int4 size, bool context) const;
+    uintm getValue(int4 startbit, int4 size, bool context) const;
     int4 getLength(bool context) const;
     bool specializes(const DisjointPattern *op2) const;
     bool identical(const DisjointPattern *op2) const;
-    bool resolvesIntersect(const DisjointPattern *op1,const DisjointPattern *op2) const;
+    bool resolvesIntersect(const DisjointPattern *op1, const DisjointPattern *op2) const;
     static DisjointPattern *restoreDisjoint(const Element *el);
 };
 
@@ -138,9 +138,9 @@ public:
     {
         maskvalue->shift(sa);
     }
-    virtual Pattern *doOr(const Pattern *b,int4 sa) const;
-    virtual Pattern *doAnd(const Pattern *b,int4 sa) const;
-    virtual Pattern *commonSubPattern(const Pattern *b,int4 sa) const;
+    virtual Pattern *doOr(const Pattern *b, int4 sa) const;
+    virtual Pattern *doAnd(const Pattern *b, int4 sa) const;
+    virtual Pattern *commonSubPattern(const Pattern *b, int4 sa) const;
     virtual bool isMatch(ParserWalker &walker) const
     {
         return maskvalue->isInstructionMatch(walker);
@@ -190,9 +190,9 @@ public:
         return new ContextPattern(maskvalue->clone());
     }
     virtual void shiftInstruction(int4 sa) { }  // do nothing
-    virtual Pattern *doOr(const Pattern *b,int4 sa) const;
-    virtual Pattern *doAnd(const Pattern *b,int4 sa) const;
-    virtual Pattern *commonSubPattern(const Pattern *b,int4 sa) const;
+    virtual Pattern *doOr(const Pattern *b, int4 sa) const;
+    virtual Pattern *doAnd(const Pattern *b, int4 sa) const;
+    virtual Pattern *commonSubPattern(const Pattern *b, int4 sa) const;
     virtual bool isMatch(ParserWalker &walker) const
     {
         return maskvalue->isContextMatch(walker);
@@ -228,7 +228,7 @@ public:
         context = (ContextPattern *)0;
         instr = (InstructionPattern *)0;
     }
-    CombinePattern(ContextPattern *con,InstructionPattern *in)
+    CombinePattern(ContextPattern *con, InstructionPattern *in)
     {
         context = con;
         instr = in;
@@ -246,9 +246,9 @@ public:
     {
         return instr->alwaysInstructionTrue();
     }
-    virtual Pattern *doOr(const Pattern *b,int4 sa) const;
-    virtual Pattern *doAnd(const Pattern *b,int4 sa) const;
-    virtual Pattern *commonSubPattern(const Pattern *b,int4 sa) const;
+    virtual Pattern *doOr(const Pattern *b, int4 sa) const;
+    virtual Pattern *doAnd(const Pattern *b, int4 sa) const;
+    virtual Pattern *commonSubPattern(const Pattern *b, int4 sa) const;
     virtual void saveXml(ostream &s) const;
     virtual void restoreXml(const Element *el);
 };
@@ -258,7 +258,7 @@ class OrPattern : public Pattern
     vector<DisjointPattern *> orlist;
 public:
     OrPattern(void) {}		// For use with restoreXml
-    OrPattern(DisjointPattern *a,DisjointPattern *b);
+    OrPattern(DisjointPattern *a, DisjointPattern *b);
     OrPattern(const vector<DisjointPattern *> &list);
     virtual ~OrPattern(void);
     virtual Pattern *simplifyClone(void) const;
@@ -275,9 +275,9 @@ public:
     virtual bool alwaysTrue(void) const;
     virtual bool alwaysFalse(void) const;
     virtual bool alwaysInstructionTrue(void) const;
-    virtual Pattern *doOr(const Pattern *b,int4 sa) const;
-    virtual Pattern *doAnd(const Pattern *b,int4 sa) const;
-    virtual Pattern *commonSubPattern(const Pattern *b,int4 sa) const;
+    virtual Pattern *doOr(const Pattern *b, int4 sa) const;
+    virtual Pattern *doAnd(const Pattern *b, int4 sa) const;
+    virtual Pattern *commonSubPattern(const Pattern *b, int4 sa) const;
     virtual void saveXml(ostream &s) const;
     virtual void restoreXml(const Element *el);
 };

@@ -39,7 +39,7 @@ struct UnimplError : public LowlevelError
     ///
     /// \param s is a more verbose description of the error
     /// \param l is the length (in bytes) of the unimplemented instruction
-    UnimplError(const string &s,int4 l) : LowlevelError(s)
+    UnimplError(const string &s, int4 l) : LowlevelError(s)
     {
         instruction_length = l;
     }
@@ -102,13 +102,14 @@ public:
     /// \param vars is a pointer to an array of VarnodeData for each
     ///             input varnode
     /// \param isize is the number of input varnodes
-    virtual void dump(const Address &addr,OpCode opc,VarnodeData *outvar,VarnodeData *vars,int4 isize)=0;
+    virtual void dump(const Address &addr, OpCode opc, VarnodeData *outvar, VarnodeData *vars, int4 isize) = 0;
 
     /// Emit pcode directly from an XML tag
-    void restoreXmlOp(const Element *el,const AddrSpaceManager *trans);
+    void restoreXmlOp(const Element *el, const AddrSpaceManager *trans);
 
     enum
-    {			// Tags for packed pcode format
+    {
+        // Tags for packed pcode format
         unimpl_tag = 0x20,
         inst_tag = 0x21,
         op_tag = 0x22,
@@ -118,11 +119,11 @@ public:
         end_tag = 0x60
     };
     /// Helper function for unpacking an offset from a pcode byte stream
-    static const uint1 *unpackOffset(const uint1 *ptr,uintb &off);
+    static const uint1 *unpackOffset(const uint1 *ptr, uintb &off);
     /// Helper function for unpacking a varnode from a pcode byte stream
-    static const uint1 *unpackVarnodeData(const uint1 *ptr,VarnodeData &v,const AddrSpaceManager *trans);
+    static const uint1 *unpackVarnodeData(const uint1 *ptr, VarnodeData &v, const AddrSpaceManager *trans);
     /// Emit pcode directly from a packed byte stream
-    const uint1 *restorePackedOp(const Address &addr,const uint1 *ptr,const AddrSpaceManager *trans);
+    const uint1 *restorePackedOp(const Address &addr, const uint1 *ptr, const AddrSpaceManager *trans);
 };
 
 /// \brief Abstract class for emitting disassembly to an application
@@ -143,7 +144,7 @@ public:
     /// \param addr is the Address of the machine instruction
     /// \param mnem is the decoded instruction mnemonic
     /// \param body is the decode body (or operands) of the instruction
-    virtual void dump(const Address &addr,const string &mnem,const string &body)=0;
+    virtual void dump(const Address &addr, const string &mnem, const string &body) = 0;
 };
 
 /// \brief Abstract class for converting native constants to addresses
@@ -169,7 +170,7 @@ public:
     /// \param point is the address at which this constant is being used
     /// \param fullEncoding is used to hold the full pointer encoding if \b val is a partial encoding
     /// \return the resolved Address
-    virtual Address resolve(uintb val,int4 sz,const Address &point,uintb &fullEncoding)=0;
+    virtual Address resolve(uintb val, int4 sz, const Address &point, uintb &fullEncoding) = 0;
 };
 
 /// \brief A virtual space \e stack space
@@ -191,10 +192,10 @@ class SpacebaseSpace : public AddrSpace
     bool isNegativeStack;		///< true if stack grows in negative direction
     VarnodeData baseloc;		///< location data of the base register
     VarnodeData baseOrig;		///< Original base register before any truncation
-    void setBaseRegister(const VarnodeData &data,int4 origSize,bool stackGrowth); ///< Set the base register at time space is created
+    void setBaseRegister(const VarnodeData &data, int4 origSize, bool stackGrowth); ///< Set the base register at time space is created
 public:
-    SpacebaseSpace(AddrSpaceManager *m,const Translate *t,const string &nm,int4 ind,int4 sz,AddrSpace *base,int4 dl);
-    SpacebaseSpace(AddrSpaceManager *m,const Translate *t); ///< For use with restoreXml
+    SpacebaseSpace(AddrSpaceManager *m, const Translate *t, const string &nm, int4 ind, int4 sz, AddrSpace *base, int4 dl);
+    SpacebaseSpace(AddrSpaceManager *m, const Translate *t); ///< For use with restoreXml
     virtual int4 numSpacebase(void) const;
     virtual const VarnodeData &getSpacebase(int4 i) const;
     virtual const VarnodeData &getSpacebaseFull(int4 i) const;
@@ -237,14 +238,14 @@ public:
     {
         return unified;    ///< Get the Varnode whole
     }
-    Address getEquivalentAddress(uintb offset,int4 &pos) const;	///< Given offset in \join space, get equivalent address of piece
+    Address getEquivalentAddress(uintb offset, int4 &pos) const;	///< Given offset in \join space, get equivalent address of piece
     bool operator<(const JoinRecord &op2) const; ///< Compare records lexigraphically by pieces
 };
 
 /// \brief Comparator for JoinRecord objects
 struct JoinRecordCompare
 {
-    bool operator()(const JoinRecord *a,const JoinRecord *b) const
+    bool operator()(const JoinRecord *a, const JoinRecord *b) const
     {
         return *a < *b;
     }		///< Compare to JoinRecords using their built-in comparison
@@ -258,8 +259,8 @@ class AddrSpaceManager
 {
     vector<AddrSpace *> baselist; ///< Every space we know about for this architecture
     vector<AddressResolver *> resolvelist; ///< Special constant resolvers
-    map<string,AddrSpace *> name2Space;	///< Map from name -> space
-    map<int4,AddrSpace *> shortcut2Space;	///< Map from shortcut -> space
+    map<string, AddrSpace *> name2Space;	///< Map from name -> space
+    map<int4, AddrSpace *> shortcut2Space;	///< Map from shortcut -> space
     AddrSpace *constantspace;	///< Quick reference to constant space
     AddrSpace *defaultcodespace;	///< Default space where code lives, generally main RAM
     AddrSpace *defaultdataspace;	///< Default space where data lives
@@ -269,20 +270,20 @@ class AddrSpaceManager
     AddrSpace *stackspace;	///< Stack space associated with processor
     AddrSpace *uniqspace;		///< Temporary space associated with processor
     uintb joinallocate;		///< Next offset to be allocated in join space
-    set<JoinRecord *,JoinRecordCompare> splitset;	///< Different splits that have been defined in join space
+    set<JoinRecord *, JoinRecordCompare> splitset;	///< Different splits that have been defined in join space
     vector<JoinRecord *> splitlist; ///< JoinRecords indexed by join address
 protected:
-    AddrSpace *restoreXmlSpace(const Element *el,const Translate *trans); ///< Add a space to the model based an on XML tag
-    void restoreXmlSpaces(const Element *el,const Translate *trans); ///< Restore address spaces in the model from an XML tag
+    AddrSpace *restoreXmlSpace(const Element *el, const Translate *trans); ///< Add a space to the model based an on XML tag
+    void restoreXmlSpaces(const Element *el, const Translate *trans); ///< Restore address spaces in the model from an XML tag
     void setDefaultCodeSpace(int4 index); ///< Set the default address space (for code)
     void setDefaultDataSpace(int4 index);	///< Set the default address space for data
     void setReverseJustified(AddrSpace *spc); ///< Set reverse justified property on this space
     void assignShortcut(AddrSpace *spc);	///< Select a shortcut character for a new space
-    void markNearPointers(AddrSpace *spc,int4 size);	///< Mark that given space can be accessed with near pointers
+    void markNearPointers(AddrSpace *spc, int4 size);	///< Mark that given space can be accessed with near pointers
     void insertSpace(AddrSpace *spc); ///< Add a new address space to the model
     void copySpaces(const AddrSpaceManager *op2);	///< Copy spaces from another manager
-    void addSpacebasePointer(SpacebaseSpace *basespace,const VarnodeData &ptrdata,int4 truncSize,bool stackGrowth); ///< Set the base register of a spacebase space
-    void insertResolver(AddrSpace *spc,AddressResolver *rsolv); ///< Override the base resolver for a space
+    void addSpacebasePointer(SpacebaseSpace *basespace, const VarnodeData &ptrdata, int4 truncSize, bool stackGrowth); ///< Set the base register of a spacebase space
+    void insertResolver(AddrSpace *spc, AddressResolver *rsolv); ///< Override the base resolver for a space
     JoinRecord *findJoinInternal(uintb offset) const; ///< Find JoinRecord for \e offset in the join space
 public:
     AddrSpaceManager(void);	///< Construct an empty address space manager
@@ -300,23 +301,23 @@ public:
     AddrSpace *getConstantSpace(void) const; ///< Get the constant space
     Address getConstant(uintb val) const; ///< Get a constant encoded as an Address
     Address createConstFromSpace(AddrSpace *spc) const; ///< Create a constant address encoding an address space
-    Address resolveConstant(AddrSpace *spc,uintb val,int4 sz,const Address &point,uintb &fullEncoding) const;
+    Address resolveConstant(AddrSpace *spc, uintb val, int4 sz, const Address &point, uintb &fullEncoding) const;
     int4 numSpaces(void) const; ///< Get the number of address spaces for this processor
     AddrSpace *getSpace(int4 i) const; ///< Get an address space via its index
     AddrSpace *getNextSpaceInOrder(AddrSpace *spc) const; ///< Get the next \e contiguous address space
-    JoinRecord *findAddJoin(const vector<VarnodeData> &pieces,uint4 logicalsize); ///< Get (or create) JoinRecord for \e pieces
+    JoinRecord *findAddJoin(const vector<VarnodeData> &pieces, uint4 logicalsize); ///< Get (or create) JoinRecord for \e pieces
     JoinRecord *findJoin(uintb offset) const; ///< Find JoinRecord for \e offset in the join space
-    void setDeadcodeDelay(AddrSpace *spc,int4 delaydelta); ///< Set the deadcodedelay for a specific space
+    void setDeadcodeDelay(AddrSpace *spc, int4 delaydelta); ///< Set the deadcodedelay for a specific space
     void truncateSpace(const TruncationTag &tag);	///< Mark a space as truncated from its original size
 
     /// \brief Build a logically lower precision storage location for a bigger floating point register
-    Address constructFloatExtensionAddress(const Address &realaddr,int4 realsize,int4 logicalsize);
+    Address constructFloatExtensionAddress(const Address &realaddr, int4 realsize, int4 logicalsize);
 
     /// \brief Build a logical whole from register pairs
-    Address constructJoinAddress(const Translate *translate,const Address &hiaddr,int4 hisz,const Address &loaddr,int4 losz);
+    Address constructJoinAddress(const Translate *translate, const Address &hiaddr, int4 hisz, const Address &loaddr, int4 losz);
 
     /// \brief Make sure a possibly offset \e join address has a proper JoinRecord
-    void renormalizeJoinAddress(Address &addr,int4 size);
+    void renormalizeJoinAddress(Address &addr, int4 size);
 };
 
 /// \brief The interface to a translation engine for a processor.
@@ -353,7 +354,7 @@ public:
     /// A translator gets initialized once, possibly using XML documents
     /// to configure it.
     /// \param store is a set of configuration documents
-    virtual void initialize(DocumentStorage &store)=0;
+    virtual void initialize(DocumentStorage &store) = 0;
 
     /// \brief Add a new context variable to the model for this processor
     ///
@@ -365,7 +366,7 @@ public:
     /// \param name is the name of the new context variable
     /// \param sbit is the first bit of the variable in the packed state
     /// \param ebit is the last bit of the variable in the packed state
-    virtual void registerContext(const string &name,int4 sbit,int4 ebit) {}
+    virtual void registerContext(const string &name, int4 sbit, int4 ebit) {}
 
     /// \brief Set the default value for a particular context variable
     ///
@@ -374,7 +375,7 @@ public:
     /// for the variable.
     /// \param name is the name of the context variable
     /// \param val is the value to be considered default
-    virtual void setContextDefault(const string &name,uintm val) {}
+    virtual void setContextDefault(const string &name, uintm val) {}
 
     /// \brief Toggle whether disassembly is allowed to affect context
     ///
@@ -394,14 +395,14 @@ public:
     /// \param base is the address space containing the register
     /// \param offset is the offset of the register
     /// \param size is the number of bytes in the register
-    virtual void addRegister(const string &nm,AddrSpace *base,uintb offset,int4 size)=0;
+    virtual void addRegister(const string &nm, AddrSpace *base, uintb offset, int4 size) = 0;
 
     /// \brief Get a register as VarnodeData given its name
     ///
     /// Retrieve the location and size of a register given its name
     /// \param nm is the name of the register
     /// \return the VarnodeData for the register
-    virtual const VarnodeData &getRegister(const string &nm) const=0;
+    virtual const VarnodeData &getRegister(const string &nm) const = 0;
 
     /// \brief Get the name of a register given its location
     ///
@@ -413,7 +414,7 @@ public:
     /// \param off is the offset of the location
     /// \param size is the size of the location
     /// \return the name of the register, or an empty string
-    virtual string getRegisterName(AddrSpace *base,uintb off,int4 size) const=0;
+    virtual string getRegisterName(AddrSpace *base, uintb off, int4 size) const = 0;
 
     /// \brief Get a list of all register names and the corresponding location
     ///
@@ -421,7 +422,7 @@ public:
     /// that are specific to it.  This function populates a map from the location information
     /// to the name, for every named location known by the translator
     /// \param reglist is the map which will be populated by the call
-    virtual void getAllRegisters(map<VarnodeData,string> &reglist) const=0;
+    virtual void getAllRegisters(map<VarnodeData, string> &reglist) const = 0;
 
     /// \brief Get a list of all \e user-defined pcode ops
     ///
@@ -431,7 +432,7 @@ public:
     /// and an index.  This method returns a list of these ops
     /// in index order.
     /// \param res is the resulting vector of user op names
-    virtual void getUserOpNames(vector<string> &res) const=0;
+    virtual void getUserOpNames(vector<string> &res) const = 0;
 
     /// \brief Get the length of a machine instruction
     ///
@@ -440,7 +441,7 @@ public:
     /// instruction stream.
     /// \param baseaddr is the Address of the instruction
     /// \return the number of bytes in the instruction
-    virtual int4 instructionLength(const Address &baseaddr) const=0;
+    virtual int4 instructionLength(const Address &baseaddr) const = 0;
 
     /// \brief Transform a single machine instruction into pcode
     ///
@@ -455,7 +456,7 @@ public:
     /// \param emit is the tailored pcode emitting object
     /// \param baseaddr is the Address of the machine instruction
     /// \return the number of bytes in the machine instruction
-    virtual int4 oneInstruction(PcodeEmit &emit,const Address &baseaddr) const=0;
+    virtual int4 oneInstruction(PcodeEmit &emit, const Address &baseaddr) const = 0;
 
     /// \brief Disassemble a single machine instruction
     ///
@@ -465,7 +466,7 @@ public:
     /// method in the \e emit object.
     /// \param emit is the disassembly emitting object
     /// \param baseaddr is the address of the machine instruction to disassemble
-    virtual int4 printAssembly(AssemblyEmit &emit,const Address &baseaddr) const=0;
+    virtual int4 printAssembly(AssemblyEmit &emit, const Address &baseaddr) const = 0;
 };
 
 /// Return the size of addresses for the processor's official
@@ -566,7 +567,7 @@ inline AddrSpace *AddrSpaceManager::getConstantSpace(void) const
 /// \return the \e constant address
 inline Address AddrSpaceManager::getConstant(uintb val) const
 {
-    return Address(constantspace,val);
+    return Address(constantspace, val);
 }
 
 /// This routine is used to encode a pointer to an address space
@@ -577,7 +578,7 @@ inline Address AddrSpaceManager::getConstant(uintb val) const
 /// \return the encoded Address
 inline Address AddrSpaceManager::createConstFromSpace(AddrSpace *spc) const
 {
-    return Address(constantspace,(uintb)(uintp)spc);
+    return Address(constantspace, (uintb)(uintp)spc);
 }
 
 /// This returns the total number of address spaces used by the
@@ -617,7 +618,7 @@ inline void Translate::setBigEndian(bool val)
 /// \param val is the boundary offset
 inline void Translate::setUniqueBase(uintm val)
 {
-    if (val>unique_base) unique_base = val;
+    if (val > unique_base) unique_base = val;
 }
 
 /// Processors can usually be described as using a big endian

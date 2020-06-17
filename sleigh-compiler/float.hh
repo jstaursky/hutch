@@ -49,11 +49,11 @@ private:
     int4 bias;			///< What to add to real exponent to get encoding
     int4 maxexponent;		///< Maximum possible exponent
     bool jbitimplied;		///< Set to \b true if integer bit of 1 is assumed
-    static double createFloat(bool sign,uintb signif,int4 exp);	 ///< Create a double given sign, fractional, and exponent
-    static floatclass extractExpSig(double x,bool *sgn,uintb *signif,int4 *exp);
-    uintb setFractionalCode(uintb x,uintb code) const;		///< Set the fractional part of an encoded value
-    uintb setSign(uintb x,bool sign) const;			///< Set the sign bit of an encoded value
-    uintb setExponentCode(uintb x,uintb code) const;		///< Set the exponent of an encoded value
+    static double createFloat(bool sign, uintb signif, int4 exp);	 ///< Create a double given sign, fractional, and exponent
+    static floatclass extractExpSig(double x, bool *sgn, uintb *signif, int4 *exp);
+    uintb setFractionalCode(uintb x, uintb code) const;		///< Set the fractional part of an encoded value
+    uintb setSign(uintb x, bool sign) const;			///< Set the sign bit of an encoded value
+    uintb setExponentCode(uintb x, uintb code) const;		///< Set the exponent of an encoded value
     uintb getZeroEncoding(bool sgn) const;			///< Get an encoded zero value
     uintb getInfinityEncoding(bool sgn) const;			///< Get an encoded infinite value
     uintb getNaNEncoding(bool sgn) const;				///< Get an encoded NaN value
@@ -64,9 +64,9 @@ public:
     {
         return size;    ///< Get the size of the encoding in bytes
     }
-    double getHostFloat(uintb encoding,floatclass *type) const;	///< Convert an encoding into host's double
+    double getHostFloat(uintb encoding, floatclass *type) const;	///< Convert an encoding into host's double
     uintb getEncoding(double host) const;				///< Convert host's double into \b this encoding
-    uintb convertEncoding(uintb encoding,const FloatFormat *formin) const;	///< Convert between two different formats
+    uintb convertEncoding(uintb encoding, const FloatFormat *formin) const;	///< Convert between two different formats
 
     uintb extractFractionalCode(uintb x) const;			///< Extract the fractional part of the encoding
     bool extractSign(uintb x) const;				///< Extract the sign bit from the encoding
@@ -74,24 +74,24 @@ public:
 
     // Operations on floating point values
 
-    uintb opEqual(uintb a,uintb b) const;			///< Equality comparison (==)
-    uintb opNotEqual(uintb a,uintb b) const;		///< Inequality comparison (!=)
-    uintb opLess(uintb a,uintb b) const;			///< Less-than comparison (<)
-    uintb opLessEqual(uintb a,uintb b) const;		///< Less-than-or-equal comparison (<=)
+    uintb opEqual(uintb a, uintb b) const;			///< Equality comparison (==)
+    uintb opNotEqual(uintb a, uintb b) const;		///< Inequality comparison (!=)
+    uintb opLess(uintb a, uintb b) const;			///< Less-than comparison (<)
+    uintb opLessEqual(uintb a, uintb b) const;		///< Less-than-or-equal comparison (<=)
     uintb opNan(uintb a) const;				///< Test if Not-a-Number (NaN)
-    uintb opAdd(uintb a,uintb b) const;			///< Addition (+)
-    uintb opDiv(uintb a,uintb b) const;			///< Division (/)
-    uintb opMult(uintb a,uintb b) const;			///< Multiplication (*)
-    uintb opSub(uintb a,uintb b) const;			///< Subtraction (-)
+    uintb opAdd(uintb a, uintb b) const;			///< Addition (+)
+    uintb opDiv(uintb a, uintb b) const;			///< Division (/)
+    uintb opMult(uintb a, uintb b) const;			///< Multiplication (*)
+    uintb opSub(uintb a, uintb b) const;			///< Subtraction (-)
     uintb opNeg(uintb a) const;				///< Unary negate
     uintb opAbs(uintb a) const;				///< Absolute value (abs)
     uintb opSqrt(uintb a) const;				///< Square root (sqrt)
-    uintb opTrunc(uintb a,int4 sizeout) const;		///< Convert floating-point to integer
+    uintb opTrunc(uintb a, int4 sizeout) const;		///< Convert floating-point to integer
     uintb opCeil(uintb a) const;				///< Ceiling (ceil)
     uintb opFloor(uintb a) const;				///< Floor (floor)
     uintb opRound(uintb a) const;				///< Round
-    uintb opInt2Float(uintb a,int4 sizein) const;		///< Convert integer to floating-point
-    uintb opFloat2Float(uintb a,const FloatFormat &outformat) const;	///< Convert between floating-point precisions
+    uintb opInt2Float(uintb a, int4 sizein) const;		///< Convert integer to floating-point
+    uintb opFloat2Float(uintb a, const FloatFormat &outformat) const;	///< Convert between floating-point precisions
 
     void saveXml(ostream &s) const;			///< Save the format to an XML stream
     void restoreXml(const Element *el);			///< Restore the format from XML

@@ -26,10 +26,10 @@ class Token  			// A multiple-byte sized chunk of pattern in a bitstream
     int4 index;			// Index of this token, for resolving offsets
     bool bigendian;
 public:
-    Token(const string &nm,int4 sz,bool be,int4 ind) : name(nm)
+    Token(const string &nm, int4 sz, bool be, int4 ind) : name(nm)
     {
         size = sz;
-        bigendian=be;
+        bigendian = be;
         index = ind;
     }
     int4 getSize(void) const
@@ -92,7 +92,8 @@ class ParserContext
     friend class ParserWalkerChange;
 public:
     enum
-    {			// Possible states of the ParserContext
+    {
+        // Possible states of the ParserContext
         uninitialized = 0,		// Instruction has not been parsed at all
         disassembly = 1,		// Instruction is parsed in preparation for disassembly
         pcode = 2			// Instruction is parsed in preparation for generating p-code
@@ -122,7 +123,7 @@ public:
     {
         return buf;
     }
-    void initialize(int4 maxstate,int4 maxparam,AddrSpace *spc);
+    void initialize(int4 maxstate, int4 maxparam, AddrSpace *spc);
     int4 getParserState(void) const
     {
         return parsestate;
@@ -132,7 +133,7 @@ public:
         parsestate = st;
     }
     void deallocateState(ParserWalkerChange &walker);
-    void allocateOperand(int4 i,ParserWalkerChange &walker);
+    void allocateOperand(int4 i, ParserWalkerChange &walker);
     void setAddr(const Address &ad)
     {
         addr = ad;
@@ -145,7 +146,7 @@ public:
     {
         calladdr = ad;
     }
-    void addCommit(TripleSymbol *sym,int4 num,uintm mask,bool flow,ConstructState *point);
+    void addCommit(TripleSymbol *sym, int4 num, uintm mask, bool flow, ConstructState *point);
     void clearCommits(void)
     {
         contextcommit.clear();
@@ -175,17 +176,17 @@ public:
     {
         return const_space;
     }
-    uintm getInstructionBytes(int4 byteoff,int4 numbytes,uint4 off) const;
-    uintm getContextBytes(int4 byteoff,int4 numbytes) const;
-    uintm getInstructionBits(int4 startbit,int4 size,uint4 off) const;
-    uintm getContextBits(int4 startbit,int4 size) const;
-    void setContextWord(int4 i,uintm val,uintm mask)
+    uintm getInstructionBytes(int4 byteoff, int4 numbytes, uint4 off) const;
+    uintm getContextBytes(int4 byteoff, int4 numbytes) const;
+    uintm getInstructionBits(int4 startbit, int4 size, uint4 off) const;
+    uintm getContextBits(int4 startbit, int4 size) const;
+    void setContextWord(int4 i, uintm val, uintm mask)
     {
-        context[i] = (context[i]&(~mask))|(mask&val);
+        context[i] = (context[i] & (~mask)) | (mask & val);
     }
     void loadContext(void)
     {
-        contcache->getContext(addr,context);
+        contcache->getContext(addr, context);
     }
     int4 getLength(void) const
     {
@@ -215,7 +216,7 @@ public:
         const_context = c;
         cross_context = (const ParserContext *)0;
     }
-    ParserWalker(const ParserContext *c,const ParserContext *cross)
+    ParserWalker(const ParserContext *c, const ParserContext *cross)
     {
         const_context = c;
         cross_context = cross;
@@ -227,29 +228,29 @@ public:
     void baseState(void)
     {
         point = const_context->base_state;
-        depth=0;
+        depth = 0;
         breadcrumb[0] = 0;
     }
-    void setOutOfBandState(Constructor *ct,int4 index,ConstructState *tempstate,const ParserWalker &otherwalker);
+    void setOutOfBandState(Constructor *ct, int4 index, ConstructState *tempstate, const ParserWalker &otherwalker);
     bool isState(void) const
     {
         return (point != (ConstructState *)0);
     }
     void pushOperand(int4 i)
     {
-        breadcrumb[depth++] = i+1;
+        breadcrumb[depth++] = i + 1;
         point = point->resolve[i];
         breadcrumb[depth] = 0;
     }
     void popOperand(void)
     {
         point = point->parent;
-        depth-= 1;
+        depth -= 1;
     }
     uint4 getOffset(int4 i) const
     {
-        if (i<0) return point->offset;
-        ConstructState *op=point->resolve[i];
+        if (i < 0) return point->offset;
+        ConstructState *op = point->resolve[i];
         return op->offset + op->length;
     }
     Constructor *getConstructor(void) const
@@ -308,21 +309,21 @@ public:
     {
         return const_context->getLength();
     }
-    uintm getInstructionBytes(int4 byteoff,int4 numbytes) const
+    uintm getInstructionBytes(int4 byteoff, int4 numbytes) const
     {
-        return const_context->getInstructionBytes(byteoff,numbytes,point->offset);
+        return const_context->getInstructionBytes(byteoff, numbytes, point->offset);
     }
-    uintm getContextBytes(int4 byteoff,int4 numbytes) const
+    uintm getContextBytes(int4 byteoff, int4 numbytes) const
     {
-        return const_context->getContextBytes(byteoff,numbytes);
+        return const_context->getContextBytes(byteoff, numbytes);
     }
-    uintm getInstructionBits(int4 startbit,int4 size) const
+    uintm getInstructionBits(int4 startbit, int4 size) const
     {
-        return const_context->getInstructionBits(startbit,size,point->offset);
+        return const_context->getInstructionBits(startbit, size, point->offset);
     }
-    uintm getContextBits(int4 startbit,int4 size) const
+    uintm getContextBits(int4 startbit, int4 size) const
     {
-        return const_context->getContextBits(startbit,size);
+        return const_context->getContextBits(startbit, size);
     }
 };
 
@@ -355,7 +356,7 @@ public:
     {
         point->length = len;
     }
-    void calcCurrentLength(int4 length,int4 numopers);
+    void calcCurrentLength(int4 length, int4 numopers);
 };
 
 struct SleighError : public LowlevelError
@@ -366,11 +367,11 @@ struct SleighError : public LowlevelError
 inline void ParserContext::deallocateState(ParserWalkerChange &walker)
 {
     alloc = 1;
-    walker.context=this;
+    walker.context = this;
     walker.baseState();
 }
 
-inline void ParserContext::allocateOperand(int4 i,ParserWalkerChange &walker)
+inline void ParserContext::allocateOperand(int4 i, ParserWalkerChange &walker)
 {
     ConstructState *opstate = &state[alloc++];
     opstate->parent = walker.point;

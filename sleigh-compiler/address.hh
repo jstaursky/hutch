@@ -57,7 +57,7 @@ public:
     };
     Address(mach_extreme ex);	///< Initialize an extremal address
     Address(void);		///< Create an invalid address
-    Address(AddrSpace *id,uintb off); ///< Construct an address with a space/offset pair
+    Address(AddrSpace *id, uintb off); ///< Construct an address with a space/offset pair
     Address(const Address &op2);	///< A copy constructor
 
     bool isInvalid(void) const;  ///< Is the address invalid?
@@ -76,22 +76,22 @@ public:
     bool operator<=(const Address &op2) const; ///< Compare two addresses via their natural ordering
     Address operator+(int4 off) const; ///< Increment address by a number of bytes
     Address operator-(int4 off) const; ///< Decrement address by a number of bytes
-    friend ostream &operator<<(ostream &s,const Address &addr);  ///< Write out an address to stream
-    bool containedBy(int4 sz,const Address &op2,int4 sz2) const;	///< Determine if \e op2 range contains \b this range
-    int4 justifiedContain(int4 sz,const Address &op2,int4 sz2,bool forceleft) const; ///< Determine if \e op2 is the least significant part of \e this.
-    int4 overlap(int4 skip,const Address &op,int4 size) const; ///< Determine how two address ranges overlap
-    bool isContiguous(int4 sz,const Address &loaddr,int4 losz) const; ///< Does \e this form a contigous range with \e loaddr
+    friend ostream &operator<<(ostream &s, const Address &addr); ///< Write out an address to stream
+    bool containedBy(int4 sz, const Address &op2, int4 sz2) const;	///< Determine if \e op2 range contains \b this range
+    int4 justifiedContain(int4 sz, const Address &op2, int4 sz2, bool forceleft) const; ///< Determine if \e op2 is the least significant part of \e this.
+    int4 overlap(int4 skip, const Address &op, int4 size) const; ///< Determine how two address ranges overlap
+    bool isContiguous(int4 sz, const Address &loaddr, int4 losz) const; ///< Does \e this form a contigous range with \e loaddr
     bool isConstant(void) const; ///< Is this a \e constant \e value
     void renormalize(int4 size);	///< Make sure there is a backing JoinRecord if \b this is in the \e join space
     bool isJoin(void) const;	///< Is this a \e join \e value
     void saveXml(ostream &s) const; ///< Save this to a stream as an XML tag
-    void saveXml(ostream &s,int4 size) const; ///< Save this and a size to a stream as an XML tag
+    void saveXml(ostream &s, int4 size) const; ///< Save this and a size to a stream as an XML tag
 
     /// Restore an address from parsed XML
-    static Address restoreXml(const Element *el,const AddrSpaceManager *manage);
+    static Address restoreXml(const Element *el, const AddrSpaceManager *manage);
 
     /// Restore an address and size from parsed XML
-    static Address restoreXml(const Element *el,const AddrSpaceManager *manage,int4 &size);
+    static Address restoreXml(const Element *el, const AddrSpaceManager *manage, int4 &size);
 
     /// Recover an encoded address space from an address
     static AddrSpace *getSpaceFromConst(const Address &addr);
@@ -120,7 +120,7 @@ public:
     SeqNum(Address::mach_extreme ex); ///< Create an extremal sequence number
 
     /// Create a sequence number with a specific \e time field
-    SeqNum(const Address &a,uintm b) : pc(a)
+    SeqNum(const Address &a, uintm b) : pc(a)
     {
         uniq = b;
     }
@@ -179,10 +179,10 @@ public:
     void saveXml(ostream &s) const;
 
     /// Restore a SeqNum from parsed XML
-    static SeqNum restoreXml(const Element *el,const AddrSpaceManager *manage);
+    static SeqNum restoreXml(const Element *el, const AddrSpaceManager *manage);
 
     /// Write out a SeqNum to a stream
-    friend ostream &operator<<(ostream &s,const SeqNum &sq);
+    friend ostream &operator<<(ostream &s, const SeqNum &sq);
 };
 
 /// \brief A contiguous range of bytes in some address space
@@ -199,7 +199,7 @@ public:
     /// \param s is the address space containing the range
     /// \param f is the offset of the first byte in the range
     /// \param l is the offset of the last byte in the range
-    Range(AddrSpace *s,uintb f,uintb l)
+    Range(AddrSpace *s, uintb f, uintb l)
     {
         spc = s;
         first = f;
@@ -220,11 +220,11 @@ public:
     }
     Address getFirstAddr(void) const
     {
-        return Address(spc,first);    ///< Get the address of the first byte
+        return Address(spc, first);   ///< Get the address of the first byte
     }
     Address getLastAddr(void) const
     {
-        return Address(spc,last);    ///< Get the address of the last byte
+        return Address(spc, last);   ///< Get the address of the last byte
     }
     Address getLastAddrOpen(const AddrSpaceManager *manage) const;	///< Get address of first byte after \b this
     bool contains(const Address &addr) const;		///< Determine if the address is in \b this Range
@@ -242,7 +242,7 @@ public:
     }
     void printBounds(ostream &s) const;			///< Print \b this Range to a stream
     void saveXml(ostream &s) const;			///< Save \b this Range to an XML stream
-    void restoreXml(const Element *el,const AddrSpaceManager *manage);	///< Restore \b this from XML stream
+    void restoreXml(const Element *el, const AddrSpaceManager *manage);	///< Restore \b this from XML stream
 };
 
 /// \brief A disjoint set of Ranges, possibly across multiple address spaces
@@ -282,15 +282,15 @@ public:
     const Range *getFirstRange(void) const;			///< Get the first Range
     const Range *getLastRange(void) const;			///< Get the last Range
     const Range *getLastSignedRange(AddrSpace *spaceid) const;	///< Get the last Range viewing offsets as signed
-    const Range *getRange(AddrSpace *spaceid,uintb offset) const;	///< Get Range containing the given byte
-    void insertRange(AddrSpace *spc,uintb first,uintb last);	///< Insert a range of addresses
-    void removeRange(AddrSpace *spc,uintb first,uintb last);	///< Remove a range of addresses
+    const Range *getRange(AddrSpace *spaceid, uintb offset) const;	///< Get Range containing the given byte
+    void insertRange(AddrSpace *spc, uintb first, uintb last);	///< Insert a range of addresses
+    void removeRange(AddrSpace *spc, uintb first, uintb last);	///< Remove a range of addresses
     void merge(const RangeList &op2);				///< Merge another RangeList into \b this
-    bool inRange(const Address &addr,int4 size) const;		///< Check containment an address range
-    uintb longestFit(const Address &addr,uintb maxsize) const;	///< Find size of biggest Range containing given address
+    bool inRange(const Address &addr, int4 size) const;		///< Check containment an address range
+    uintb longestFit(const Address &addr, uintb maxsize) const;	///< Find size of biggest Range containing given address
     void printBounds(ostream &s) const;				///< Print a description of \b this RangeList to stream
     void saveXml(ostream &s) const;				///< Write \b this RangeList to an XML stream
-    void restoreXml(const Element *el,const AddrSpaceManager *manage);	///< Restore \b this RangeList from an XML stream
+    void restoreXml(const Element *el, const AddrSpaceManager *manage);	///< Restore \b this RangeList from an XML stream
 };
 
 /// Precalculated masks indexed by size
@@ -308,10 +308,10 @@ inline Address::Address(void)
 /// This is the basic Address constructor
 /// \param id is the space containing the address
 /// \param off is the offset of the address
-inline Address::Address(AddrSpace *id,uintb off)
+inline Address::Address(AddrSpace *id, uintb off)
 {
-    base=id;
-    offset=off;
+    base = id;
+    offset = off;
 }
 
 /// This is a standard copy constructor, copying the
@@ -355,7 +355,7 @@ inline void Address::printRaw(ostream &s) const
         s << "invalid_addr";
         return;
     }
-    base->printRaw(s,offset);
+    base->printRaw(s, offset);
 }
 
 /// Convert a string into an address. The string format can be
@@ -365,7 +365,7 @@ inline void Address::printRaw(ostream &s) const
 inline int4 Address::read(const string &s)
 {
     int4 sz;
-    offset=base->read(s,sz);
+    offset = base->read(s, sz);
     return sz;
 }
 
@@ -409,7 +409,7 @@ inline Address &Address::operator=(const Address &op2)
 /// \return \b true if the addresses are the same
 inline bool Address::operator==(const Address &op2) const
 {
-    return ((base==op2.base)&&(offset==op2.offset));
+    return ((base == op2.base) && (offset == op2.offset));
 }
 
 /// Check if two addresses are not equal.  I.e. if either their
@@ -418,7 +418,7 @@ inline bool Address::operator==(const Address &op2) const
 /// \return \b true if the addresses are different
 inline bool Address::operator!=(const Address &op2) const
 {
-    return !(*this==op2);
+    return !(*this == op2);
 }
 
 /// Do an ordering comparison of two addresses.  Addresses are
@@ -474,7 +474,7 @@ inline bool Address::operator<=(const Address &op2) const
 /// \return the new incremented address
 inline Address Address::operator+(int4 off) const
 {
-    return Address(base,base->wrapOffset(offset+off));
+    return Address(base, base->wrapOffset(offset + off));
 }
 
 /// Subtract an integer value from the offset portion of the
@@ -485,7 +485,7 @@ inline Address Address::operator+(int4 off) const
 /// \return the new decremented address
 inline Address Address::operator-(int4 off) const
 {
-    return Address(base,base->wrapOffset(offset-off));
+    return Address(base, base->wrapOffset(offset - off));
 }
 
 /// Determine if this address is from the \e constant \e space.
@@ -511,8 +511,8 @@ inline bool Address::isJoin(void) const
 inline void Address::saveXml(ostream &s) const
 {
     s << "<addr";
-    if (base!=(AddrSpace *)0)
-        base->saveXmlAttributes(s,offset);
+    if (base != (AddrSpace *)0)
+        base->saveXmlAttributes(s, offset);
     s << "/>";
 }
 
@@ -521,11 +521,11 @@ inline void Address::saveXml(ostream &s) const
 /// so that it can describe an entire memory range.
 /// \param s is the stream being written to
 /// \param size is the number of bytes in the range
-inline void Address::saveXml(ostream &s,int4 size) const
+inline void Address::saveXml(ostream &s, int4 size) const
 {
     s << "<addr";
-    if (base!=(AddrSpace *)0)
-        base->saveXmlAttributes(s,offset,size);
+    if (base != (AddrSpace *)0)
+        base->saveXmlAttributes(s, offset, size);
     s << "/>";
 }
 
@@ -555,16 +555,16 @@ inline bool Range::contains(const Address &addr) const
 /// \return a value appropriate for masking off the first \e size bytes
 inline uintb calc_mask(int4 size)
 {
-    return uintbmasks[(size<8)? size : 8];
+    return uintbmasks[(size < 8) ? size : 8];
 }
 
 /// Perform a CPUI_INT_RIGHT on the given val
 /// \param val is the value to shift
 /// \param sa is the number of bits to shift
 /// \return the shifted value
-inline uintb pcode_right(uintb val,int4 sa)
+inline uintb pcode_right(uintb val, int4 sa)
 {
-    if (sa >= 8*sizeof(uintb)) return 0;
+    if (sa >= 8 * sizeof(uintb)) return 0;
     return val >> sa;
 }
 
@@ -572,9 +572,9 @@ inline uintb pcode_right(uintb val,int4 sa)
 /// \param val is the value to shift
 /// \param sa is the number of bits to shift
 /// \return the shifted value
-inline uintb pcode_left(uintb val,int4 sa)
+inline uintb pcode_left(uintb val, int4 sa)
 {
-    if (sa >= 8*sizeof(uintb)) return 0;
+    if (sa >= 8 * sizeof(uintb)) return 0;
     return val << sa;
 }
 
@@ -596,27 +596,27 @@ inline uintb minimalmask(uintb val)
     return 0xff;
 }
 
-extern bool signbit_negative(uintb val,int4 size);	///< Return true if the sign-bit is set
+extern bool signbit_negative(uintb val, int4 size);	///< Return true if the sign-bit is set
 extern uintb calc_mask(int4 size);			///< Calculate a mask for a given byte size
-extern uintb uintb_negate(uintb in,int4 size);		///< Negate the \e sized value
-extern uintb sign_extend(uintb in,int4 sizein,int4 sizeout);	///< Sign-extend a value between two byte sizes
+extern uintb uintb_negate(uintb in, int4 size);		///< Negate the \e sized value
+extern uintb sign_extend(uintb in, int4 sizein, int4 sizeout);	///< Sign-extend a value between two byte sizes
 
-extern void sign_extend(intb &val,int4 bit); 		///< Sign extend above given bit
-extern void zero_extend(intb &val,int4 bit);		///< Clear all bits above given bit
-extern void byte_swap(intb &val,int4 size);		///< Swap bytes in the given value
+extern void sign_extend(intb &val, int4 bit); 		///< Sign extend above given bit
+extern void zero_extend(intb &val, int4 bit);		///< Clear all bits above given bit
+extern void byte_swap(intb &val, int4 size);		///< Swap bytes in the given value
 
-extern uintb byte_swap(uintb val,int4 size);		///< Return the given value with bytes swapped
+extern uintb byte_swap(uintb val, int4 size);		///< Return the given value with bytes swapped
 extern int4 leastsigbit_set(uintb val);			///< Return index of least significant bit set in given value
 extern int4 mostsigbit_set(uintb val);			///< Return index of most significant bit set in given value
 extern int4 popcount(uintb val);			///< Return the number of one bits in the given value
 extern int4 count_leading_zeros(uintb val);		///< Return the number of leading zero bits in the given value
 
 extern uintb coveringmask(uintb val);			///< Return a mask that \e covers the given value
-extern int4 bit_transitions(uintb val,int4 sz);		///< Calculate the number of bit transitions in the sized value
+extern int4 bit_transitions(uintb val, int4 sz);		///< Calculate the number of bit transitions in the sized value
 
-extern void mult64to128(uint8 *res,uint8 x,uint8 y);
-extern void unsignedSubtract128(uint8 *a,uint8 *b);
-extern int4 unsignedCompare128(uint8 *a,uint8 *b);
-extern int4 power2Divide(int4 n,uint8 divisor,uint8 &q,uint8 &r);
+extern void mult64to128(uint8 *res, uint8 x, uint8 y);
+extern void unsignedSubtract128(uint8 *a, uint8 *b);
+extern int4 unsignedCompare128(uint8 *a, uint8 *b);
+extern int4 power2Divide(int4 n, uint8 divisor, uint8 &q, uint8 &r);
 
 #endif

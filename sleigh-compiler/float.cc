@@ -26,13 +26,13 @@
 
 inline int4 signbit(double x)
 {
-    return (((_fpclass(x)& (_FPCLASS_NINF | _FPCLASS_NN
-                            | _FPCLASS_ND | _FPCLASS_NZ))!=0) ? 1 : 0);
+    return (((_fpclass(x) & (_FPCLASS_NINF | _FPCLASS_NN
+                             | _FPCLASS_ND | _FPCLASS_NZ)) != 0) ? 1 : 0);
 }
 
 inline int4 isnan(double x)
 {
-    return (((_fpclass(x)& (_FPCLASS_SNAN | _FPCLASS_QNAN))!=0) ? 1 : 0);
+    return (((_fpclass(x) & (_FPCLASS_SNAN | _FPCLASS_QNAN)) != 0) ? 1 : 0);
 }
 
 inline int4 isinf(double x)
@@ -72,23 +72,23 @@ FloatFormat::FloatFormat(int4 sz)
         bias = 1023;
         jbitimplied = true;
     }
-    maxexponent = (1<<exp_size)-1;
+    maxexponent = (1 << exp_size) - 1;
 }
 
 /// \param sign is set to \b true if the value should be negative
 /// \param signif is the fractional part
 /// \param exp is the exponent
 /// \return the constructed floating-point value
-double FloatFormat::createFloat(bool sign,uintb signif,int4 exp)
+double FloatFormat::createFloat(bool sign, uintb signif, int4 exp)
 
 {
     signif >>= 1;		      // Throw away 1 bit of precision we will
     // lose anyway, to make sure highbit is 0
-    int4 precis = 8*sizeof(uintb) - 1;   // fullword - 1 we threw away
+    int4 precis = 8 * sizeof(uintb) - 1; // fullword - 1 we threw away
     double res = (double)signif;
     int4 expchange = exp - precis + 1; // change in exponent is precis
     // -1 integer bit
-    res = ldexp(res,expchange);
+    res = ldexp(res, expchange);
     if (sign)
         res = res * -1.0;
     return res;
@@ -101,19 +101,19 @@ double FloatFormat::createFloat(bool sign,uintb signif,int4 exp)
 /// \param signif passes back the fractional part
 /// \param exp passes back the exponent
 /// \return the floating-point class of the value
-FloatFormat::floatclass FloatFormat::extractExpSig(double x,bool *sgn,uintb *signif,int4 *exp)
+FloatFormat::floatclass FloatFormat::extractExpSig(double x, bool *sgn, uintb *signif, int4 *exp)
 
 {
     int4 e;
 
     *sgn = (signbit(x) != 0);
     if (x == 0.0) return zero;
-    if (isinf(x)!=0) return infinity;
-    if (isnan(x)!=0) return nan;
+    if (isinf(x) != 0) return infinity;
+    if (isnan(x) != 0) return nan;
     if (*sgn)
         x = -x;
-    double norm = frexp(x,&e);  // norm is between 1/2 and 1
-    norm = ldexp(norm,8*sizeof(uintb)-1); // norm between 2^62 and 2^63
+    double norm = frexp(x, &e); // norm is between 1/2 and 1
+    norm = ldexp(norm, 8 * sizeof(uintb) - 1); // norm between 2^62 and 2^63
 
     *signif = (uintb)norm;    // Convert to normalized integer
     *signif <<= 1;
@@ -129,7 +129,7 @@ uintb FloatFormat::extractFractionalCode(uintb x) const
 
 {
     x >>= frac_pos;		// Eliminate bits below
-    x <<= 8*sizeof(uintb) - frac_size; // Align with top of word
+    x <<= 8 * sizeof(uintb) - frac_size; // Align with top of word
     return x;
 }
 
@@ -139,7 +139,7 @@ bool FloatFormat::extractSign(uintb x) const
 
 {
     x >>= signbit_pos;
-    return ((x&1)!=0);
+    return ((x & 1) != 0);
 }
 
 /// \param x is an encoded floating-point value
@@ -149,19 +149,19 @@ int4 FloatFormat::extractExponentCode(uintb x) const
 {
     x >>= exp_pos;
     uintb mask = 1;
-    mask = (mask<<exp_size) - 1;
+    mask = (mask << exp_size) - 1;
     return (int4)(x & mask);
 }
 
 /// \param x is an encoded value (with fraction part set to zero)
 /// \param code is the new fractional value to set
 /// \return the encoded value with the fractional filled in
-uintb FloatFormat::setFractionalCode(uintb x,uintb code) const
+uintb FloatFormat::setFractionalCode(uintb x, uintb code) const
 
 {
     // Align with bottom of word, also drops bits of precision
     // we don't have room for
-    code >>= 8*sizeof(uintb) - frac_size;
+    code >>= 8 * sizeof(uintb) - frac_size;
     code <<= frac_pos;		// Move bits into position;
     x |= code;
     return x;
@@ -170,7 +170,7 @@ uintb FloatFormat::setFractionalCode(uintb x,uintb code) const
 /// \param x is an encoded value (with sign set to zero)
 /// \param sign is the sign bit to set
 /// \return the encoded value with the sign bit set
-uintb FloatFormat::setSign(uintb x,bool sign) const
+uintb FloatFormat::setSign(uintb x, bool sign) const
 
 {
     if (!sign) return x;		// Assume bit is already zero
@@ -183,7 +183,7 @@ uintb FloatFormat::setSign(uintb x,bool sign) const
 /// \param x is an encoded value (with exponent set to zero)
 /// \param code is the exponent to set
 /// \return the encoded value with the new exponent
-uintb FloatFormat::setExponentCode(uintb x,uintb code) const
+uintb FloatFormat::setExponentCode(uintb x, uintb code) const
 
 {
     code <<= exp_pos;		// Move bits into position
@@ -198,9 +198,9 @@ uintb FloatFormat::getZeroEncoding(bool sgn) const
 {
     uintb res = 0;
     // Use IEEE 754 standard for zero encoding
-    res = setFractionalCode(res,0);
-    res = setExponentCode(res,0);
-    return setSign(res,sgn);
+    res = setFractionalCode(res, 0);
+    res = setExponentCode(res, 0);
+    return setSign(res, sgn);
 }
 
 /// \param sgn is set to \b true for negative infinity, \b false for positive
@@ -210,9 +210,9 @@ uintb FloatFormat::getInfinityEncoding(bool sgn) const
 {
     uintb res = 0;
     // Use IEEE 754 standard for infinity encoding
-    res = setFractionalCode(res,0);
-    res = setExponentCode(res,(uintb)maxexponent);
-    return setSign(res,sgn);
+    res = setFractionalCode(res, 0);
+    res = setExponentCode(res, (uintb)maxexponent);
+    return setSign(res, sgn);
 }
 
 /// \param sgn is set to \b true for negative NaN, \b false for positive
@@ -223,16 +223,16 @@ uintb FloatFormat::getNaNEncoding(bool sgn) const
     uintb res = 0;
     // Use IEEE 754 standard for NaN encoding
     uintb mask = 1;
-    mask <<= 8*sizeof(uintb)-1;	// Create "quiet" NaN
-    res = setFractionalCode(res,mask);
-    res = setExponentCode(res,(uintb)maxexponent);
-    return setSign(res,sgn);
+    mask <<= 8 * sizeof(uintb) - 1;	// Create "quiet" NaN
+    res = setFractionalCode(res, mask);
+    res = setExponentCode(res, (uintb)maxexponent);
+    return setSign(res, sgn);
 }
 
 /// \param encoding is the encoding value
 /// \param type points to the floating-point class, which is passed back
 /// \return the equivalent double value
-double FloatFormat::getHostFloat(uintb encoding,floatclass *type) const
+double FloatFormat::getHostFloat(uintb encoding, floatclass *type) const
 
 {
     bool sgn = extractSign(encoding);
@@ -266,10 +266,10 @@ double FloatFormat::getHostFloat(uintb encoding,floatclass *type) const
     if (normal && jbitimplied) {
         frac >>= 1;			// Make room for 1 jbit
         uintb highbit = 1;
-        highbit <<= 8*sizeof(uintb)-1;
+        highbit <<= 8 * sizeof(uintb) - 1;
         frac |= highbit;		// Stick bit in at top
     }
-    return createFloat(sgn,frac,exp);
+    return createFloat(sgn, frac, exp);
 }
 
 /// \param host is the double value to convert
@@ -282,7 +282,7 @@ uintb FloatFormat::getEncoding(double host) const
     uintb signif;
     int4 exp;
 
-    type = extractExpSig(host,&sgn,&signif,&exp);
+    type = extractExpSig(host, &sgn, &signif, &exp);
     if (type == zero)
         return getZeroEncoding(sgn);
     else if (type == infinity)
@@ -296,19 +296,19 @@ uintb FloatFormat::getEncoding(double host) const
         return getZeroEncoding(sgn);
     if (exp > maxexponent)	// Exponent is too big to represent
         return getInfinityEncoding(sgn);
-    if (jbitimplied && (exp !=0))
+    if (jbitimplied && (exp != 0))
         signif <<= 1;		// Cut off top bit (which should be 1)
 
     uintb res = 0;
-    res = setFractionalCode(res,signif);
-    res = setExponentCode(res,(uintb)exp);
-    return setSign(res,sgn);
+    res = setFractionalCode(res, signif);
+    res = setExponentCode(res, (uintb)exp);
+    return setSign(res, sgn);
 }
 
 /// \param encoding is the value in the \e other FloatFormat
 /// \param formin is the \e other FloatFormat
 /// \return the equivalent value in \b this FloatFormat
-uintb FloatFormat::convertEncoding(uintb encoding,const FloatFormat *formin) const
+uintb FloatFormat::convertEncoding(uintb encoding, const FloatFormat *formin) const
 
 {
     bool sgn = formin->extractSign(encoding);
@@ -330,14 +330,14 @@ uintb FloatFormat::convertEncoding(uintb encoding,const FloatFormat *formin) con
     else if (formin->jbitimplied && !jbitimplied) {
         frac >>= 1;			// Make room for 1 jbit
         uintb highbit = 1;
-        highbit <<= 8*sizeof(uintb)-1;
+        highbit <<= 8 * sizeof(uintb) - 1;
         frac |= highbit;		// Stick bit in at top
     }
 
     uintb res = 0;
-    res = setFractionalCode(res,frac);
-    res = setExponentCode(res,(uintb)exp);
-    return setSign(res,sgn);
+    res = setFractionalCode(res, frac);
+    res = setExponentCode(res, (uintb)exp);
+    return setSign(res, sgn);
 }
 
 // Currently we emulate floating point operations on the target
@@ -348,12 +348,12 @@ uintb FloatFormat::convertEncoding(uintb encoding,const FloatFormat *formin) con
 /// \param a is the first floating-point value
 /// \param b is the second floating-point value
 /// \return \b true if (a == b)
-uintb FloatFormat::opEqual(uintb a,uintb b) const
+uintb FloatFormat::opEqual(uintb a, uintb b) const
 
 {
     floatclass type;
-    double val1 = getHostFloat(a,&type);
-    double val2 = getHostFloat(b,&type);
+    double val1 = getHostFloat(a, &type);
+    double val2 = getHostFloat(b, &type);
     uintb res = (val1 == val2) ? 1 : 0;
     return res;
 }
@@ -361,12 +361,12 @@ uintb FloatFormat::opEqual(uintb a,uintb b) const
 /// \param a is the first floating-point value
 /// \param b is the second floating-point value
 /// \return \b true if (a != b)
-uintb FloatFormat::opNotEqual(uintb a,uintb b) const
+uintb FloatFormat::opNotEqual(uintb a, uintb b) const
 
 {
     floatclass type;
-    double val1 = getHostFloat(a,&type);
-    double val2 = getHostFloat(b,&type);
+    double val1 = getHostFloat(a, &type);
+    double val2 = getHostFloat(b, &type);
     uintb res = (val1 != val2) ? 1 : 0;
     return res;
 }
@@ -374,12 +374,12 @@ uintb FloatFormat::opNotEqual(uintb a,uintb b) const
 /// \param a is the first floating-point value
 /// \param b is the second floating-point value
 /// \return \b true if (a < b)
-uintb FloatFormat::opLess(uintb a,uintb b) const
+uintb FloatFormat::opLess(uintb a, uintb b) const
 
 {
     floatclass type;
-    double val1 = getHostFloat(a,&type);
-    double val2 = getHostFloat(b,&type);
+    double val1 = getHostFloat(a, &type);
+    double val2 = getHostFloat(b, &type);
     uintb res = (val1 < val2) ? 1 : 0;
     return res;
 }
@@ -387,12 +387,12 @@ uintb FloatFormat::opLess(uintb a,uintb b) const
 /// \param a is the first floating-point value
 /// \param b is the second floating-point value
 /// \return \b true if (a <= b)
-uintb FloatFormat::opLessEqual(uintb a,uintb b) const
+uintb FloatFormat::opLessEqual(uintb a, uintb b) const
 
 {
     floatclass type;
-    double val1 = getHostFloat(a,&type);
-    double val2 = getHostFloat(b,&type);
+    double val1 = getHostFloat(a, &type);
+    double val2 = getHostFloat(b, &type);
     uintb res = (val1 <= val2) ? 1 : 0;
     return res;
 }
@@ -403,7 +403,7 @@ uintb FloatFormat::opNan(uintb a) const
 
 {
     floatclass type;
-    getHostFloat(a,&type);
+    getHostFloat(a, &type);
     uintb res = (type == FloatFormat::nan) ? 1 : 0;
     return res;
 }
@@ -411,48 +411,48 @@ uintb FloatFormat::opNan(uintb a) const
 /// \param a is the first floating-point value
 /// \param b is the second floating-point value
 /// \return a + b
-uintb FloatFormat::opAdd(uintb a,uintb b) const
+uintb FloatFormat::opAdd(uintb a, uintb b) const
 
 {
     floatclass type;
-    double val1 = getHostFloat(a,&type);
-    double val2 = getHostFloat(b,&type);
+    double val1 = getHostFloat(a, &type);
+    double val2 = getHostFloat(b, &type);
     return getEncoding(val1 + val2);
 }
 
 /// \param a is the first floating-point value
 /// \param b is the second floating-point value
 /// \return a / b
-uintb FloatFormat::opDiv(uintb a,uintb b) const
+uintb FloatFormat::opDiv(uintb a, uintb b) const
 
 {
     floatclass type;
-    double val1 = getHostFloat(a,&type);
-    double val2 = getHostFloat(b,&type);
+    double val1 = getHostFloat(a, &type);
+    double val2 = getHostFloat(b, &type);
     return getEncoding(val1 / val2);
 }
 
 /// \param a is the first floating-point value
 /// \param b is the second floating-point value
 /// \return a * b
-uintb FloatFormat::opMult(uintb a,uintb b) const
+uintb FloatFormat::opMult(uintb a, uintb b) const
 
 {
     floatclass type;
-    double val1 = getHostFloat(a,&type);
-    double val2 = getHostFloat(b,&type);
+    double val1 = getHostFloat(a, &type);
+    double val2 = getHostFloat(b, &type);
     return getEncoding(val1 * val2);
 }
 
 /// \param a is the first floating-point value
 /// \param b is the second floating-point value
 /// \return a - b
-uintb FloatFormat::opSub(uintb a,uintb b) const
+uintb FloatFormat::opSub(uintb a, uintb b) const
 
 {
     floatclass type;
-    double val1 = getHostFloat(a,&type);
-    double val2 = getHostFloat(b,&type);
+    double val1 = getHostFloat(a, &type);
+    double val2 = getHostFloat(b, &type);
     return getEncoding(val1 - val2);
 }
 
@@ -462,7 +462,7 @@ uintb FloatFormat::opNeg(uintb a) const
 
 {
     floatclass type;
-    double val = getHostFloat(a,&type);
+    double val = getHostFloat(a, &type);
     return getEncoding(-val);
 }
 
@@ -472,7 +472,7 @@ uintb FloatFormat::opAbs(uintb a) const
 
 {
     floatclass type;
-    double val = getHostFloat(a,&type);
+    double val = getHostFloat(a, &type);
     return getEncoding(fabs(val));
 }
 
@@ -482,18 +482,18 @@ uintb FloatFormat::opSqrt(uintb a) const
 
 {
     floatclass type;
-    double val = getHostFloat(a,&type);
+    double val = getHostFloat(a, &type);
     return getEncoding(sqrt(val));
 }
 
 /// \param a is a signed integer value
 /// \param sizein is the number of bytes in the integer encoding
 /// \return a converted to an encoded floating-point value
-uintb FloatFormat::opInt2Float(uintb a,int4 sizein) const
+uintb FloatFormat::opInt2Float(uintb a, int4 sizein) const
 
 {
     intb ival = (intb)a;
-    sign_extend(ival,8*sizein-1);
+    sign_extend(ival, 8 * sizein - 1);
     double val = (double) ival;	// Convert integer to float
     return getEncoding(val);
 }
@@ -501,22 +501,22 @@ uintb FloatFormat::opInt2Float(uintb a,int4 sizein) const
 /// \param a is an encoded floating-point value
 /// \param outformat is the desired output FloatFormat
 /// \return a converted to the output FloatFormat
-uintb FloatFormat::opFloat2Float(uintb a,const FloatFormat &outformat) const
+uintb FloatFormat::opFloat2Float(uintb a, const FloatFormat &outformat) const
 
 {
     floatclass type;
-    double val = getHostFloat(a,&type);
+    double val = getHostFloat(a, &type);
     return outformat.getEncoding(val);
 }
 
 /// \param a is an encoded floating-point value
 /// \param sizeout is the desired encoding size of the output
 /// \return an integer encoding of a
-uintb FloatFormat::opTrunc(uintb a,int4 sizeout) const
+uintb FloatFormat::opTrunc(uintb a, int4 sizeout) const
 
 {
     floatclass type;
-    double val = getHostFloat(a,&type);
+    double val = getHostFloat(a, &type);
     intb ival = (intb) val;	// Convert to integer
     uintb res = (uintb) ival;	// Convert to unsigned
     res &= calc_mask(sizeout);	// Truncate to proper size
@@ -529,7 +529,7 @@ uintb FloatFormat::opCeil(uintb a) const
 
 {
     floatclass type;
-    double val = getHostFloat(a,&type);
+    double val = getHostFloat(a, &type);
     return getEncoding(ceil(val));
 }
 
@@ -539,7 +539,7 @@ uintb FloatFormat::opFloor(uintb a) const
 
 {
     floatclass type;
-    double val = getHostFloat(a,&type);
+    double val = getHostFloat(a, &type);
     return getEncoding(floor(val));
 }
 
@@ -549,8 +549,8 @@ uintb FloatFormat::opRound(uintb a) const
 
 {
     floatclass type;
-    double val = getHostFloat(a,&type);
-    return getEncoding(floor(val+0.5));
+    double val = getHostFloat(a, &type);
+    return getEncoding(floor(val + 0.5));
 }
 
 /// Write the format out to a \<floatformat> XML tag.
@@ -559,14 +559,14 @@ void FloatFormat::saveXml(ostream &s) const
 
 {
     s << "<floatformat";
-    a_v_i(s,"size",size);
-    a_v_i(s,"signpos",signbit_pos);
-    a_v_i(s,"fracpos",frac_pos);
-    a_v_i(s,"fracsize",frac_size);
-    a_v_i(s,"exppos",exp_pos);
-    a_v_i(s,"expsize",exp_size);
-    a_v_i(s,"bias",bias);
-    a_v_b(s,"jbitimplied",jbitimplied);
+    a_v_i(s, "size", size);
+    a_v_i(s, "signpos", signbit_pos);
+    a_v_i(s, "fracpos", frac_pos);
+    a_v_i(s, "fracsize", frac_size);
+    a_v_i(s, "exppos", exp_pos);
+    a_v_i(s, "expsize", exp_size);
+    a_v_i(s, "bias", bias);
+    a_v_b(s, "jbitimplied", jbitimplied);
     s << "/>\n";
 }
 
@@ -611,5 +611,5 @@ void FloatFormat::restoreXml(const Element *el)
         s >> bias;
     }
     jbitimplied = xml_readbool(el->getAttributeValue("jbitimplied"));
-    maxexponent = (1<<exp_size)-1;
+    maxexponent = (1 << exp_size) - 1;
 }

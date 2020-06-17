@@ -47,7 +47,7 @@ public:
     }
     ~Attributes(void)
     {
-        for(uint4 i=0; i<name.size(); ++i) {
+        for(uint4 i = 0; i < name.size(); ++i) {
             delete name[i];
             delete value[i];
         }
@@ -61,7 +61,7 @@ public:
     {
         return *elementname;    ///< Get the name of this element
     }
-    void add_attribute(string *nm,string *vl)
+    void add_attribute(string *nm, string *vl)
     {
         name.push_back(nm);    ///< Add a formal attribute
         value.push_back(vl);
@@ -96,7 +96,7 @@ public:
     /// \brief Get the value of the attribute with the given qualified name
     const string &getValue(const string &qualifiedName) const
     {
-        for(uint4 i=0; i<name.size(); ++i)
+        for(uint4 i = 0; i < name.size(); ++i)
             if (*name[i] == qualifiedName) return *value[i];
         return bogus_uri;
     }
@@ -112,11 +112,11 @@ class ContentHandler
 {
 public:
     virtual ~ContentHandler(void) {}			///< Destructor
-    virtual void setDocumentLocator(Locator locator)=0;	///< Set the Locator object for documents
-    virtual void startDocument(void)=0;			///< Start processing a new XML document
-    virtual void endDocument(void)=0;			///< End processing for the current XML document
-    virtual void startPrefixMapping(const string &prefix,const string &uri)=0;	///< Start a new prefix to namespace URI mapping
-    virtual void endPrefixMapping(const string &prefix)=0;			///< Finish the current prefix
+    virtual void setDocumentLocator(Locator locator) = 0;	///< Set the Locator object for documents
+    virtual void startDocument(void) = 0;			///< Start processing a new XML document
+    virtual void endDocument(void) = 0;			///< End processing for the current XML document
+    virtual void startPrefixMapping(const string &prefix, const string &uri) = 0;	///< Start a new prefix to namespace URI mapping
+    virtual void endPrefixMapping(const string &prefix) = 0;			///< Finish the current prefix
 
     /// \brief Callback indicating a new XML element has started.
     ///
@@ -124,56 +124,56 @@ public:
     /// \param localName is the local name of the new element
     /// \param qualifiedName is the fully qualified name of the new element
     /// \param atts is the set of (previously parsed) attributes to attach to the new element
-    virtual void startElement(const string &namespaceURI,const string &localName,
-                              const string &qualifiedName,const Attributes &atts)=0;
+    virtual void startElement(const string &namespaceURI, const string &localName,
+                              const string &qualifiedName, const Attributes &atts) = 0;
 
     /// \brief Callback indicating parsing of the current XML element is finished.
     ///
     /// \param namespaceURI is the namespace to which the element belongs
     /// \param localName is the local name of the new element
     /// \param qualifiedName is the fully qualified name of the element.
-    virtual void endElement(const string &namespaceURI,const string &localName,
-                            const string &qualifiedName)=0;
+    virtual void endElement(const string &namespaceURI, const string &localName,
+                            const string &qualifiedName) = 0;
 
     /// \brief Callback with raw characters to be inserted in the current XML element
     ///
     /// \param text is an array of character data being inserted.
     /// \param start is the first character within the array to insert.
     /// \param length is the number of characters to insert.
-    virtual void characters(const char *text,int4 start,int4 length)=0;
+    virtual void characters(const char *text, int4 start, int4 length) = 0;
 
     /// \brief Callback with whitespace character data for the current XML element
     ///
     /// \param text is an array of character data that can be inserted.
     /// \param start is the first character within the array to insert.
     /// \param length is the number of characters to insert.
-    virtual void ignorableWhitespace(const char *text,int4 start,int4 length)=0;
+    virtual void ignorableWhitespace(const char *text, int4 start, int4 length) = 0;
 
     /// \brief Set the XML version as specified by the current document
     ///
     /// \param version is the parsed version string
-    virtual void setVersion(const string &version)=0;
+    virtual void setVersion(const string &version) = 0;
 
     /// \brief Set the character encoding as specified by the current document
     ///
     /// \param encoding is the parsed encoding string
-    virtual void setEncoding(const string &encoding)=0;
+    virtual void setEncoding(const string &encoding) = 0;
 
     /// \brief Callback for a formal \e processing \e instruction seen in the current document
     ///
     /// \param target is the target instruction to process
     /// \param data is (optional) character data for the instruction
-    virtual void processingInstruction(const string &target,const string &data)=0;
+    virtual void processingInstruction(const string &target, const string &data) = 0;
 
     /// \brief Callback for an XML entity skipped by the parser
     ///
     /// \param name is the name of the entity being skipped
-    virtual void skippedEntity(const string &name)=0;
+    virtual void skippedEntity(const string &name) = 0;
 
     /// \brief Callback for handling an error condition during XML parsing
     ///
     /// \param errmsg is a message describing the error condition
-    virtual void setError(const string &errmsg)=0;
+    virtual void setError(const string &errmsg) = 0;
 };
 
 class Element;
@@ -207,10 +207,10 @@ public:
     /// \param str is an array of character data
     /// \param start is the index of the first character to append
     /// \param length is the number of characters to append
-    void addContent(const char *str,int4 start,int4 length)
+    void addContent(const char *str, int4 start, int4 length)
     {
         //    for(int4 i=0;i<length;++i) content += str[start+i]; }
-        content.append(str+start,length);
+        content.append(str + start, length);
     }
 
     /// \brief Add a new child Element to the model, with \b this as the parent
@@ -225,7 +225,7 @@ public:
     ///
     /// \param nm is the name of the attribute
     /// \param vl is the value of the attribute
-    void addAttribute(const string &nm,const string &vl)
+    void addAttribute(const string &nm, const string &vl)
     {
         attr.push_back(nm);
         value.push_back(vl);
@@ -304,15 +304,15 @@ public:
     virtual void setDocumentLocator(Locator locator) {}
     virtual void startDocument(void) {}
     virtual void endDocument(void) {}
-    virtual void startPrefixMapping(const string &prefix,const string &uri) {}
+    virtual void startPrefixMapping(const string &prefix, const string &uri) {}
     virtual void endPrefixMapping(const string &prefix) {}
-    virtual void startElement(const string &namespaceURI,const string &localName,
-                              const string &qualifiedName,const Attributes &atts);
-    virtual void endElement(const string &namespaceURI,const string &localName,
+    virtual void startElement(const string &namespaceURI, const string &localName,
+                              const string &qualifiedName, const Attributes &atts);
+    virtual void endElement(const string &namespaceURI, const string &localName,
                             const string &qualifiedName);
-    virtual void characters(const char *text,int4 start,int4 length);
-    virtual void ignorableWhitespace(const char *text,int4 start,int4 length) {}
-    virtual void processingInstruction(const string &target,const string &data) {}
+    virtual void characters(const char *text, int4 start, int4 length);
+    virtual void ignorableWhitespace(const char *text, int4 start, int4 length) {}
+    virtual void processingInstruction(const string &target, const string &data) {}
     virtual void setVersion(const string &val) {}
     virtual void setEncoding(const string &val) {}
     virtual void skippedEntity(const string &name) {}
@@ -335,7 +335,7 @@ public:
 class DocumentStorage
 {
     vector<Document *> doclist;		///< The list of documents held by this container
-    map<string,const Element *> tagmap;	///< The map from name to registered XML elements
+    map<string, const Element *> tagmap;	///< The map from name to registered XML elements
 public:
     ~DocumentStorage(void);		///< Destructor
 
@@ -388,7 +388,7 @@ struct XmlError
 /// \param hand is the ContentHandler that stores or processes the XML content events
 /// \param dbg is non-zero if the parser should output debug information during its parse
 /// \return 0 if there is no error during parsing or a (non-zero) error condition
-extern int4 xml_parse(istream &i,ContentHandler *hand,int4 dbg=0);
+extern int4 xml_parse(istream &i, ContentHandler *hand, int4 dbg = 0);
 
 /// \brief Parse the given XML stream into an in-memory document
 ///
@@ -409,7 +409,7 @@ extern Document *xml_tree(istream &i);
 ///
 /// \param s is the stream to write to
 /// \param str is the given character array to escape
-extern void xml_escape(ostream &s,const char *str);
+extern void xml_escape(ostream &s, const char *str);
 
 // Some helper functions for writing XML documents directly to a stream
 
@@ -418,11 +418,11 @@ extern void xml_escape(ostream &s,const char *str);
 /// \param s is the output stream
 /// \param attr is the name of the attribute
 /// \param val is the attribute value
-inline void a_v(ostream &s,const string &attr,const string &val)
+inline void a_v(ostream &s, const string &attr, const string &val)
 
 {
     s << ' ' << attr << "=\"";
-    xml_escape(s,val.c_str());
+    xml_escape(s, val.c_str());
     s << "\"";
 }
 
@@ -431,7 +431,7 @@ inline void a_v(ostream &s,const string &attr,const string &val)
 /// \param s is the output stream
 /// \param attr is the name of the attribute
 /// \param val is the given integer value
-inline void a_v_i(ostream &s,const string &attr,intb val)
+inline void a_v_i(ostream &s, const string &attr, intb val)
 
 {
     s << ' ' << attr << "=\"" << dec << val << "\"";
@@ -442,7 +442,7 @@ inline void a_v_i(ostream &s,const string &attr,intb val)
 /// \param s is the output stream
 /// \param attr is the name of the attribute
 /// \param val is the given unsigned integer value
-inline void a_v_u(ostream &s,const string &attr,uintb val)
+inline void a_v_u(ostream &s, const string &attr, uintb val)
 
 {
     s << ' ' << attr << "=\"0x" << hex << val << "\"";
@@ -453,7 +453,7 @@ inline void a_v_u(ostream &s,const string &attr,uintb val)
 /// \param s is the output stream
 /// \param attr is the name of the attribute
 /// \param val is the given boolean value
-inline void a_v_b(ostream &s,const string &attr,bool val)
+inline void a_v_b(ostream &s, const string &attr, bool val)
 
 {
     s << ' ' << attr << "=\"";
@@ -473,11 +473,11 @@ inline void a_v_b(ostream &s,const string &attr,bool val)
 inline bool xml_readbool(const string &attr)
 
 {
-    if (attr.size()==0) return false;
+    if (attr.size() == 0) return false;
     char firstc = attr[0];
-    if (firstc=='t') return true;
-    if (firstc=='1') return true;
-    if (firstc=='y') return true;         // For backward compatibility
+    if (firstc == 't') return true;
+    if (firstc == '1') return true;
+    if (firstc == 'y') return true;       // For backward compatibility
     return false;
 }
 #endif

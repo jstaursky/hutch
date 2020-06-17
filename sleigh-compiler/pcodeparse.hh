@@ -31,7 +31,8 @@ class PcodeLexer
 {
 public:
     enum
-    {			// Lexer states
+    {
+        // Lexer states
         start,
         special2,			// Middle of special 2 character operator
         special3,                   // First character of special 3 character operator
@@ -47,7 +48,7 @@ public:
 private:
     static const IdentRec idents[];
     int4 curstate;
-    char curchar,lookahead1,lookahead2;
+    char curchar, lookahead1, lookahead2;
     char curtoken[256];
     int4 tokpos;
     bool endofstream;
@@ -66,7 +67,7 @@ private:
     }
     bool isIdent(char c) const
     {
-        return (isalnum(c)||(c=='_')||(c=='.'));
+        return (isalnum(c) || (c == '_') || (c == '.'));
     }
     bool isHex(char c) const
     {
@@ -144,7 +145,7 @@ public:
     void clear(void);
     int lex(void);
     bool parseStream(istream& s);
-    void addOperand(const string &name,int4 index);
+    void addOperand(const string &name, int4 index);
 };
 
 

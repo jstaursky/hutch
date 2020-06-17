@@ -30,7 +30,7 @@ struct RtlPair
         section = (ConstructTpl *)0;
         scope = (SymbolScope *)0;
     }
-    RtlPair(ConstructTpl *sec,SymbolScope *sc)
+    RtlPair(ConstructTpl *sec, SymbolScope *sc)
     {
         section = sec;
         scope = sc;
@@ -43,7 +43,7 @@ class SectionVector
     RtlPair main;
     vector<RtlPair> named;
 public:
-    SectionVector(ConstructTpl *rtl,SymbolScope *scope);
+    SectionVector(ConstructTpl *rtl, SymbolScope *scope);
     ConstructTpl *getMainSection(void) const
     {
         return main.section;
@@ -68,13 +68,14 @@ public:
     {
         return named.size();
     }
-    void append(ConstructTpl *rtl,SymbolScope *scope);
+    void append(ConstructTpl *rtl, SymbolScope *scope);
 };
 
 struct SpaceQuality  	// Qualities of an address space
 {
     enum
-    {			// Class of space
+    {
+        // Class of space
         ramtype,
         registertype
     };
@@ -89,11 +90,11 @@ struct SpaceQuality  	// Qualities of an address space
 struct FieldQuality
 {
     string name;
-    uint4 low,high;
+    uint4 low, high;
     bool signext;
     bool flow;
     bool hex;
-    FieldQuality(string *nm,uintb *l,uintb *h);
+    FieldQuality(string *nm, uintb *l, uintb *h);
 };
 
 class WithBlock
@@ -131,12 +132,12 @@ class ConsistencyChecker
         {
             writeop = -1;
             readop = -1;
-            inslot=-1;
-            writecount=0;
-            readcount=0;
-            writesection=-2;
-            readsection=-2;
-            opttype=-1;
+            inslot = -1;
+            writecount = 0;
+            readcount = 0;
+            writesection = -2;
+            readsection = -2;
+            opttype = -1;
         }
     };
     SleighCompile *compiler;
@@ -147,33 +148,33 @@ class ConsistencyChecker
     bool printdeadwarning;
     SubtableSymbol *root_symbol;
     vector<SubtableSymbol *> postorder;
-    map<SubtableSymbol *,int4> sizemap; // Sizes associated with tables
-    OperandSymbol *getOperandSymbol(int4 slot,OpTpl *op,Constructor *ct);
-    void printOpName(ostream &s,OpTpl *op);
-    void printOpError(OpTpl *op,Constructor *ct,int4 err1,int4 err2,const string &message);
-    int4 recoverSize(const ConstTpl &sizeconst,Constructor *ct);
-    bool checkOpMisuse(OpTpl *op,Constructor *ct);
-    bool sizeRestriction(OpTpl *op,Constructor *ct);
-    bool checkConstructorSection(Constructor *ct,ConstructTpl *cttpl);
-    bool checkVarnodeTruncation(Constructor *ct,int4 slot,OpTpl *op,VarnodeTpl *vn,bool isbigendian);
-    bool checkSectionTruncations(Constructor *ct,ConstructTpl *cttpl,bool isbigendian);
+    map<SubtableSymbol *, int4> sizemap; // Sizes associated with tables
+    OperandSymbol *getOperandSymbol(int4 slot, OpTpl *op, Constructor *ct);
+    void printOpName(ostream &s, OpTpl *op);
+    void printOpError(OpTpl *op, Constructor *ct, int4 err1, int4 err2, const string &message);
+    int4 recoverSize(const ConstTpl &sizeconst, Constructor *ct);
+    bool checkOpMisuse(OpTpl *op, Constructor *ct);
+    bool sizeRestriction(OpTpl *op, Constructor *ct);
+    bool checkConstructorSection(Constructor *ct, ConstructTpl *cttpl);
+    bool checkVarnodeTruncation(Constructor *ct, int4 slot, OpTpl *op, VarnodeTpl *vn, bool isbigendian);
+    bool checkSectionTruncations(Constructor *ct, ConstructTpl *cttpl, bool isbigendian);
     bool checkSubtable(SubtableSymbol *sym);
-    void dealWithUnnecessaryExt(OpTpl *op,Constructor *ct);
-    void dealWithUnnecessaryTrunc(OpTpl *op,Constructor *ct);
+    void dealWithUnnecessaryExt(OpTpl *op, Constructor *ct);
+    void dealWithUnnecessaryTrunc(OpTpl *op, Constructor *ct);
     void setPostOrder(SubtableSymbol *root); // Establish table ordering
 
     // Optimization routines
-    static void examineVn(map<uintb,OptimizeRecord> &recs,const VarnodeTpl *vn,uint4 i,int4 inslot,int4 secnum);
-    static bool possibleIntersection(const VarnodeTpl *vn1,const VarnodeTpl *vn2);
-    bool readWriteInterference(const VarnodeTpl *vn,const OpTpl *op,bool checkread) const;
-    void optimizeGather1(Constructor *ct,map<uintb,OptimizeRecord> &recs,int4 secnum) const;
-    void optimizeGather2(Constructor *ct,map<uintb,OptimizeRecord> &recs,int4 secnum) const;
-    OptimizeRecord *findValidRule(Constructor *ct,map<uintb,OptimizeRecord> &recs) const;
-    void applyOptimization(Constructor *ct,const OptimizeRecord &rec);
-    void checkUnusedTemps(Constructor *ct,const map<uintb,OptimizeRecord> &recs);
+    static void examineVn(map<uintb, OptimizeRecord> &recs, const VarnodeTpl *vn, uint4 i, int4 inslot, int4 secnum);
+    static bool possibleIntersection(const VarnodeTpl *vn1, const VarnodeTpl *vn2);
+    bool readWriteInterference(const VarnodeTpl *vn, const OpTpl *op, bool checkread) const;
+    void optimizeGather1(Constructor *ct, map<uintb, OptimizeRecord> &recs, int4 secnum) const;
+    void optimizeGather2(Constructor *ct, map<uintb, OptimizeRecord> &recs, int4 secnum) const;
+    OptimizeRecord *findValidRule(Constructor *ct, map<uintb, OptimizeRecord> &recs) const;
+    void applyOptimization(Constructor *ct, const OptimizeRecord &rec);
+    void checkUnusedTemps(Constructor *ct, const map<uintb, OptimizeRecord> &recs);
     void optimize(Constructor *ct);
 public:
-    ConsistencyChecker(SleighCompile *sleigh, SubtableSymbol *rt,bool unnecessary,bool warndead);
+    ConsistencyChecker(SleighCompile *sleigh, SubtableSymbol *rt, bool unnecessary, bool warndead);
     bool test(void);
     bool testTruncations(bool isbigendian);
     void optimizeAll(void);
@@ -196,10 +197,10 @@ struct FieldContext
     VarnodeSymbol *sym;
     FieldQuality *qual;
     bool operator<(const FieldContext &op2) const;
-    FieldContext(VarnodeSymbol *s,FieldQuality *q)
+    FieldContext(VarnodeSymbol *s, FieldQuality *q)
     {
-        sym=s;
-        qual=q;
+        sym = s;
+        qual = q;
     }
 };
 
@@ -209,12 +210,12 @@ class MacroBuilder : public PcodeBuilder
     bool haserror;
     vector<OpTpl *> &outvec;
     vector<HandleTpl *> params;
-    bool transferOp(OpTpl *op,vector<HandleTpl *> &params);
+    bool transferOp(OpTpl *op, vector<HandleTpl *> &params);
     virtual void dump( OpTpl *op );
     void free(void);
     void reportError(const Location* loc, const string &val);
 public:
-    MacroBuilder(SleighCompile *sl,vector<OpTpl *> &ovec,uint4 lbcnt) : PcodeBuilder(lbcnt),outvec(ovec)
+    MacroBuilder(SleighCompile *sl, vector<OpTpl *> &ovec, uint4 lbcnt) : PcodeBuilder(lbcnt), outvec(ovec)
     {
         slgh = sl;
         haserror = false;
@@ -228,7 +229,7 @@ public:
     {
         free();
     }
-    virtual void appendBuild(OpTpl *bld,int4 secnum)
+    virtual void appendBuild(OpTpl *bld, int4 secnum)
     {
         dump(bld);
     }
@@ -237,7 +238,7 @@ public:
         dump(op);
     }
     virtual void setLabel(OpTpl *op);
-    virtual void appendCrossBuild(OpTpl *bld,int4 secnum)
+    virtual void appendCrossBuild(OpTpl *bld, int4 secnum)
     {
         dump(bld);
     }
@@ -268,7 +269,7 @@ class SleighCompile : public SleighBase
 public:
     SleighPcode pcode;
 private:
-    map<string,string> preproc_defines; // Defines for the preprocessor
+    map<string, string> preproc_defines; // Defines for the preprocessor
     vector<FieldContext> contexttable;
     vector<ConstructTpl *> macrotable;
     vector<Token *> tokentable;
@@ -295,23 +296,23 @@ private:
 
     const Location* getCurrentLocation(void) const;
     void predefinedSymbols(void);
-    int4 calcContextVarLayout(int4 start,int4 sz,int4 numbits);
+    int4 calcContextVarLayout(int4 start, int4 sz, int4 numbits);
     void buildDecisionTrees(void);
     void buildPatterns(void);
     void checkConsistency(void);
-    static int4 findCollision(map<uintb,int4> &local2Operand,const vector<uintb> &locals,int operand);
+    static int4 findCollision(map<uintb, int4> &local2Operand, const vector<uintb> &locals, int operand);
     bool checkLocalExports(Constructor *ct);
     void checkLocalCollisions(void);
     void checkNops(void);
     string checkSymbols(SymbolScope *scope);
     void addSymbol(SleighSymbol *sym);
     SleighSymbol *dedupSymbolList(vector<SleighSymbol *> *symlist);
-    bool expandMacros(ConstructTpl *ctpl,const vector<ConstructTpl *> &macrotable);
-    bool finalizeSections(Constructor *big,SectionVector *vec);
-    static void shiftUniqueVn(VarnodeTpl *vn,int4 sa);
-    static void shiftUniqueOp(OpTpl *op,int4 sa);
-    static void shiftUniqueHandle(HandleTpl *hand,int4 sa);
-    static void shiftUniqueConstruct(ConstructTpl *tpl,int4 sa);
+    bool expandMacros(ConstructTpl *ctpl, const vector<ConstructTpl *> &macrotable);
+    bool finalizeSections(Constructor *big, SectionVector *vec);
+    static void shiftUniqueVn(VarnodeTpl *vn, int4 sa);
+    static void shiftUniqueOp(OpTpl *op, int4 sa);
+    static void shiftUniqueHandle(HandleTpl *hand, int4 sa);
+    static void shiftUniqueConstruct(ConstructTpl *tpl, int4 sa);
     void checkUniqueAllocation(void);
 public:
     SleighCompile(void);
@@ -367,14 +368,14 @@ public:
     {
         lineno.back() += 1;
     }
-    bool getPreprocValue(const string &nm,string &res) const;
-    void setPreprocValue(const string &nm,const string &value);
+    bool getPreprocValue(const string &nm, string &res) const;
+    void setPreprocValue(const string &nm, const string &value);
     bool undefinePreprocValue(const string &nm);
 
     // Parser functions
-    TokenSymbol *defineToken(string *name,uintb *sz);
-    void addTokenField(TokenSymbol *sym,FieldQuality *qual);
-    bool addContextField(VarnodeSymbol *sym,FieldQuality *qual);
+    TokenSymbol *defineToken(string *name, uintb *sz);
+    void addTokenField(TokenSymbol *sym, FieldQuality *qual);
+    bool addContextField(VarnodeSymbol *sym, FieldQuality *qual);
     void newSpace(SpaceQuality *qual);
     SectionSymbol *newSectionSymbol(const string &nm);
     void setEndian(int4 end);
@@ -382,41 +383,41 @@ public:
     {
         alignment = val;
     }
-    void defineVarnodes(SpaceSymbol *spacesym,uintb *off,uintb *size,vector<string> *names);
-    void defineBitrange(string *name,VarnodeSymbol *sym,uint4 bitoffset,uint4 numb);
+    void defineVarnodes(SpaceSymbol *spacesym, uintb *off, uintb *size, vector<string> *names);
+    void defineBitrange(string *name, VarnodeSymbol *sym, uint4 bitoffset, uint4 numb);
     void addUserOp(vector<string> *names);
-    void attachValues(vector<SleighSymbol *> *symlist,vector<intb> *numlist);
-    void attachNames(vector<SleighSymbol *> *symlist,vector<string> *names);
-    void attachVarnodes(vector<SleighSymbol *> *symlist,vector<SleighSymbol *> *varlist);
+    void attachValues(vector<SleighSymbol *> *symlist, vector<intb> *numlist);
+    void attachNames(vector<SleighSymbol *> *symlist, vector<string> *names);
+    void attachVarnodes(vector<SleighSymbol *> *symlist, vector<SleighSymbol *> *varlist);
     SubtableSymbol *newTable(string *nm);
-    void newOperand(Constructor *ct,string *nm);
-    VarnodeTpl *addressOf(VarnodeTpl *var,uint4 size);
-    PatternEquation *constrainOperand(OperandSymbol *sym,PatternExpression *patexp);
-    void defineOperand(OperandSymbol *sym,PatternExpression *patexp);
+    void newOperand(Constructor *ct, string *nm);
+    VarnodeTpl *addressOf(VarnodeTpl *var, uint4 size);
+    PatternEquation *constrainOperand(OperandSymbol *sym, PatternExpression *patexp);
+    void defineOperand(OperandSymbol *sym, PatternExpression *patexp);
     PatternEquation *defineInvisibleOperand(TripleSymbol *sym);
     void selfDefine(OperandSymbol *sym);
-    ConstructTpl *setResultVarnode(ConstructTpl *ct,VarnodeTpl *vn);
-    ConstructTpl *setResultStarVarnode(ConstructTpl *ct,StarQuality *star,VarnodeTpl *vn);
-    bool contextMod(vector<ContextChange *> *vec,ContextSymbol *sym,PatternExpression *pe);
-    void contextSet(vector<ContextChange *> *vec,TripleSymbol *sym,ContextSymbol *cvar);
-    MacroSymbol *createMacro(string *name,vector<string> *param);
-    void compareMacroParams(MacroSymbol *sym,const vector<ExprTree *> &param);
-    vector<OpTpl *> *createMacroUse(MacroSymbol *sym,vector<ExprTree *> *param);
+    ConstructTpl *setResultVarnode(ConstructTpl *ct, VarnodeTpl *vn);
+    ConstructTpl *setResultStarVarnode(ConstructTpl *ct, StarQuality *star, VarnodeTpl *vn);
+    bool contextMod(vector<ContextChange *> *vec, ContextSymbol *sym, PatternExpression *pe);
+    void contextSet(vector<ContextChange *> *vec, TripleSymbol *sym, ContextSymbol *cvar);
+    MacroSymbol *createMacro(string *name, vector<string> *param);
+    void compareMacroParams(MacroSymbol *sym, const vector<ExprTree *> &param);
+    vector<OpTpl *> *createMacroUse(MacroSymbol *sym, vector<ExprTree *> *param);
     SectionVector *standaloneSection(ConstructTpl *main);
-    SectionVector *firstNamedSection(ConstructTpl *main,SectionSymbol *sym);
-    SectionVector *nextNamedSection(SectionVector *vec,ConstructTpl *section,SectionSymbol *sym);
-    SectionVector *finalNamedSection(SectionVector *vec,ConstructTpl *section);
-    vector<OpTpl *> *createCrossBuild(VarnodeTpl *addr,SectionSymbol *sym);
+    SectionVector *firstNamedSection(ConstructTpl *main, SectionSymbol *sym);
+    SectionVector *nextNamedSection(SectionVector *vec, ConstructTpl *section, SectionSymbol *sym);
+    SectionVector *finalNamedSection(SectionVector *vec, ConstructTpl *section);
+    vector<OpTpl *> *createCrossBuild(VarnodeTpl *addr, SectionSymbol *sym);
     Constructor *createConstructor(SubtableSymbol *sym);
     bool isInRoot(Constructor *ct) const
     {
         return (root == ct->getParent());
     }
     void resetConstructors(void);
-    void pushWith(SubtableSymbol *ss,PatternEquation *pateq,vector<ContextChange *> *contvec);
+    void pushWith(SubtableSymbol *ss, PatternEquation *pateq, vector<ContextChange *> *contvec);
     void popWith(void);
-    void buildConstructor(Constructor *big,PatternEquation *pateq,vector<ContextChange *> *contvec,SectionVector *vec);
-    void buildMacro(MacroSymbol *sym,ConstructTpl *rtl);
+    void buildConstructor(Constructor *big, PatternEquation *pateq, vector<ContextChange *> *contvec, SectionVector *vec);
+    void buildMacro(MacroSymbol *sym, ConstructTpl *rtl);
     void recordNop(void);
 
     // Virtual functions (not used by the compiler)
@@ -425,11 +426,11 @@ public:
     {
         return 0;
     }
-    virtual int4 oneInstruction(PcodeEmit &emit,const Address &baseaddr) const
+    virtual int4 oneInstruction(PcodeEmit &emit, const Address &baseaddr) const
     {
         return 0;
     }
-    virtual int4 printAssembly(AssemblyEmit &emit,const Address &baseaddr) const
+    virtual int4 printAssembly(AssemblyEmit &emit, const Address &baseaddr) const
     {
         return 0;
     }

@@ -23,7 +23,7 @@ ConstTpl::ConstTpl(const_type tp)
     type = tp;
 }
 
-ConstTpl::ConstTpl(const_type tp,uintb val)
+ConstTpl::ConstTpl(const_type tp, uintb val)
 
 {
     // Constructor for real constants
@@ -33,7 +33,7 @@ ConstTpl::ConstTpl(const_type tp,uintb val)
     select = v_space;
 }
 
-ConstTpl::ConstTpl(const_type tp,int4 ht,v_field vf)
+ConstTpl::ConstTpl(const_type tp, int4 ht, v_field vf)
 
 {
     // Constructor for handle constant
@@ -42,7 +42,7 @@ ConstTpl::ConstTpl(const_type tp,int4 ht,v_field vf)
     select = vf;
 }
 
-ConstTpl::ConstTpl(const_type tp,int4 ht,v_field vf,uintb plus)
+ConstTpl::ConstTpl(const_type tp, int4 ht, v_field vf, uintb plus)
 
 {
     type = handle;
@@ -61,16 +61,16 @@ ConstTpl::ConstTpl(AddrSpace *sid)
 bool ConstTpl::isConstSpace(void) const
 
 {
-    if (type==spaceid)
-        return (value.spaceid->getType()==IPTR_CONSTANT);
+    if (type == spaceid)
+        return (value.spaceid->getType() == IPTR_CONSTANT);
     return false;
 }
 
 bool ConstTpl::isUniqueSpace(void) const
 
 {
-    if (type==spaceid)
-        return (value.spaceid->getType()==IPTR_INTERNAL);
+    if (type == spaceid)
+        return (value.spaceid->getType() == IPTR_INTERNAL);
     return false;
 }
 
@@ -144,23 +144,23 @@ uintb ConstTpl::fix(const ParserWalker &walker) const
                 return (uintb)(uintp)hand.space;
             return (uintb)(uintp)hand.temp_space;
         case v_offset:
-            if (hand.offset_space==(AddrSpace *)0)
+            if (hand.offset_space == (AddrSpace *)0)
                 return hand.offset_offset;
             return hand.temp_offset;
         case v_size:
             return hand.size;
         case v_offset_plus:
             if (hand.space != walker.getConstSpace()) { // If we are not a constant
-                if (hand.offset_space==(AddrSpace *)0)
-                    return hand.offset_offset + (value_real&0xffff); // Adjust offset by truncation amount
-                return hand.temp_offset + (value_real&0xffff);
+                if (hand.offset_space == (AddrSpace *)0)
+                    return hand.offset_offset + (value_real & 0xffff); // Adjust offset by truncation amount
+                return hand.temp_offset + (value_real & 0xffff);
             } else {			// If we are a constant, we want to return a shifted value
                 uintb val;
-                if (hand.offset_space==(AddrSpace *)0)
+                if (hand.offset_space == (AddrSpace *)0)
                     val = hand.offset_offset;
                 else
                     val = hand.temp_offset;
-                val >>= 8 * (value_real>>16);
+                val >>= 8 * (value_real >> 16);
                 return val;
             }
         }
@@ -205,7 +205,7 @@ AddrSpace *ConstTpl::fixSpace(const ParserWalker &walker) const
     throw LowlevelError("ConstTpl is not a spaceid as expected");
 }
 
-void ConstTpl::fillinSpace(FixedHandle &hand,const ParserWalker &walker) const
+void ConstTpl::fillinSpace(FixedHandle &hand, const ParserWalker &walker) const
 
 {
     // Fill in the space portion of a FixedHandle, base on this ConstTpl
@@ -233,7 +233,7 @@ void ConstTpl::fillinSpace(FixedHandle &hand,const ParserWalker &walker) const
     throw LowlevelError("ConstTpl is not a spaceid as expected");
 }
 
-void ConstTpl::fillinOffset(FixedHandle &hand,const ParserWalker &walker) const
+void ConstTpl::fillinOffset(FixedHandle &hand, const ParserWalker &walker) const
 
 {
     // Fillin the offset portion of a FixedHandle, based on this ConstTpl
@@ -271,8 +271,8 @@ void ConstTpl::transfer(const vector<HandleTpl *> &params)
         uintb tmp = value_real;
         *this = newhandle->getPtrOffset();
         if (type == real) {
-            value_real += (tmp&0xffff);
-        } else if ((type == handle)&&(select == v_offset)) {
+            value_real += (tmp & 0xffff);
+        } else if ((type == handle) && (select == v_offset)) {
             select = v_offset_plus;
             value_real = tmp;
         } else
@@ -285,7 +285,7 @@ void ConstTpl::transfer(const vector<HandleTpl *> &params)
     }
 }
 
-void ConstTpl::printHandleSelector(ostream &s,v_field val)
+void ConstTpl::printHandleSelector(ostream &s, v_field val)
 
 {
     switch(val) {
@@ -336,7 +336,7 @@ void ConstTpl::saveXml(ostream &s) const
     case handle:
         s << "handle\" val=\"" << dec << value.handle_index << "\" ";
         s << "s=\"";
-        printHandleSelector(s,select);
+        printHandleSelector(s, select);
         s << "\"";
         if (select == v_offset_plus)
             s << " plus=\"0x" << hex << value_real << "\"";
@@ -375,7 +375,7 @@ void ConstTpl::saveXml(ostream &s) const
     }
 }
 
-void ConstTpl::restoreXml(const Element *el,const AddrSpaceManager *manage)
+void ConstTpl::restoreXml(const Element *el, const AddrSpaceManager *manage)
 
 {
     const string &typestring(el->getAttributeValue("type"));
@@ -384,7 +384,7 @@ void ConstTpl::restoreXml(const Element *el,const AddrSpaceManager *manage)
         istringstream s(el->getAttributeValue("val"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
         s >> value_real;
-    } else if (typestring=="handle") {
+    } else if (typestring == "handle") {
         type = handle;
         istringstream s(el->getAttributeValue("val"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
@@ -395,18 +395,18 @@ void ConstTpl::restoreXml(const Element *el,const AddrSpaceManager *manage)
             s2.unsetf(ios::dec | ios::hex | ios::oct);
             s2 >> value_real;
         }
-    } else if (typestring=="start") {
+    } else if (typestring == "start") {
         type = j_start;
-    } else if (typestring=="next") {
+    } else if (typestring == "next") {
         type = j_next;
-    } else if (typestring=="curspace") {
+    } else if (typestring == "curspace") {
         type = j_curspace;
-    } else if (typestring=="curspace_size") {
+    } else if (typestring == "curspace_size") {
         type = j_curspace_size;
-    } else if (typestring=="spaceid") {
+    } else if (typestring == "spaceid") {
         type = spaceid;
         value.spaceid = manage->getSpaceByName(el->getAttributeValue("name"));
-    } else if (typestring=="relative") {
+    } else if (typestring == "relative") {
         type = j_relative;
         istringstream s(el->getAttributeValue("val"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
@@ -423,17 +423,17 @@ void ConstTpl::restoreXml(const Element *el,const AddrSpaceManager *manage)
         throw LowlevelError("Bad constant type");
 }
 
-VarnodeTpl::VarnodeTpl(int4 hand,bool zerosize) :
-    space(ConstTpl::handle,hand,ConstTpl::v_space), offset(ConstTpl::handle,hand,ConstTpl::v_offset), size(ConstTpl::handle,hand,ConstTpl::v_size)
+VarnodeTpl::VarnodeTpl(int4 hand, bool zerosize) :
+    space(ConstTpl::handle, hand, ConstTpl::v_space), offset(ConstTpl::handle, hand, ConstTpl::v_offset), size(ConstTpl::handle, hand, ConstTpl::v_size)
 {
     // Varnode built from a handle
     // if zerosize is true, set the size constant to zero
     if (zerosize)
-        size = ConstTpl(ConstTpl::real,0);
+        size = ConstTpl(ConstTpl::real, 0);
     unnamed_flag = false;
 }
 
-VarnodeTpl::VarnodeTpl(const ConstTpl &sp,const ConstTpl &off,const ConstTpl &sz) :
+VarnodeTpl::VarnodeTpl(const ConstTpl &sp, const ConstTpl &off, const ConstTpl &sz) :
     space(sp), offset(off), size(sz)
 
 {
@@ -451,14 +451,14 @@ bool VarnodeTpl::isLocalTemp(void) const
 
 {
     if (space.getType() != ConstTpl::spaceid) return false;
-    if (space.getSpace()->getType()!=IPTR_INTERNAL) return false;
+    if (space.getSpace()->getType() != IPTR_INTERNAL) return false;
     return true;
 }
 
 bool VarnodeTpl::isDynamic(const ParserWalker &walker) const
 
 {
-    if (offset.getType()!=ConstTpl::handle) return false;
+    if (offset.getType() != ConstTpl::handle) return false;
     // Technically we should probably check all three
     // ConstTpls for dynamic handles, but in all cases
     // if there is any dynamic piece then the offset is
@@ -472,7 +472,7 @@ int4 VarnodeTpl::transfer(const vector<HandleTpl *> &params)
     bool doesOffsetPlus = false;
     int4 handleIndex;
     int4 plus;
-    if ((offset.getType() == ConstTpl::handle)&&(offset.getSelect()==ConstTpl::v_offset_plus)) {
+    if ((offset.getType() == ConstTpl::handle) && (offset.getSelect() == ConstTpl::v_offset_plus)) {
         handleIndex = offset.getHandleIndex();
         plus = (int4)offset.getReal();
         doesOffsetPlus = true;
@@ -497,7 +497,7 @@ void VarnodeTpl::changeHandleIndex(const vector<int4> &handmap)
     size.changeHandleIndex(handmap);
 }
 
-bool VarnodeTpl::adjustTruncation(int4 sz,bool isbigendian)
+bool VarnodeTpl::adjustTruncation(int4 sz, bool isbigendian)
 
 {
     // We know this->offset is an offset_plus, check that the truncation is in bounds (given -sz-)
@@ -513,13 +513,13 @@ bool VarnodeTpl::adjustTruncation(int4 sz,bool isbigendian)
     uintb val = byteoffset;
     val <<= 16;
     if (isbigendian) {
-        val |= (uintb)(sz - (numbytes+byteoffset));
+        val |= (uintb)(sz - (numbytes + byteoffset));
     } else {
         val |= (uintb) byteoffset;
     }
 
 
-    offset = ConstTpl(ConstTpl::handle,offset.getHandleIndex(),ConstTpl::v_offset_plus,val);
+    offset = ConstTpl(ConstTpl::handle, offset.getHandleIndex(), ConstTpl::v_offset_plus, val);
     return true;
 }
 
@@ -533,25 +533,25 @@ void VarnodeTpl::saveXml(ostream &s) const
     s << "</varnode_tpl>\n";
 }
 
-void VarnodeTpl::restoreXml(const Element *el,const AddrSpaceManager *manage)
+void VarnodeTpl::restoreXml(const Element *el, const AddrSpaceManager *manage)
 
 {
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    space.restoreXml(*iter,manage);
+    space.restoreXml(*iter, manage);
     ++iter;
-    offset.restoreXml(*iter,manage);
+    offset.restoreXml(*iter, manage);
     ++iter;
-    size.restoreXml(*iter,manage);
+    size.restoreXml(*iter, manage);
 }
 
 bool VarnodeTpl::operator<(const VarnodeTpl &op2) const
 
 {
-    if (!(space==op2.space)) return (space<op2.space);
-    if (!(offset==op2.offset)) return (offset<op2.offset);
-    if (!(size==op2.size)) return (size<op2.size);
+    if (!(space == op2.space)) return (space < op2.space);
+    if (!(offset == op2.offset)) return (offset < op2.offset);
+    if (!(size == op2.size)) return (size < op2.size);
     return false;
 }
 
@@ -561,36 +561,36 @@ HandleTpl::HandleTpl(const VarnodeTpl *vn)
     // Build handle which indicates given varnode
     space = vn->getSpace();
     size = vn->getSize();
-    ptrspace = ConstTpl(ConstTpl::real,0);
+    ptrspace = ConstTpl(ConstTpl::real, 0);
     ptroffset = vn->getOffset();
 }
 
-HandleTpl::HandleTpl(const ConstTpl &spc,const ConstTpl &sz,const VarnodeTpl *vn,
-                     AddrSpace *t_space,uintb t_offset) :
+HandleTpl::HandleTpl(const ConstTpl &spc, const ConstTpl &sz, const VarnodeTpl *vn,
+                     AddrSpace *t_space, uintb t_offset) :
     space(spc), size(sz), ptrspace(vn->getSpace()), ptroffset(vn->getOffset()), ptrsize(vn->getSize()),
-    temp_space(t_space), temp_offset(ConstTpl::real,t_offset)
+    temp_space(t_space), temp_offset(ConstTpl::real, t_offset)
 {
     // Build handle to thing being pointed at by -vn-
 }
 
-void HandleTpl::fix(FixedHandle &hand,const ParserWalker &walker) const
+void HandleTpl::fix(FixedHandle &hand, const ParserWalker &walker) const
 
 {
     if (ptrspace.getType() == ConstTpl::real) {
         // The export is unstarred, but this doesn't mean the varnode
         // being exported isn't dynamic
-        space.fillinSpace(hand,walker);
+        space.fillinSpace(hand, walker);
         hand.size = size.fix(walker);
-        ptroffset.fillinOffset(hand,walker);
+        ptroffset.fillinOffset(hand, walker);
     } else {
         hand.space = space.fixSpace(walker);
         hand.size = size.fix(walker);
         hand.offset_offset = ptroffset.fix(walker);
         hand.offset_space = ptrspace.fixSpace(walker);
-        if (hand.offset_space->getType()==IPTR_CONSTANT) {
+        if (hand.offset_space->getType() == IPTR_CONSTANT) {
             // Handle could have been dynamic but wasn't
             hand.offset_space = (AddrSpace *)0;
-            hand.offset_offset = AddrSpace::addressToByte(hand.offset_offset,hand.space->getWordSize());
+            hand.offset_offset = AddrSpace::addressToByte(hand.offset_offset, hand.space->getWordSize());
             hand.offset_offset = hand.space->wrapOffset(hand.offset_offset);
         } else {
             hand.offset_size = ptrsize.fix(walker);
@@ -626,25 +626,25 @@ void HandleTpl::saveXml(ostream &s) const
     s << "</handle_tpl>\n";
 }
 
-void HandleTpl::restoreXml(const Element *el,const AddrSpaceManager *manage)
+void HandleTpl::restoreXml(const Element *el, const AddrSpaceManager *manage)
 
 {
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    space.restoreXml(*iter,manage);
+    space.restoreXml(*iter, manage);
     ++iter;
-    size.restoreXml(*iter,manage);
+    size.restoreXml(*iter, manage);
     ++iter;
-    ptrspace.restoreXml(*iter,manage);
+    ptrspace.restoreXml(*iter, manage);
     ++iter;
-    ptroffset.restoreXml(*iter,manage);
+    ptroffset.restoreXml(*iter, manage);
     ++iter;
-    ptrsize.restoreXml(*iter,manage);
+    ptrsize.restoreXml(*iter, manage);
     ++iter;
-    temp_space.restoreXml(*iter,manage);
+    temp_space.restoreXml(*iter, manage);
     ++iter;
-    temp_offset.restoreXml(*iter,manage);
+    temp_offset.restoreXml(*iter, manage);
 }
 
 OpTpl::~OpTpl(void)
@@ -654,7 +654,7 @@ OpTpl::~OpTpl(void)
     if (output != (VarnodeTpl *)0)
         delete output;
     vector<VarnodeTpl *>::iterator iter;
-    for(iter=input.begin(); iter!=input.end(); ++iter)
+    for(iter = input.begin(); iter != input.end(); ++iter)
         delete *iter;
 }
 
@@ -666,7 +666,7 @@ bool OpTpl::isZeroSize(void) const
 
     if (output != (VarnodeTpl *)0)
         if (output->isZeroSize()) return true;
-    for(iter=input.begin(); iter!=input.end(); ++iter)
+    for(iter = input.begin(); iter != input.end(); ++iter)
         if ((*iter)->isZeroSize()) return true;
     return false;
 }
@@ -676,8 +676,8 @@ void OpTpl::removeInput(int4 index)
 {
     // Remove the indicated input
     delete input[index];
-    for(int4 i=index; i<input.size()-1; ++i)
-        input[i] = input[i+1];
+    for(int4 i = index; i < input.size() - 1; ++i)
+        input[i] = input[i + 1];
     input.pop_back();
 }
 
@@ -688,7 +688,7 @@ void OpTpl::changeHandleIndex(const vector<int4> &handmap)
         output->changeHandleIndex(handmap);
     vector<VarnodeTpl *>::const_iterator iter;
 
-    for(iter=input.begin(); iter!=input.end(); ++iter)
+    for(iter = input.begin(); iter != input.end(); ++iter)
         (*iter)->changeHandleIndex(handmap);
 }
 
@@ -700,12 +700,12 @@ void OpTpl::saveXml(ostream &s) const
         s << "<null/>\n";
     else
         output->saveXml(s);
-    for(int4 i=0; i<input.size(); ++i)
+    for(int4 i = 0; i < input.size(); ++i)
         input[i]->saveXml(s);
     s << "</op_tpl>\n";
 }
 
-void OpTpl::restoreXml(const Element *el,const AddrSpaceManager *manage)
+void OpTpl::restoreXml(const Element *el, const AddrSpaceManager *manage)
 
 {
     opc = get_opcode(el->getAttributeValue("code"));
@@ -716,12 +716,12 @@ void OpTpl::restoreXml(const Element *el,const AddrSpaceManager *manage)
         output = (VarnodeTpl *)0;
     else {
         output = new VarnodeTpl();
-        output->restoreXml(*iter,manage);
+        output->restoreXml(*iter, manage);
     }
     ++iter;
     while(iter != list.end()) {
         VarnodeTpl *vn = new VarnodeTpl();
-        vn->restoreXml(*iter,manage);
+        vn->restoreXml(*iter, manage);
         input.push_back(vn);
         ++iter;
     }
@@ -732,7 +732,7 @@ ConstructTpl::~ConstructTpl(void)
 {
     // Constructor owns its ops and handles
     vector<OpTpl *>::iterator oiter;
-    for(oiter=vec.begin(); oiter!=vec.end(); ++oiter)
+    for(oiter = vec.begin(); oiter != vec.end(); ++oiter)
         delete *oiter;
     if (result != (HandleTpl *)0)
         delete result;
@@ -754,13 +754,13 @@ bool ConstructTpl::addOp(OpTpl *ot)
 bool ConstructTpl::addOpList(const vector<OpTpl *> &oplist)
 
 {
-    for(int4 i=0; i<oplist.size(); ++i)
+    for(int4 i = 0; i < oplist.size(); ++i)
         if (!addOp(oplist[i]))
             return false;
     return true;
 }
 
-int4 ConstructTpl::fillinBuild(vector<int4> &check,AddrSpace *const_space)
+int4 ConstructTpl::fillinBuild(vector<int4> &check, AddrSpace *const_space)
 
 {
     // Make sure there is a build statement for all subtable params
@@ -769,7 +769,7 @@ int4 ConstructTpl::fillinBuild(vector<int4> &check,AddrSpace *const_space)
     OpTpl *op;
     VarnodeTpl *indvn;
 
-    for(iter=vec.begin(); iter!=vec.end(); ++iter) {
+    for(iter = vec.begin(); iter != vec.end(); ++iter) {
         op = *iter;
         if (op->getOpcode() == BUILD) {
             int4 index = op->getIn(0)->getOffset().getReal();
@@ -778,14 +778,14 @@ int4 ConstructTpl::fillinBuild(vector<int4> &check,AddrSpace *const_space)
             check[index] = 1;		// Mark to avoid future duplicate build
         }
     }
-    for(int4 i=0; i<check.size(); ++i) {
+    for(int4 i = 0; i < check.size(); ++i) {
         if (check[i] == 0) {	// Didn't see a BUILD statement
             op = new OpTpl(BUILD);
             indvn = new VarnodeTpl(ConstTpl(const_space),
-                                   ConstTpl(ConstTpl::real,i),
-                                   ConstTpl(ConstTpl::real,4));
+                                   ConstTpl(ConstTpl::real, i),
+                                   ConstTpl(ConstTpl::real, 4));
             op->addInput(indvn);
-            vec.insert(vec.begin(),op);
+            vec.insert(vec.begin(), op);
         }
     }
     return 0;
@@ -796,7 +796,7 @@ bool ConstructTpl::buildOnly(void) const
 {
     vector<OpTpl *>::const_iterator iter;
     OpTpl *op;
-    for(iter=vec.begin(); iter!=vec.end(); ++iter) {
+    for(iter = vec.begin(); iter != vec.end(); ++iter) {
         op = *iter;
         if (op->getOpcode() != BUILD)
             return false;
@@ -810,7 +810,7 @@ void ConstructTpl::changeHandleIndex(const vector<int4> &handmap)
     vector<OpTpl *>::const_iterator iter;
     OpTpl *op;
 
-    for(iter=vec.begin(); iter!=vec.end(); ++iter) {
+    for(iter = vec.begin(); iter != vec.end(); ++iter) {
         op = *iter;
         if (op->getOpcode() == BUILD) {
             int4 index = op->getIn(0)->getOffset().getReal();
@@ -823,19 +823,19 @@ void ConstructTpl::changeHandleIndex(const vector<int4> &handmap)
         result->changeHandleIndex(handmap);
 }
 
-void ConstructTpl::setInput(VarnodeTpl *vn,int4 index,int4 slot)
+void ConstructTpl::setInput(VarnodeTpl *vn, int4 index, int4 slot)
 
 {
     // set the VarnodeTpl input for a particular op
     // for use with optimization routines
     OpTpl *op = vec[index];
     VarnodeTpl *oldvn = op->getIn(slot);
-    op->setInput(vn,slot);
+    op->setInput(vn, slot);
     if (oldvn != (VarnodeTpl *)0)
         delete oldvn;
 }
 
-void ConstructTpl::setOutput(VarnodeTpl *vn,int4 index)
+void ConstructTpl::setOutput(VarnodeTpl *vn, int4 index)
 
 {
     // set the VarnodeTpl output for a particular op
@@ -851,12 +851,12 @@ void ConstructTpl::deleteOps(const vector<int4> &indices)
 
 {
     // delete a particular set of ops
-    for(uint4 i=0; i<indices.size(); ++i) {
+    for(uint4 i = 0; i < indices.size(); ++i) {
         delete vec[indices[i]];
         vec[indices[i]] = (OpTpl *)0;
     }
     uint4 poscur = 0;
-    for(uint4 i=0; i<vec.size(); ++i) {
+    for(uint4 i = 0; i < vec.size(); ++i) {
         OpTpl *op = vec[i];
         if (op != (OpTpl *)0) {
             vec[poscur] = op;
@@ -867,11 +867,11 @@ void ConstructTpl::deleteOps(const vector<int4> &indices)
         vec.pop_back();
 }
 
-void ConstructTpl::saveXml(ostream &s,int4 sectionid) const
+void ConstructTpl::saveXml(ostream &s, int4 sectionid) const
 
 {
     s << "<construct_tpl";
-    if (sectionid >=0 )
+    if (sectionid >= 0 )
         s << " section=\"" << dec << sectionid << "\"";
     if (delayslot != 0)
         s << " delay=\"" << dec << delayslot << "\"";
@@ -882,25 +882,25 @@ void ConstructTpl::saveXml(ostream &s,int4 sectionid) const
         result->saveXml(s);
     else
         s << "<null/>";
-    for(int4 i=0; i<vec.size(); ++i)
+    for(int4 i = 0; i < vec.size(); ++i)
         vec[i]->saveXml(s);
     s << "</construct_tpl>\n";
 }
 
-int4 ConstructTpl::restoreXml(const Element *el,const AddrSpaceManager *manage)
+int4 ConstructTpl::restoreXml(const Element *el, const AddrSpaceManager *manage)
 
 {
     int4 sectionid = -1;
-    for(int4 i=0; i<el->getNumAttributes(); ++i) {
-        if (el->getAttributeName(i)=="delay") {
+    for(int4 i = 0; i < el->getNumAttributes(); ++i) {
+        if (el->getAttributeName(i) == "delay") {
             istringstream s(el->getAttributeValue(i));
             s.unsetf(ios::dec | ios::hex | ios::oct);
             s >> delayslot;
-        } else if (el->getAttributeName(i)=="labels") {
+        } else if (el->getAttributeName(i) == "labels") {
             istringstream s(el->getAttributeValue(i));
             s.unsetf(ios::dec | ios::hex | ios::oct);
             s >> numlabels;
-        } else if (el->getAttributeName(i)=="section") {
+        } else if (el->getAttributeName(i) == "section") {
             istringstream s(el->getAttributeValue(i));
             s.unsetf(ios::dec | ios::hex | ios::oct);
             s >> sectionid;
@@ -913,23 +913,23 @@ int4 ConstructTpl::restoreXml(const Element *el,const AddrSpaceManager *manage)
         result = (HandleTpl *)0;
     else {
         result = new HandleTpl();
-        result->restoreXml(*iter,manage);
+        result->restoreXml(*iter, manage);
     }
     ++iter;
     while(iter != list.end()) {
         OpTpl *op = new OpTpl();
-        op->restoreXml(*iter,manage);
+        op->restoreXml(*iter, manage);
         vec.push_back(op);
         ++iter;
     }
     return sectionid;
 }
 
-void PcodeBuilder::build(ConstructTpl *construct,int4 secnum)
+void PcodeBuilder::build(ConstructTpl *construct, int4 secnum)
 
 {
     if (construct == (ConstructTpl *)0)
-        throw UnimplError("",0);	// Pcode is not implemented for this constructor
+        throw UnimplError("", 0);	// Pcode is not implemented for this constructor
 
     uint4 oldbase = labelbase;	// Recursively store old labelbase
     labelbase = labelcount;	// Set the newbase
@@ -939,7 +939,7 @@ void PcodeBuilder::build(ConstructTpl *construct,int4 secnum)
     OpTpl *op;
     const vector<OpTpl *> &ops(construct->getOpvec());
 
-    for(iter=ops.begin(); iter!=ops.end(); ++iter) {
+    for(iter = ops.begin(); iter != ops.end(); ++iter) {
         op = *iter;
         switch(op->getOpcode()) {
         case BUILD:
@@ -952,7 +952,7 @@ void PcodeBuilder::build(ConstructTpl *construct,int4 secnum)
             setLabel( op );
             break;
         case CROSSBUILD:
-            appendCrossBuild(op,secnum);
+            appendCrossBuild(op, secnum);
             break;
         default:
             dump( op );

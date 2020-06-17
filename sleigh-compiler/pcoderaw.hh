@@ -43,7 +43,7 @@ struct VarnodeData
     Address getAddr(void) const;
 
     /// Recover this object from an XML tag
-    void restoreXml(const Element *el,const AddrSpaceManager *manage);
+    void restoreXml(const Element *el, const AddrSpaceManager *manage);
 
     /// Does \b this container another given VarnodeData
     bool contains(const VarnodeData &op2) const;
@@ -88,7 +88,7 @@ inline bool VarnodeData::operator!=(const VarnodeData &op2) const
 /// \return the address of the varnode
 inline Address VarnodeData::getAddr(void) const
 {
-    return Address(space,offset);
+    return Address(space, offset);
 }
 
 /// \brief A low-level representation of a single pcode operation
@@ -106,7 +106,7 @@ public:
     void setBehavior(OpBehavior *be); ///< Set the opcode for this op
     OpBehavior *getBehavior(void) const; ///< Retrieve the behavior for this op
     OpCode getOpcode(void) const;	///< Get the opcode for this op
-    void setSeqNum(const Address &a,uintm b); ///< Set the sequence number
+    void setSeqNum(const Address &a, uintm b); ///< Set the sequence number
     const SeqNum &getSeqNum(void) const; ///< Retrieve the sequence number
     const Address &getAddr(void) const; ///< Get address of this operation
     void setOutput(VarnodeData *o); ///< Set the output varnode for this op
@@ -150,10 +150,10 @@ inline OpCode PcodeOpRaw::getOpcode(void) const
 /// particular operation within the entire translation of the machine instruction
 /// \param a is the instruction address
 /// \param b is the order number
-inline void PcodeOpRaw::setSeqNum(const Address &a,uintm b)
+inline void PcodeOpRaw::setSeqNum(const Address &a, uintm b)
 
 {
-    seq = SeqNum(a,b);
+    seq = SeqNum(a, b);
 }
 
 /// Every pcode operation has a \b sequence \b number which associates

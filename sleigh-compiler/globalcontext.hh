@@ -36,7 +36,7 @@ class ContextBitRange
     uintm mask;		///< Mask to apply (after shifting) when unpacking this value from its word
 public:
     ContextBitRange(void) { }	///< Constructor for use with restoreXml()
-    ContextBitRange(int4 sbit,int4 ebit);		///< Construct a context value given an absolute bit range
+    ContextBitRange(int4 sbit, int4 ebit);		///< Construct a context value given an absolute bit range
     int4 getShift(void) const
     {
         return shift;    ///< Return the shift-amount for \b this value
@@ -54,11 +54,11 @@ public:
     ///
     /// \param vec is the given context blob to alter (as an array of uintm words)
     /// \param val is the integer value to set
-    void setValue(uintm *vec,uintm val) const
+    void setValue(uintm *vec, uintm val) const
     {
         uintm newval = vec[word];
-        newval &= ~(mask<<shift);
-        newval |= ((val & mask)<<shift);
+        newval &= ~(mask << shift);
+        newval |= ((val & mask) << shift);
         vec[word] = newval;
     }
 
@@ -68,7 +68,7 @@ public:
     /// \return the recovered integer value
     uintm getValue(const uintm *vec) const
     {
-        return ((vec[word]>>shift)&mask);
+        return ((vec[word] >> shift)&mask);
     }
 };
 
@@ -81,7 +81,7 @@ struct TrackedContext
 {
     VarnodeData loc;	///< Storage details of the register being tracked
     uintb val;		///< The value of the register
-    void restoreXml(const Element *el,const AddrSpaceManager *manage);	///< Restore \b this from an XML stream
+    void restoreXml(const Element *el, const AddrSpaceManager *manage);	///< Restore \b this from an XML stream
     void saveXml(ostream &s) const;					///< Save \b this to an XML stream
 };
 typedef vector<TrackedContext> TrackedSet;		///< A set of tracked registers and their values (at one code point)
@@ -121,22 +121,22 @@ typedef vector<TrackedContext> TrackedSet;		///< A set of tracked registers and 
 class ContextDatabase
 {
 protected:
-    static void saveTracked(ostream &s,const Address &addr,const TrackedSet &vec);
-    static void restoreTracked(const Element *el,const AddrSpaceManager *manage,TrackedSet &vec);
+    static void saveTracked(ostream &s, const Address &addr, const TrackedSet &vec);
+    static void restoreTracked(const Element *el, const AddrSpaceManager *manage, TrackedSet &vec);
 
     /// \brief Retrieve the context variable description object by name
     ///
     /// If the variable doesn't exist an exception is thrown.
     /// \param nm is the name of the context value
     /// \return the ContextBitRange object matching the name
-    virtual ContextBitRange &getVariable(const string &nm)=0;
+    virtual ContextBitRange &getVariable(const string &nm) = 0;
 
     /// \brief Retrieve the context variable description object by name
     ///
     /// If the variable doesn't exist an exception is thrown.
     /// \param nm is the name of the context value
     /// \return the ContextBitRange object matching the name
-    virtual const ContextBitRange &getVariable(const string &nm) const=0;
+    virtual const ContextBitRange &getVariable(const string &nm) const = 0;
 
     /// \brief Grab the context blob(s) for the given address range, marking bits that will be set
     ///
@@ -150,8 +150,8 @@ protected:
     /// \param addr2 is (1 past) the last address of the range or is invalid
     /// \param num is the word index for the context value that will be set
     /// \param mask is a mask of the value being set (within its word)
-    virtual void getRegionForSet(vector<uintm *> &res,const Address &addr1,
-                                 const Address &addr2,int4 num,uintm mask)=0;
+    virtual void getRegionForSet(vector<uintm *> &res, const Address &addr1,
+                                 const Address &addr2, int4 num, uintm mask) = 0;
 
     /// \brief Grab the context blob(s) starting at the given address up to the first point of change
     ///
@@ -162,28 +162,28 @@ protected:
     /// \param addr is the starting address of the regions to fetch
     /// \param num is the word index for the specific context value being set
     /// \param mask is a mask of the context value being set (within its word)
-    virtual void getRegionToChangePoint(vector<uintm *> &res,const Address &addr,int4 num,uintm mask)=0;
+    virtual void getRegionToChangePoint(vector<uintm *> &res, const Address &addr, int4 num, uintm mask) = 0;
 
     /// \brief Retrieve the memory region holding all default context values
     ///
     /// This fetches the active memory holding the default context values on top of which all other context
     /// values are overlaid.
     /// \return the memory region holding all the default context values
-    virtual uintm *getDefaultValue(void)=0;
+    virtual uintm *getDefaultValue(void) = 0;
 
     /// \brief Retrieve the memory region holding all default context values
     ///
     /// This fetches the active memory holding the default context values on top of which all other context
     /// values are overlaid.
     /// \return the memory region holding all the default context values
-    virtual const uintm *getDefaultValue(void) const=0;
+    virtual const uintm *getDefaultValue(void) const = 0;
 public:
     virtual ~ContextDatabase() {}			///< Destructor
 
     /// \brief Retrieve the number of words (uintm) in a context \e blob
     ///
     /// \return the number of words
-    virtual int4 getContextSize(void) const=0;
+    virtual int4 getContextSize(void) const = 0;
 
     /// \brief Register a new named context variable (as a bit range) with the database
     ///
@@ -194,13 +194,13 @@ public:
     /// \param nm is the name of the new variable
     /// \param sbit is the position of the variable's most significant bit within the blob
     /// \param ebit is the position of the variable's least significant bit within the blob
-    virtual void registerVariable(const string &nm,int4 sbit,int4 ebit)=0;
+    virtual void registerVariable(const string &nm, int4 sbit, int4 ebit) = 0;
 
     /// \brief Get the context blob of values associated with a given address
     ///
     /// \param addr is the given address
     /// \return the memory region holding the context values for the address
-    virtual const uintm *getContext(const Address &addr) const=0;
+    virtual const uintm *getContext(const Address &addr) const = 0;
 
     /// \brief Get the context blob of values associated with a given address and its bounding offsets
     ///
@@ -210,18 +210,18 @@ public:
     /// \param first will hold the starting offset of the valid range
     /// \param last will hold the ending offset of the valid range
     /// \return the memory region holding the context values for the address
-    virtual const uintm *getContext(const Address &addr,uintb &first,uintb &last) const=0;
+    virtual const uintm *getContext(const Address &addr, uintb &first, uintb &last) const = 0;
 
     /// \brief Get the set of default values for all tracked registers
     ///
     /// \return the list of TrackedContext objects
-    virtual TrackedSet &getTrackedDefault(void)=0;
+    virtual TrackedSet &getTrackedDefault(void) = 0;
 
     /// \brief Get the set of tracked register values associated with the given address
     ///
     /// \param addr is the given address
     /// \return the list of TrackedContext objects
-    virtual const TrackedSet &getTrackedSet(const Address &addr) const=0;
+    virtual const TrackedSet &getTrackedSet(const Address &addr) const = 0;
 
     /// \brief Create a tracked register set that is valid over the given range
     ///
@@ -230,18 +230,18 @@ public:
     /// \param addr1 is the starting address of the given range
     /// \param addr2 is (1 past) the ending address of the given range
     /// \return the empty set of tracked register values
-    virtual TrackedSet &createSet(const Address &addr1,const Address &addr2)=0;
+    virtual TrackedSet &createSet(const Address &addr1, const Address &addr2) = 0;
 
     /// \brief Serialize the entire database to an XML stream
     ///
     /// \param s is the output stream
-    virtual void saveXml(ostream &s) const=0;
+    virtual void saveXml(ostream &s) const = 0;
 
     /// \brief Restore the state of \b this database object from a serialized XML stream
     ///
     /// \param el is the root element of the XML describing the database state
     /// \param manage is used to resolve address space references
-    virtual void restoreXml(const Element *el,const AddrSpaceManager *manage)=0;
+    virtual void restoreXml(const Element *el, const AddrSpaceManager *manage) = 0;
 
     /// \brief Add initial context state from XML tags in compiler/processor specifications
     ///
@@ -249,17 +249,17 @@ public:
     /// \<context_data> tags in either the compiler or processor specification file for the architecture
     /// \param el is a \<context_data> tag
     /// \param manage is used to resolve address space references
-    virtual void restoreFromSpec(const Element *el,const AddrSpaceManager *manage)=0;
+    virtual void restoreFromSpec(const Element *el, const AddrSpaceManager *manage) = 0;
 
-    void setVariableDefault(const string &nm,uintm val);	///< Provide a default value for a context variable
+    void setVariableDefault(const string &nm, uintm val);	///< Provide a default value for a context variable
     uintm getDefaultValue(const string &nm) const;	///< Retrieve the default value for a context variable
-    void setVariable(const string &nm,const Address &addr,uintm value);	///< Set a context value at the given address
-    uintm getVariable(const string &nm,const Address &addr) const;	///< Retrieve a context value at the given address
-    void setContextChangePoint(const Address &addr,int4 num,uintm mask,uintm value);
-    void setContextRegion(const Address &addr1,const Address &addr2,int4 num,uintm mask,uintm value);
-    void setVariableRegion(const string &nm,const Address &begad,
-                           const Address &endad,uintm value);
-    uintb getTrackedValue(const VarnodeData &mem,const Address &point) const;
+    void setVariable(const string &nm, const Address &addr, uintm value);	///< Set a context value at the given address
+    uintm getVariable(const string &nm, const Address &addr) const;	///< Retrieve a context value at the given address
+    void setContextChangePoint(const Address &addr, int4 num, uintm mask, uintm value);
+    void setContextRegion(const Address &addr1, const Address &addr2, int4 num, uintm mask, uintm value);
+    void setVariableRegion(const string &nm, const Address &begad,
+                           const Address &endad, uintm value);
+    uintb getTrackedValue(const VarnodeData &mem, const Address &point) const;
 };
 
 /// \brief An in-memory implementation of the ContextDatabase interface
@@ -282,13 +282,13 @@ class ContextInternal : public ContextDatabase
         int4 size;			///< The number of words in the array
         FreeArray(void)
         {
-            size=0;    ///< Construct an empty context blob
+            size = 0;  ///< Construct an empty context blob
             array = (uintm *)0;
             mask = (uintm *)0;
         }
         ~FreeArray(void)
         {
-            if (size!=0) {
+            if (size != 0) {
                 delete [] array;    ///< Destructor
                 delete [] mask;
             }
@@ -298,16 +298,16 @@ class ContextInternal : public ContextDatabase
     };
 
     int4 size;			///< Number of words in a context blob (for this architecture)
-    map<string,ContextBitRange> variables;		///< Map from context variable name to description object
-    partmap<Address,FreeArray> database;			///< Partition map of context blobs (FreeArray)
-    partmap<Address,TrackedSet> trackbase;		///< Partition map of tracked register sets
-    void saveContext(ostream &s,const Address &addr,const uintm *vec) const;
-    void restoreContext(const Element *el,const Address &addr1,const Address &addr2);
+    map<string, ContextBitRange> variables;		///< Map from context variable name to description object
+    partmap<Address, FreeArray> database;			///< Partition map of context blobs (FreeArray)
+    partmap<Address, TrackedSet> trackbase;		///< Partition map of tracked register sets
+    void saveContext(ostream &s, const Address &addr, const uintm *vec) const;
+    void restoreContext(const Element *el, const Address &addr1, const Address &addr2);
     virtual ContextBitRange &getVariable(const string &nm);
     virtual const ContextBitRange &getVariable(const string &nm) const;
-    virtual void getRegionForSet(vector<uintm *> &res,const Address &addr1,
-                                 const Address &addr2,int4 num,uintm mask);
-    virtual void getRegionToChangePoint(vector<uintm *> &res,const Address &addr,int4 num,uintm mask);
+    virtual void getRegionForSet(vector<uintm *> &res, const Address &addr1,
+                                 const Address &addr2, int4 num, uintm mask);
+    virtual void getRegionToChangePoint(vector<uintm *> &res, const Address &addr, int4 num, uintm mask);
     virtual uintm *getDefaultValue(void)
     {
         return database.defaultValue().array;
@@ -326,13 +326,13 @@ public:
     {
         return size;
     }
-    virtual void registerVariable(const string &nm,int4 sbit,int4 ebit);
+    virtual void registerVariable(const string &nm, int4 sbit, int4 ebit);
 
     virtual const uintm *getContext(const Address &addr) const
     {
         return database.getValue(addr).array;
     }
-    virtual const uintm *getContext(const Address &addr,uintb &first,uintb &last) const;
+    virtual const uintm *getContext(const Address &addr, uintb &first, uintb &last) const;
 
     virtual TrackedSet &getTrackedDefault(void)
     {
@@ -342,11 +342,11 @@ public:
     {
         return trackbase.getValue(addr);
     }
-    virtual TrackedSet &createSet(const Address &addr1,const Address &addr2);
+    virtual TrackedSet &createSet(const Address &addr1, const Address &addr2);
 
     virtual void saveXml(ostream &s) const;
-    virtual void restoreXml(const Element *el,const AddrSpaceManager *manage);
-    virtual void restoreFromSpec(const Element *el,const AddrSpaceManager *manage);
+    virtual void restoreXml(const Element *el, const AddrSpaceManager *manage);
+    virtual void restoreFromSpec(const Element *el, const AddrSpaceManager *manage);
 };
 
 /// \brief A helper class for caching the active context blob to minimize database lookups
@@ -372,9 +372,9 @@ public:
     {
         allowset = val;    ///< Toggle whether setContext() calls are ignored
     }
-    void getContext(const Address &addr,uintm *buf) const;	///< Retrieve the context blob for the given address
-    void setContext(const Address &addr,int4 num,uintm mask,uintm value);
-    void setContext(const Address &addr1,const Address &addr2,int4 num,uintm mask,uintm value);
+    void getContext(const Address &addr, uintm *buf) const;	///< Retrieve the context blob for the given address
+    void setContext(const Address &addr, int4 num, uintm mask, uintm value);
+    void setContext(const Address &addr1, const Address &addr2, int4 num, uintm mask, uintm value);
 };
 
 #endif

@@ -80,7 +80,7 @@ public:
     LoadImage(const string &f);	///< LoadImage constructor
     virtual ~LoadImage(void);	///< LoadImage destructor
     const string &getFileName(void) const; ///< Get the name of the LoadImage
-    virtual void loadFill(uint1 *ptr,int4 size,const Address &addr)=0; ///< Get data from the LoadImage
+    virtual void loadFill(uint1 *ptr, int4 size, const Address &addr) = 0; ///< Get data from the LoadImage
     virtual void openSymbols(void) const; ///< Prepare to read symbols
     virtual void closeSymbols(void) const; ///< Stop reading symbols
     virtual bool getNextSymbol(LoadImageFunc &record) const; ///< Get the next symbol record
@@ -88,9 +88,9 @@ public:
     virtual void closeSectionInfo(void) const; ///< Stop reading section info
     virtual bool getNextSection(LoadImageSection &sec) const; ///< Get info on the next section
     virtual void getReadonly(RangeList &list) const; ///< Return list of \e readonly address ranges
-    virtual string getArchType(void) const=0; ///< Get a string indicating the architecture type
-    virtual void adjustVma(long adjust)=0; ///< Adjust load addresses with a global offset
-    uint1 *load(int4 size,const Address &addr);	///< Load a chunk of image
+    virtual string getArchType(void) const = 0; ///< Get a string indicating the architecture type
+    virtual void adjustVma(long adjust) = 0; ///< Adjust load addresses with a global offset
+    uint1 *load(int4 size, const Address &addr);	///< Load a chunk of image
 };
 
 /// \brief A simple raw binary loadimage
@@ -112,7 +112,7 @@ public:
     }
     void open(void);					///< Open the raw file for reading
     virtual ~RawLoadImage(void);				///< RawLoadImage destructor
-    virtual void loadFill(uint1 *ptr,int4 size,const Address &addr);
+    virtual void loadFill(uint1 *ptr, int4 size, const Address &addr);
     virtual string getArchType(void) const;
     virtual void adjustVma(long adjust);
 };

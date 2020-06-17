@@ -30,7 +30,7 @@ class SleighBase : public Translate
 {
     static const int4 SLA_FORMAT_VERSION;	///< Current version of the .sla file read/written by SleighBash
     vector<string> userop;		///< Names of user-define p-code ops for \b this Translate object
-    map<VarnodeData,string> varnode_xref;	///< A map from Varnodes in the \e register space to register names
+    map<VarnodeData, string> varnode_xref;	///< A map from Varnodes in the \e register space to register names
 protected:
     SubtableSymbol *root;		///< The root SLEIGH decoding symbol
     SymbolTable symtab;		///< The SLEIGH symbol table
@@ -47,10 +47,10 @@ public:
         return (root != (SubtableSymbol *)0);    ///< Return \b true if \b this is initialized
     }
     virtual ~SleighBase(void) {}	///< Destructor
-    virtual void addRegister(const string &nm,AddrSpace *base,uintb offset,int4 size);
+    virtual void addRegister(const string &nm, AddrSpace *base, uintb offset, int4 size);
     virtual const VarnodeData &getRegister(const string &nm) const;
-    virtual string getRegisterName(AddrSpace *base,uintb off,int4 size) const;
-    virtual void getAllRegisters(map<VarnodeData,string> &reglist) const;
+    virtual string getRegisterName(AddrSpace *base, uintb off, int4 size) const;
+    virtual void getAllRegisters(map<VarnodeData, string> &reglist) const;
     virtual void getUserOpNames(vector<string> &res) const;
 
     SleighSymbol *findSymbol(const string &nm) const

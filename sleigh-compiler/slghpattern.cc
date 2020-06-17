@@ -15,21 +15,21 @@
  */
 #include "slghpattern.hh"
 
-uintm DisjointPattern::getMask(int4 startbit,int4 size,bool context) const
+uintm DisjointPattern::getMask(int4 startbit, int4 size, bool context) const
 
 {
     PatternBlock *block = getBlock(context);
     if (block != (PatternBlock *)0)
-        return block->getMask(startbit,size);
+        return block->getMask(startbit, size);
     return 0;
 }
 
-uintm DisjointPattern::getValue(int4 startbit,int4 size,bool context) const
+uintm DisjointPattern::getValue(int4 startbit, int4 size, bool context) const
 
 {
     PatternBlock *block = getBlock(context);
     if (block != (PatternBlock *)0)
-        return block->getValue(startbit,size);
+        return block->getValue(startbit, size);
     return 0;
 }
 
@@ -47,17 +47,17 @@ bool DisjointPattern::specializes(const DisjointPattern *op2) const
 {
     // Return true, if everywhere this's mask is non-zero
     // op2's mask is non-zero and op2's value match this's
-    PatternBlock *a,*b;
+    PatternBlock *a, *b;
 
     a = getBlock(false);
     b = op2->getBlock(false);
-    if ((b != (PatternBlock *)0)&&(!b->alwaysTrue())) {	// a must match existing block
+    if ((b != (PatternBlock *)0) && (!b->alwaysTrue())) {	// a must match existing block
         if (a == (PatternBlock *)0) return false;
         if (!a->specializes(b)) return false;
     }
     a = getBlock(true);
     b = op2->getBlock(true);
-    if ((b != (PatternBlock *)0)&&(!b->alwaysTrue())) {	// a must match existing block
+    if ((b != (PatternBlock *)0) && (!b->alwaysTrue())) {	// a must match existing block
         if (a == (PatternBlock *)0) return false;
         if (!a->specializes(b)) return false;
     }
@@ -68,7 +68,7 @@ bool DisjointPattern::identical(const DisjointPattern *op2) const
 
 {
     // Return true if patterns match exactly
-    PatternBlock *a,*b;
+    PatternBlock *a, *b;
 
     a = getBlock(false);
     b = op2->getBlock(false);
@@ -79,7 +79,7 @@ bool DisjointPattern::identical(const DisjointPattern *op2) const
         } else if (!a->identical(b))
             return false;
     } else {
-        if ((a != (PatternBlock *)0)&&(!a->alwaysTrue()))
+        if ((a != (PatternBlock *)0) && (!a->alwaysTrue()))
             return false;
     }
     a = getBlock(true);
@@ -91,13 +91,13 @@ bool DisjointPattern::identical(const DisjointPattern *op2) const
         } else if (!a->identical(b))
             return false;
     } else {
-        if ((a != (PatternBlock *)0)&&(!a->alwaysTrue()))
+        if ((a != (PatternBlock *)0) && (!a->alwaysTrue()))
             return false;
     }
     return true;
 }
 
-static bool resolveIntersectBlock(PatternBlock *bl1,PatternBlock *bl2,PatternBlock *thisblock)
+static bool resolveIntersectBlock(PatternBlock *bl1, PatternBlock *bl2, PatternBlock *thisblock)
 
 {
     PatternBlock *inter;
@@ -124,13 +124,13 @@ static bool resolveIntersectBlock(PatternBlock *bl1,PatternBlock *bl2,PatternBlo
     return res;
 }
 
-bool DisjointPattern::resolvesIntersect(const DisjointPattern *op1,const DisjointPattern *op2) const
+bool DisjointPattern::resolvesIntersect(const DisjointPattern *op1, const DisjointPattern *op2) const
 
 {
     // Is this pattern equal to the intersection of -op1- and -op2-
-    if (!resolveIntersectBlock(op1->getBlock(false),op2->getBlock(false),getBlock(false)))
+    if (!resolveIntersectBlock(op1->getBlock(false), op2->getBlock(false), getBlock(false)))
         return false;
-    return resolveIntersectBlock(op1->getBlock(true),op2->getBlock(true),getBlock(true));
+    return resolveIntersectBlock(op1->getBlock(true), op2->getBlock(true), getBlock(true));
 }
 
 DisjointPattern *DisjointPattern::restoreDisjoint(const Element *el)
@@ -151,23 +151,23 @@ DisjointPattern *DisjointPattern::restoreDisjoint(const Element *el)
 void PatternBlock::normalize(void)
 
 {
-    if (nonzerosize<=0) {		// Check if alwaystrue or alwaysfalse
+    if (nonzerosize <= 0) {		// Check if alwaystrue or alwaysfalse
         offset = 0;			// in which case we don't need mask and value
         maskvec.clear();
         valvec.clear();
         return;
     }
-    vector<uintm>::iterator iter1,iter2;
+    vector<uintm>::iterator iter1, iter2;
 
     iter1 = maskvec.begin();	// Cut zeros from beginning of mask
     iter2 = valvec.begin();
-    while((iter1 != maskvec.end())&&((*iter1)==0)) {
+    while((iter1 != maskvec.end()) && ((*iter1) == 0)) {
         iter1++;
         iter2++;
         offset += sizeof(uintm);
     }
-    maskvec.erase(maskvec.begin(),iter1);
-    valvec.erase(valvec.begin(),iter2);
+    maskvec.erase(maskvec.begin(), iter1);
+    valvec.erase(valvec.begin(), iter2);
 
     if (!maskvec.empty()) {
         int4 suboff = 0;		// Cut off unaligned zeros from beginning of mask
@@ -176,21 +176,21 @@ void PatternBlock::normalize(void)
             suboff += 1;
             tmp >>= 8;
         }
-        suboff = sizeof(uintm)-suboff;
+        suboff = sizeof(uintm) - suboff;
         if (suboff != 0) {
             offset += suboff;		// Slide up maskvec by suboff bytes
-            for(int4 i=0; i<maskvec.size()-1; ++i) {
-                tmp = maskvec[i] << (suboff*8);
-                tmp |= (maskvec[i+1] >> ((sizeof(uintm)-suboff)*8));
+            for(int4 i = 0; i < maskvec.size() - 1; ++i) {
+                tmp = maskvec[i] << (suboff * 8);
+                tmp |= (maskvec[i + 1] >> ((sizeof(uintm) - suboff) * 8));
                 maskvec[i] = tmp;
             }
-            maskvec.back() <<= suboff*8;
-            for(int4 i=0; i<valvec.size()-1; ++i) { // Slide up valvec by suboff bytes
-                tmp = valvec[i] << (suboff*8);
-                tmp |= (valvec[i+1] >> ((sizeof(uintm)-suboff)*8));
+            maskvec.back() <<= suboff * 8;
+            for(int4 i = 0; i < valvec.size() - 1; ++i) { // Slide up valvec by suboff bytes
+                tmp = valvec[i] << (suboff * 8);
+                tmp |= (valvec[i + 1] >> ((sizeof(uintm) - suboff) * 8));
                 valvec[i] = tmp;
             }
-            valvec.back() <<= suboff*8;
+            valvec.back() <<= suboff * 8;
         }
 
         iter1 = maskvec.end();	// Cut zeros from end of mask
@@ -204,8 +204,8 @@ void PatternBlock::normalize(void)
             iter1++;			// Find first zero, in last zero chain
             iter2++;
         }
-        maskvec.erase(iter1,maskvec.end());
-        valvec.erase(iter2,valvec.end());
+        maskvec.erase(iter1, maskvec.end());
+        valvec.erase(iter2, valvec.end());
     }
 
     if (maskvec.empty()) {
@@ -215,13 +215,13 @@ void PatternBlock::normalize(void)
     }
     nonzerosize = maskvec.size() * sizeof(uintm);
     uintm tmp = maskvec.back();	// tmp must be nonzero
-    while( (tmp&0xff) == 0) {
+    while( (tmp & 0xff) == 0) {
         nonzerosize -= 1;
         tmp >>= 8;
     }
 }
 
-PatternBlock::PatternBlock(int4 off,uintm msk,uintm val)
+PatternBlock::PatternBlock(int4 off, uintm msk, uintm val)
 
 {
     // Define mask and value pattern, confined to one uintm
@@ -242,7 +242,7 @@ PatternBlock::PatternBlock(bool tf)
         nonzerosize = -1;
 }
 
-PatternBlock::PatternBlock(const PatternBlock *a,const PatternBlock *b)
+PatternBlock::PatternBlock(const PatternBlock *a, const PatternBlock *b)
 
 {
     // Construct PatternBlock by ANDing two others together
@@ -258,7 +258,7 @@ PatternBlock::PatternBlock(vector<PatternBlock *> &list)
 
 {
     // AND several blocks together to construct new block
-    PatternBlock *res,*next;
+    PatternBlock *res, *next;
 
     if (list.empty()) {		// If not ANDing anything
         offset = 0;			// make constructed block always true
@@ -266,7 +266,7 @@ PatternBlock::PatternBlock(vector<PatternBlock *> &list)
         return;
     }
     res = list[0];
-    for(int4 i=1; i<list.size(); ++i) {
+    for(int4 i = 1; i < list.size(); ++i) {
         next = res->intersect(list[i]);
         delete res;
         res = next;
@@ -301,14 +301,14 @@ PatternBlock *PatternBlock::commonSubPattern(const PatternBlock *b) const
 
     res->offset = 0;
     int4 offset = 0;
-    uintm mask1,val1,mask2,val2;
-    uintm resmask,resval;
+    uintm mask1, val1, mask2, val2;
+    uintm resmask, resval;
     while(offset < maxlength) {
-        mask1 = getMask(offset*8,sizeof(uintm)*8);
-        val1 = getValue(offset*8,sizeof(uintm)*8);
-        mask2 = b->getMask(offset*8,sizeof(uintm)*8);
-        val2 = b->getValue(offset*8,sizeof(uintm)*8);
-        resmask = mask1 & mask2 & ~(val1^val2);
+        mask1 = getMask(offset * 8, sizeof(uintm) * 8);
+        val1 = getValue(offset * 8, sizeof(uintm) * 8);
+        mask2 = b->getMask(offset * 8, sizeof(uintm) * 8);
+        val2 = b->getValue(offset * 8, sizeof(uintm) * 8);
+        resmask = mask1 & mask2 & ~(val1 ^ val2);
         resval = val1 & val2 & resmask;
         res->maskvec.push_back(resmask);
         res->valvec.push_back(resval);
@@ -330,13 +330,13 @@ PatternBlock *PatternBlock::intersect(const PatternBlock *b) const
 
     res->offset = 0;
     int4 offset = 0;
-    uintm mask1,val1,mask2,val2,commonmask;
-    uintm resmask,resval;
+    uintm mask1, val1, mask2, val2, commonmask;
+    uintm resmask, resval;
     while(offset < maxlength) {
-        mask1 = getMask(offset*8,sizeof(uintm)*8);
-        val1 = getValue(offset*8,sizeof(uintm)*8);
-        mask2 = b->getMask(offset*8,sizeof(uintm)*8);
-        val2 = b->getValue(offset*8,sizeof(uintm)*8);
+        mask1 = getMask(offset * 8, sizeof(uintm) * 8);
+        val1 = getValue(offset * 8, sizeof(uintm) * 8);
+        mask2 = b->getMask(offset * 8, sizeof(uintm) * 8);
+        val2 = b->getValue(offset * 8, sizeof(uintm) * 8);
         commonmask = mask1 & mask2;	// Bits in mask shared by both patterns
         if ((commonmask & val1) != (commonmask & val2)) {
             res->nonzerosize = -1;	// Impossible pattern
@@ -359,18 +359,18 @@ bool PatternBlock::specializes(const PatternBlock *op2) const
 {
     // does every masked bit in -this- match the corresponding
     // masked bit in -op2-
-    int4 length = 8*op2->getLength();
+    int4 length = 8 * op2->getLength();
     int4 tmplength;
-    uintm mask1,mask2,value1,value2;
+    uintm mask1, mask2, value1, value2;
     int4 sbit = 0;
     while(sbit < length) {
-        tmplength = length-sbit;
-        if (tmplength > 8*sizeof(uintm))
-            tmplength = 8*sizeof(uintm);
-        mask1 = getMask(sbit,tmplength);
-        value1 = getValue(sbit,tmplength);
-        mask2 = op2->getMask(sbit,tmplength);
-        value2 = op2->getValue(sbit,tmplength);
+        tmplength = length - sbit;
+        if (tmplength > 8 * sizeof(uintm))
+            tmplength = 8 * sizeof(uintm);
+        mask1 = getMask(sbit, tmplength);
+        value1 = getValue(sbit, tmplength);
+        mask2 = op2->getMask(sbit, tmplength);
+        value2 = op2->getValue(sbit, tmplength);
         if ((mask1 & mask2) != mask2) return false;
         if ((value1 & mask2) != (value2 & mask2)) return false;
         sbit += tmplength;
@@ -383,41 +383,41 @@ bool PatternBlock::identical(const PatternBlock *op2) const
 {
     // Do the mask and value match exactly
     int4 tmplength;
-    int4 length = 8*op2->getLength();
-    tmplength = 8*getLength();
+    int4 length = 8 * op2->getLength();
+    tmplength = 8 * getLength();
     if (tmplength > length)
         length = tmplength;		// Maximum of two lengths
-    uintm mask1,mask2,value1,value2;
+    uintm mask1, mask2, value1, value2;
     int4 sbit = 0;
     while(sbit < length) {
-        tmplength = length-sbit;
-        if (tmplength > 8*sizeof(uintm))
-            tmplength = 8*sizeof(uintm);
-        mask1 = getMask(sbit,tmplength);
-        value1 = getValue(sbit,tmplength);
-        mask2 = op2->getMask(sbit,tmplength);
-        value2 = op2->getValue(sbit,tmplength);
+        tmplength = length - sbit;
+        if (tmplength > 8 * sizeof(uintm))
+            tmplength = 8 * sizeof(uintm);
+        mask1 = getMask(sbit, tmplength);
+        value1 = getValue(sbit, tmplength);
+        mask2 = op2->getMask(sbit, tmplength);
+        value2 = op2->getValue(sbit, tmplength);
         if (mask1 != mask2) return false;
-        if ((mask1&value1) != (mask2&value2)) return false;
+        if ((mask1 & value1) != (mask2 & value2)) return false;
         sbit += tmplength;
     }
     return true;
 }
 
-uintm PatternBlock::getMask(int4 startbit,int4 size) const
+uintm PatternBlock::getMask(int4 startbit, int4 size) const
 
 {
-    startbit -= 8*offset;
+    startbit -= 8 * offset;
     // Note the division and remainder here is unsigned.  Then it is recast to signed.
     // If startbit is negative, then wordnum1 is either negative or very big,
     // if (unsigned size is same as sizeof int)
     // In either case, shift should come out between 0 and 8*sizeof(uintm)-1
-    int4 wordnum1 = startbit/(8*sizeof(uintm));
-    int4 shift = startbit % (8*sizeof(uintm));
-    int4 wordnum2 = (startbit+size-1)/(8*sizeof(uintm));
+    int4 wordnum1 = startbit / (8 * sizeof(uintm));
+    int4 shift = startbit % (8 * sizeof(uintm));
+    int4 wordnum2 = (startbit + size - 1) / (8 * sizeof(uintm));
     uintm res;
 
-    if ((wordnum1<0)||(wordnum1>=maskvec.size()))
+    if ((wordnum1 < 0) || (wordnum1 >= maskvec.size()))
         res = 0;
     else
         res = maskvec[wordnum1];
@@ -425,40 +425,40 @@ uintm PatternBlock::getMask(int4 startbit,int4 size) const
     res <<= shift;
     if (wordnum1 != wordnum2) {
         uintm tmp;
-        if ((wordnum2<0)||(wordnum2>=maskvec.size()))
+        if ((wordnum2 < 0) || (wordnum2 >= maskvec.size()))
             tmp = 0;
         else
             tmp = maskvec[wordnum2];
-        res |= (tmp>>(8*sizeof(uintm)-shift));
+        res |= (tmp >> (8 * sizeof(uintm) - shift));
     }
-    res >>= (8*sizeof(uintm) - size);
+    res >>= (8 * sizeof(uintm) - size);
 
     return res;
 }
 
-uintm PatternBlock::getValue(int4 startbit,int4 size) const
+uintm PatternBlock::getValue(int4 startbit, int4 size) const
 
 {
-    startbit -= 8*offset;
-    int4 wordnum1 = startbit/(8*sizeof(uintm));
-    int4 shift = startbit % (8*sizeof(uintm));
-    int4 wordnum2 = (startbit+size-1)/(8*sizeof(uintm));
+    startbit -= 8 * offset;
+    int4 wordnum1 = startbit / (8 * sizeof(uintm));
+    int4 shift = startbit % (8 * sizeof(uintm));
+    int4 wordnum2 = (startbit + size - 1) / (8 * sizeof(uintm));
     uintm res;
 
-    if ((wordnum1<0)||(wordnum1>=valvec.size()))
+    if ((wordnum1 < 0) || (wordnum1 >= valvec.size()))
         res = 0;
     else
         res = valvec[wordnum1];
     res <<= shift;
     if (wordnum1 != wordnum2) {
         uintm tmp;
-        if ((wordnum2<0)||(wordnum2>=valvec.size()))
+        if ((wordnum2 < 0) || (wordnum2 >= valvec.size()))
             tmp = 0;
         else
             tmp = valvec[wordnum2];
-        res |= (tmp>>(8*sizeof(uintm)-shift));
+        res |= (tmp >> (8 * sizeof(uintm) - shift));
     }
-    res >>= (8*sizeof(uintm) - size);
+    res >>= (8 * sizeof(uintm) - size);
 
     return res;
 }
@@ -466,11 +466,11 @@ uintm PatternBlock::getValue(int4 startbit,int4 size) const
 bool PatternBlock::isInstructionMatch(ParserWalker &walker) const
 
 {
-    if (nonzerosize<=0) return (nonzerosize==0);
+    if (nonzerosize <= 0) return (nonzerosize == 0);
     int4 off = offset;
-    for(int4 i=0; i<maskvec.size(); ++i) {
-        uintm data = walker.getInstructionBytes(off,sizeof(uintm));
-        if ((maskvec[i] & data)!=valvec[i]) return false;
+    for(int4 i = 0; i < maskvec.size(); ++i) {
+        uintm data = walker.getInstructionBytes(off, sizeof(uintm));
+        if ((maskvec[i] & data) != valvec[i]) return false;
         off += sizeof(uintm);
     }
     return true;
@@ -479,11 +479,11 @@ bool PatternBlock::isInstructionMatch(ParserWalker &walker) const
 bool PatternBlock::isContextMatch(ParserWalker &walker) const
 
 {
-    if (nonzerosize<=0) return (nonzerosize==0);
+    if (nonzerosize <= 0) return (nonzerosize == 0);
     int4 off = offset;
-    for(int4 i=0; i<maskvec.size(); ++i) {
-        uintm data = walker.getContextBytes(off,sizeof(uintm));
-        if ((maskvec[i] & data)!=valvec[i]) return false;
+    for(int4 i = 0; i < maskvec.size(); ++i) {
+        uintm data = walker.getContextBytes(off, sizeof(uintm));
+        if ((maskvec[i] & data) != valvec[i]) return false;
         off += sizeof(uintm);
     }
     return true;
@@ -495,7 +495,7 @@ void PatternBlock::saveXml(ostream &s) const
     s << "<pat_block ";
     s << "offset=\"" << dec << offset << "\" ";
     s << "nonzero=\"" << nonzerosize << "\">\n";
-    for(int4 i=0; i<maskvec.size(); ++i) {
+    for(int4 i = 0; i < maskvec.size(); ++i) {
         s << "  <mask_word ";
         s << "mask=\"0x" << hex << maskvec[i] << "\" ";
         s << "val=\"0x" << valvec[i] << "\"/>\n";
@@ -519,7 +519,7 @@ void PatternBlock::restoreXml(const Element *el)
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    uintm mask,val;
+    uintm mask, val;
     while(iter != list.end()) {
         Element *subel = *iter;
         {
@@ -539,22 +539,22 @@ void PatternBlock::restoreXml(const Element *el)
     normalize();
 }
 
-Pattern *InstructionPattern::doAnd(const Pattern *b,int4 sa) const
+Pattern *InstructionPattern::doAnd(const Pattern *b, int4 sa) const
 
 {
-    if (b->numDisjoint()>0)
-        return b->doAnd(this,-sa);
+    if (b->numDisjoint() > 0)
+        return b->doAnd(this, -sa);
 
     const CombinePattern *b2 = dynamic_cast<const CombinePattern *>(b);
     if (b2 != (const CombinePattern *)0)
-        return b->doAnd(this,-sa);
+        return b->doAnd(this, -sa);
 
     const ContextPattern *b3 = dynamic_cast<const ContextPattern *>(b);
     if (b3 != (const ContextPattern *)0) {
         InstructionPattern *newpat = (InstructionPattern *)simplifyClone();
         if (sa < 0)
             newpat->shiftInstruction(-sa);
-        return new CombinePattern((ContextPattern *)b3->simplifyClone(),newpat);
+        return new CombinePattern((ContextPattern *)b3->simplifyClone(), newpat);
     }
     const InstructionPattern *b4 = (const InstructionPattern *)b;
 
@@ -573,15 +573,15 @@ Pattern *InstructionPattern::doAnd(const Pattern *b,int4 sa) const
     return new InstructionPattern(respattern);
 }
 
-Pattern *InstructionPattern::commonSubPattern(const Pattern *b,int4 sa) const
+Pattern *InstructionPattern::commonSubPattern(const Pattern *b, int4 sa) const
 
 {
-    if (b->numDisjoint()>0)
-        return b->commonSubPattern(this,-sa);
+    if (b->numDisjoint() > 0)
+        return b->commonSubPattern(this, -sa);
 
     const CombinePattern *b2 = dynamic_cast<const CombinePattern *>(b);
     if (b2 != (const CombinePattern *)0)
-        return b->commonSubPattern(this,-sa);
+        return b->commonSubPattern(this, -sa);
 
     const ContextPattern *b3 = dynamic_cast<const ContextPattern *>(b);
     if (b3 != (const ContextPattern *)0) {
@@ -605,24 +605,24 @@ Pattern *InstructionPattern::commonSubPattern(const Pattern *b,int4 sa) const
     return new InstructionPattern(respattern);
 }
 
-Pattern *InstructionPattern::doOr(const Pattern *b,int4 sa) const
+Pattern *InstructionPattern::doOr(const Pattern *b, int4 sa) const
 
 {
-    if (b->numDisjoint()>0)
-        return b->doOr(this,-sa);
+    if (b->numDisjoint() > 0)
+        return b->doOr(this, -sa);
 
     const CombinePattern *b2 = dynamic_cast<const CombinePattern *>(b);
     if (b2 != (const CombinePattern *)0)
-        return b->doOr(this,-sa);
+        return b->doOr(this, -sa);
 
-    DisjointPattern *res1,*res2;
+    DisjointPattern *res1, *res2;
     res1 = (DisjointPattern *)simplifyClone();
     res2 = (DisjointPattern *)b->simplifyClone();
     if (sa < 0)
         res1->shiftInstruction(-sa);
     else
         res2->shiftInstruction(sa);
-    return new OrPattern(res1,res2);
+    return new OrPattern(res1, res2);
 }
 
 void InstructionPattern::saveXml(ostream &s) const
@@ -643,33 +643,33 @@ void InstructionPattern::restoreXml(const Element *el)
     maskvalue->restoreXml(*iter);
 }
 
-Pattern *ContextPattern::doOr(const Pattern *b,int4 sa) const
+Pattern *ContextPattern::doOr(const Pattern *b, int4 sa) const
 
 {
     const ContextPattern *b2 = dynamic_cast<const ContextPattern *>(b);
     if (b2 == (const ContextPattern *)0)
-        return b->doOr(this,-sa);
+        return b->doOr(this, -sa);
 
-    return new OrPattern((DisjointPattern *)simplifyClone(),(DisjointPattern *)b2->simplifyClone());
+    return new OrPattern((DisjointPattern *)simplifyClone(), (DisjointPattern *)b2->simplifyClone());
 }
 
-Pattern *ContextPattern::doAnd(const Pattern *b,int4 sa) const
+Pattern *ContextPattern::doAnd(const Pattern *b, int4 sa) const
 
 {
     const ContextPattern *b2 = dynamic_cast<const ContextPattern *>(b);
     if (b2 == (const ContextPattern *)0)
-        return b->doAnd(this,-sa);
+        return b->doAnd(this, -sa);
 
     PatternBlock *resblock = maskvalue->intersect(b2->maskvalue);
     return new ContextPattern(resblock);
 }
 
-Pattern *ContextPattern::commonSubPattern(const Pattern *b,int4 sa) const
+Pattern *ContextPattern::commonSubPattern(const Pattern *b, int4 sa) const
 
 {
     const ContextPattern *b2 = dynamic_cast<const ContextPattern *>(b);
     if (b2 == (const ContextPattern *)0)
-        return b->commonSubPattern(this,-sa);
+        return b->commonSubPattern(this, -sa);
 
     PatternBlock *resblock = maskvalue->commonSubPattern(b2->maskvalue);
     return new ContextPattern(resblock);
@@ -722,63 +722,63 @@ bool CombinePattern::alwaysFalse(void) const
     return (context->alwaysFalse() || instr->alwaysFalse());
 }
 
-Pattern *CombinePattern::doAnd(const Pattern *b,int4 sa) const
+Pattern *CombinePattern::doAnd(const Pattern *b, int4 sa) const
 
 {
     CombinePattern *tmp;
 
     if (b->numDisjoint() != 0)
-        return b->doAnd(this,-sa);
+        return b->doAnd(this, -sa);
 
     const CombinePattern *b2 = dynamic_cast<const CombinePattern *>(b);
     if (b2 != (CombinePattern *)0) {
-        ContextPattern *c = (ContextPattern *)context->doAnd(b2->context,0);
-        InstructionPattern *i = (InstructionPattern *)instr->doAnd(b2->instr,sa);
-        tmp = new CombinePattern(c,i);
+        ContextPattern *c = (ContextPattern *)context->doAnd(b2->context, 0);
+        InstructionPattern *i = (InstructionPattern *)instr->doAnd(b2->instr, sa);
+        tmp = new CombinePattern(c, i);
     } else {
         const InstructionPattern *b3 = dynamic_cast<const InstructionPattern *>(b);
         if (b3 != (const InstructionPattern *)0) {
-            InstructionPattern *i = (InstructionPattern *)instr->doAnd(b3,sa);
-            tmp = new CombinePattern((ContextPattern *)context->simplifyClone(),i);
+            InstructionPattern *i = (InstructionPattern *)instr->doAnd(b3, sa);
+            tmp = new CombinePattern((ContextPattern *)context->simplifyClone(), i);
         } else {			// Must be a ContextPattern
-            ContextPattern *c = (ContextPattern *)context->doAnd(b,0);
+            ContextPattern *c = (ContextPattern *)context->doAnd(b, 0);
             InstructionPattern *newpat = (InstructionPattern *) instr->simplifyClone();
             if (sa < 0)
                 newpat->shiftInstruction(-sa);
-            tmp = new CombinePattern(c,newpat);
+            tmp = new CombinePattern(c, newpat);
         }
     }
     return tmp;
 }
 
-Pattern *CombinePattern::commonSubPattern(const Pattern *b,int4 sa) const
+Pattern *CombinePattern::commonSubPattern(const Pattern *b, int4 sa) const
 
 {
     Pattern *tmp;
 
     if (b->numDisjoint() != 0)
-        return b->commonSubPattern(this,-sa);
+        return b->commonSubPattern(this, -sa);
 
     const CombinePattern *b2 = dynamic_cast<const CombinePattern *>(b);
     if (b2 != (CombinePattern *)0) {
-        ContextPattern *c = (ContextPattern *)context->commonSubPattern(b2->context,0);
-        InstructionPattern *i = (InstructionPattern *)instr->commonSubPattern(b2->instr,sa);
-        tmp = new CombinePattern(c,i);
+        ContextPattern *c = (ContextPattern *)context->commonSubPattern(b2->context, 0);
+        InstructionPattern *i = (InstructionPattern *)instr->commonSubPattern(b2->instr, sa);
+        tmp = new CombinePattern(c, i);
     } else {
         const InstructionPattern *b3 = dynamic_cast<const InstructionPattern *>(b);
         if (b3 != (const InstructionPattern *)0)
-            tmp = instr->commonSubPattern(b3,sa);
+            tmp = instr->commonSubPattern(b3, sa);
         else			// Must be a ContextPattern
-            tmp = context->commonSubPattern(b,0);
+            tmp = context->commonSubPattern(b, 0);
     }
     return tmp;
 }
 
-Pattern *CombinePattern::doOr(const Pattern *b,int4 sa) const
+Pattern *CombinePattern::doOr(const Pattern *b, int4 sa) const
 
 {
     if (b->numDisjoint() != 0)
-        return b->doOr(this,-sa);
+        return b->doOr(this, -sa);
 
     DisjointPattern *res1 = (DisjointPattern *)simplifyClone();
     DisjointPattern *res2 = (DisjointPattern *)b->simplifyClone();
@@ -786,7 +786,7 @@ Pattern *CombinePattern::doOr(const Pattern *b,int4 sa) const
         res1->shiftInstruction(-sa);
     else
         res2->shiftInstruction(sa);
-    OrPattern *tmp = new OrPattern(res1,res2);
+    OrPattern *tmp = new OrPattern(res1, res2);
     return tmp;
 }
 
@@ -798,7 +798,7 @@ Pattern *CombinePattern::simplifyClone(void) const
         return instr->simplifyClone();
     if (instr->alwaysTrue())
         return context->simplifyClone();
-    if (context->alwaysFalse()||instr->alwaysFalse())
+    if (context->alwaysFalse() || instr->alwaysFalse())
         return new InstructionPattern(false);
     return new CombinePattern((ContextPattern *)context->simplifyClone(),
                               (InstructionPattern *)instr->simplifyClone());
@@ -826,7 +826,7 @@ void CombinePattern::restoreXml(const Element *el)
     instr->restoreXml(*iter);
 }
 
-OrPattern::OrPattern(DisjointPattern *a,DisjointPattern *b)
+OrPattern::OrPattern(DisjointPattern *a, DisjointPattern *b)
 
 {
     orlist.push_back(a);
@@ -838,7 +838,7 @@ OrPattern::OrPattern(const vector<DisjointPattern *> &list)
 {
     vector<DisjointPattern *>::const_iterator iter;
 
-    for(iter=list.begin(); iter!=list.end(); ++iter)
+    for(iter = list.begin(); iter != list.end(); ++iter)
         orlist.push_back(*iter);
 }
 
@@ -847,7 +847,7 @@ OrPattern::~OrPattern(void)
 {
     vector<DisjointPattern *>::iterator iter;
 
-    for(iter=orlist.begin(); iter!=orlist.end(); ++iter)
+    for(iter = orlist.begin(); iter != orlist.end(); ++iter)
         delete *iter;
 }
 
@@ -856,14 +856,14 @@ void OrPattern::shiftInstruction(int4 sa)
 {
     vector<DisjointPattern *>::iterator iter;
 
-    for(iter=orlist.begin(); iter!=orlist.end(); ++iter)
+    for(iter = orlist.begin(); iter != orlist.end(); ++iter)
         (*iter)->shiftInstruction(sa);
 }
 
 bool OrPattern::isMatch(ParserWalker &walker) const
 
 {
-    for(int4 i=0; i<orlist.size(); ++i)
+    for(int4 i = 0; i < orlist.size(); ++i)
         if (orlist[i]->isMatch(walker))
             return true;
     return false;
@@ -876,7 +876,7 @@ bool OrPattern::alwaysTrue(void) const
     // may cover the entire gamut
     vector<DisjointPattern *>::const_iterator iter;
 
-    for(iter=orlist.begin(); iter!=orlist.end(); ++iter)
+    for(iter = orlist.begin(); iter != orlist.end(); ++iter)
         if ((*iter)->alwaysTrue()) return true;
     return false;
 }
@@ -886,7 +886,7 @@ bool OrPattern::alwaysFalse(void) const
 {
     vector<DisjointPattern *>::const_iterator iter;
 
-    for(iter=orlist.begin(); iter!=orlist.end(); ++iter)
+    for(iter = orlist.begin(); iter != orlist.end(); ++iter)
         if (!(*iter)->alwaysFalse()) return false;
     return true;
 }
@@ -896,29 +896,29 @@ bool OrPattern::alwaysInstructionTrue(void) const
 {
     vector<DisjointPattern *>::const_iterator iter;
 
-    for(iter=orlist.begin(); iter!=orlist.end(); ++iter)
+    for(iter = orlist.begin(); iter != orlist.end(); ++iter)
         if (!(*iter)->alwaysInstructionTrue()) return false;
     return true;
 }
 
-Pattern *OrPattern::doAnd(const Pattern *b,int4 sa) const
+Pattern *OrPattern::doAnd(const Pattern *b, int4 sa) const
 
 {
     const OrPattern *b2 = dynamic_cast<const OrPattern *>(b);
     vector<DisjointPattern *> newlist;
-    vector<DisjointPattern *>::const_iterator iter,iter2;
+    vector<DisjointPattern *>::const_iterator iter, iter2;
     DisjointPattern *tmp;
     OrPattern *tmpor;
 
     if (b2 == (const OrPattern *)0) {
-        for(iter=orlist.begin(); iter!=orlist.end(); ++iter) {
-            tmp = (DisjointPattern *)(*iter)->doAnd(b,sa);
+        for(iter = orlist.begin(); iter != orlist.end(); ++iter) {
+            tmp = (DisjointPattern *)(*iter)->doAnd(b, sa);
             newlist.push_back(tmp);
         }
     } else {
-        for(iter=orlist.begin(); iter!=orlist.end(); ++iter)
-            for(iter2=b2->orlist.begin(); iter2!=b2->orlist.end(); ++iter2) {
-                tmp = (DisjointPattern *)(*iter)->doAnd(*iter2,sa);
+        for(iter = orlist.begin(); iter != orlist.end(); ++iter)
+            for(iter2 = b2->orlist.begin(); iter2 != b2->orlist.end(); ++iter2) {
+                tmp = (DisjointPattern *)(*iter)->doAnd(*iter2, sa);
                 newlist.push_back(tmp);
             }
     }
@@ -926,20 +926,20 @@ Pattern *OrPattern::doAnd(const Pattern *b,int4 sa) const
     return tmpor;
 }
 
-Pattern *OrPattern::commonSubPattern(const Pattern *b,int4 sa) const
+Pattern *OrPattern::commonSubPattern(const Pattern *b, int4 sa) const
 
 {
     vector<DisjointPattern *>::const_iterator iter;
-    Pattern *res,*next;
+    Pattern *res, *next;
 
     iter = orlist.begin();
-    res = (*iter)->commonSubPattern(b,sa);
+    res = (*iter)->commonSubPattern(b, sa);
     iter++;
 
     if (sa > 0)
         sa = 0;
-    while(iter!=orlist.end()) {
-        next = (*iter)->commonSubPattern(res,sa);
+    while(iter != orlist.end()) {
+        next = (*iter)->commonSubPattern(res, sa);
         delete res;
         res = next;
         ++iter;
@@ -947,27 +947,27 @@ Pattern *OrPattern::commonSubPattern(const Pattern *b,int4 sa) const
     return res;
 }
 
-Pattern *OrPattern::doOr(const Pattern *b,int4 sa) const
+Pattern *OrPattern::doOr(const Pattern *b, int4 sa) const
 
 {
     const OrPattern *b2 = dynamic_cast<const OrPattern *>(b);
     vector<DisjointPattern *> newlist;
     vector<DisjointPattern *>::const_iterator iter;
 
-    for(iter=orlist.begin(); iter!=orlist.end(); ++iter)
+    for(iter = orlist.begin(); iter != orlist.end(); ++iter)
         newlist.push_back((DisjointPattern *)(*iter)->simplifyClone());
     if (sa < 0)
-        for(iter=orlist.begin(); iter!=orlist.end(); ++iter)
+        for(iter = orlist.begin(); iter != orlist.end(); ++iter)
             (*iter)->shiftInstruction(-sa);
 
     if (b2 == (const OrPattern *)0)
         newlist.push_back((DisjointPattern *)b->simplifyClone());
     else {
-        for(iter=b2->orlist.begin(); iter!=b2->orlist.end(); ++iter)
+        for(iter = b2->orlist.begin(); iter != b2->orlist.end(); ++iter)
             newlist.push_back((DisjointPattern *)(*iter)->simplifyClone());
     }
     if (sa > 0)
-        for(int4 i=0; i<newlist.size(); ++i)
+        for(int4 i = 0; i < newlist.size(); ++i)
             newlist[i]->shiftInstruction(sa);
 
     OrPattern *tmpor = new OrPattern(newlist);
@@ -980,12 +980,12 @@ Pattern *OrPattern::simplifyClone(void) const
     // Look for alwaysTrue eliminate alwaysFalse
     vector<DisjointPattern *>::const_iterator iter;
 
-    for(iter=orlist.begin(); iter!=orlist.end(); ++iter) // Look for alwaysTrue
+    for(iter = orlist.begin(); iter != orlist.end(); ++iter) // Look for alwaysTrue
         if ((*iter)->alwaysTrue())
             return new InstructionPattern(true);
 
     vector<DisjointPattern *> newlist;
-    for(iter=orlist.begin(); iter!=orlist.end(); ++iter) // Look for alwaysFalse
+    for(iter = orlist.begin(); iter != orlist.end(); ++iter) // Look for alwaysFalse
         if (!(*iter)->alwaysFalse())
             newlist.push_back((DisjointPattern *)(*iter)->simplifyClone());
 
@@ -1000,7 +1000,7 @@ void OrPattern::saveXml(ostream &s) const
 
 {
     s << "<or_pat>\n";
-    for(int4 i=0; i<orlist.size(); ++i)
+    for(int4 i = 0; i < orlist.size(); ++i)
         orlist[i]->saveXml(s);
     s << "</or_pat>\n";
 }

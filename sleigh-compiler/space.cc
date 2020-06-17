@@ -21,9 +21,9 @@
 void AddrSpace::calcScaleMask(void)
 
 {
-    pointerLowerBound = (addressSize < 3) ? 0x100: 0x1000;
+    pointerLowerBound = (addressSize < 3) ? 0x100 : 0x1000;
     highest = calc_mask(addressSize); // Maximum address
-    highest = highest * wordsize + (wordsize-1); // Maximum byte address
+    highest = highest * wordsize + (wordsize - 1); // Maximum byte address
 }
 
 /// Initialize an address space with its basic attributes
@@ -36,8 +36,8 @@ void AddrSpace::calcScaleMask(void)
 /// \param ind is the integer identifier for the new space
 /// \param fl can be 0 or AddrSpace::hasphysical
 /// \param dl is the number of rounds to delay heritage for the new space
-AddrSpace::AddrSpace(AddrSpaceManager *m,const Translate *t,spacetype tp,const string &nm,
-                     uint4 size,uint4 ws, int4 ind,uint4 fl,int4 dl)
+AddrSpace::AddrSpace(AddrSpaceManager *m, const Translate *t, spacetype tp, const string &nm,
+                     uint4 size, uint4 ws, int4 ind, uint4 fl, int4 dl)
 {
     refcount = 0;			// No references to this space yet
     manage = m;
@@ -66,7 +66,7 @@ AddrSpace::AddrSpace(AddrSpaceManager *m,const Translate *t,spacetype tp,const s
 /// \param m the associated address space manager
 /// \param t is the processor translator
 /// \param tp the basic type of the space
-AddrSpace::AddrSpace(AddrSpaceManager *m,const Translate *t,spacetype tp)
+AddrSpace::AddrSpace(AddrSpaceManager *m, const Translate *t, spacetype tp)
 
 {
     refcount = 0;
@@ -87,15 +87,15 @@ AddrSpace::AddrSpace(AddrSpaceManager *m,const Translate *t,spacetype tp)
 void AddrSpace::saveBasicAttributes(ostream &s) const
 
 {
-    a_v(s,"name",name);
-    a_v_i(s,"index",index);
-    a_v_b(s,"bigendian",isBigEndian());
-    a_v_i(s,"delay",delay);
+    a_v(s, "name", name);
+    a_v_i(s, "index", index);
+    a_v_b(s, "bigendian", isBigEndian());
+    a_v_i(s, "delay", delay);
     if (delay != deadcodedelay)
-        a_v_i(s,"deadcodedelay",deadcodedelay);
-    a_v_i(s,"size",addressSize);
-    if (wordsize > 1) a_v_i(s,"wordsize",wordsize);
-    a_v_b(s,"physical",hasPhysical());
+        a_v_i(s, "deadcodedelay", deadcodedelay);
+    a_v_i(s, "size", addressSize);
+    if (wordsize > 1) a_v_i(s, "wordsize", wordsize);
+    a_v_b(s, "physical", hasPhysical());
 }
 
 /// The logical form of the space is truncated from its actual size
@@ -115,12 +115,12 @@ void AddrSpace::truncateSpace(uint4 newsize)
 /// in other details pertaining to this particular space.
 /// \param s is the stream to write to
 /// \param offset is the offset of the address
-void AddrSpace::saveXmlAttributes(ostream &s,uintb offset) const
+void AddrSpace::saveXmlAttributes(ostream &s, uintb offset) const
 
 {
-    a_v(s,"space",getName());	// Just append the proper attributes
+    a_v(s, "space", getName());	// Just append the proper attributes
     s << ' ' << "offset=\"";
-    printOffset(s,offset);
+    printOffset(s, offset);
     s << "\"";
 }
 
@@ -130,14 +130,14 @@ void AddrSpace::saveXmlAttributes(ostream &s,uintb offset) const
 /// \param s is the stream to write to
 /// \param offset is the offset of the address
 /// \param size is the size of the memory location
-void AddrSpace::saveXmlAttributes(ostream &s,uintb offset,int4 size) const
+void AddrSpace::saveXmlAttributes(ostream &s, uintb offset, int4 size) const
 
 {
-    a_v(s,"space",getName());	// Just append the proper attributes
+    a_v(s, "space", getName());	// Just append the proper attributes
     s << ' ' << "offset=\"";
-    printOffset(s,offset);
+    printOffset(s, offset);
     s << "\"";
-    a_v_i(s,"size",size);
+    a_v_i(s, "size", size);
 }
 
 /// For an XML tag describing an address in this space, this routine
@@ -145,19 +145,19 @@ void AddrSpace::saveXmlAttributes(ostream &s,uintb offset,int4 size) const
 /// \param el is the XML address tag
 /// \param size is a reference where the recovered size should be stored
 /// \return the recovered offset
-uintb AddrSpace::restoreXmlAttributes(const Element *el,uint4 &size) const
+uintb AddrSpace::restoreXmlAttributes(const Element *el, uint4 &size) const
 
 {
     uintb offset;
     int4 num = el->getNumAttributes();
     bool foundoffset = false;
-    for(int4 i=0; i<num; ++i) {
-        if (el->getAttributeName(i)=="offset") {
+    for(int4 i = 0; i < num; ++i) {
+        if (el->getAttributeName(i) == "offset") {
             foundoffset = true;
             istringstream s1(el->getAttributeValue(i));
             s1.unsetf(ios::dec | ios::hex | ios::oct);
             s1 >> offset;
-        } else if (el->getAttributeName(i)=="size") {
+        } else if (el->getAttributeName(i) == "size") {
             istringstream s2(el->getAttributeValue(i));
             s2.unsetf(ios::dec | ios::hex | ios::oct);
             s2 >> size;
@@ -172,7 +172,7 @@ uintb AddrSpace::restoreXmlAttributes(const Element *el,uint4 &size) const
 /// Print the \e offset as hexidecimal digits.
 /// \param s is the stream to write to
 /// \param offset is the offset to be printed
-void AddrSpace::printOffset(ostream &s,uintb offset) const
+void AddrSpace::printOffset(ostream &s, uintb offset) const
 
 {
     s << "0x" << hex << offset;
@@ -184,25 +184,25 @@ void AddrSpace::printOffset(ostream &s,uintb offset) const
 /// returns the expected/typical size of values from this space.
 /// \param s is the stream being written
 /// \param offset is the offset to be printed
-void AddrSpace::printRaw(ostream &s,uintb offset) const
+void AddrSpace::printRaw(ostream &s, uintb offset) const
 
 {
     int4 sz = getAddrSize();
     if (sz > 4) {
-        if ((offset>>32) == 0)
+        if ((offset >> 32) == 0)
             sz = 4;			// Don't print a bunch of zeroes at front of address
-        else if ((offset>>48) == 0)
+        else if ((offset >> 48) == 0)
             sz = 6;
     }
-    s << "0x" << setfill('0') << setw(2*sz) << hex << byteToAddress(offset,wordsize);
-    if (wordsize>1) {
+    s << "0x" << setfill('0') << setw(2 * sz) << hex << byteToAddress(offset, wordsize);
+    if (wordsize > 1) {
         int4 cut = offset % wordsize;
         if (cut != 0)
             s << '+' << dec << cut;
     }
 }
 
-static int4 get_offset_size(const char *ptr,uintb &offset)
+static int4 get_offset_size(const char *ptr, uintb &offset)
 
 {
     // Get optional size and offset fields from string
@@ -213,12 +213,12 @@ static int4 get_offset_size(const char *ptr,uintb &offset)
     val = 0;			// Defaults
     size = -1;
     if (*ptr == ':') {
-        size = strtoul(ptr+1,&ptr2,0);
+        size = strtoul(ptr + 1, &ptr2, 0);
         if (*ptr2 == '+')
-            val = strtoul(ptr2+1,&ptr2,0);
+            val = strtoul(ptr2 + 1, &ptr2, 0);
     }
     if (*ptr == '+')
-        val = strtoul(ptr+1,&ptr2,0);
+        val = strtoul(ptr + 1, &ptr2, 0);
 
     offset += val;		// Adjust offset
     return size;
@@ -234,7 +234,7 @@ static int4 get_offset_size(const char *ptr,uintb &offset)
 /// \param s is the string to be parsed
 /// \param size is a reference to the size being returned
 /// \return the parsed offset
-uintb AddrSpace::read(const string &s,int4 &size) const
+uintb AddrSpace::read(const string &s, int4 &size) const
 
 {
     const char *enddata;
@@ -251,14 +251,14 @@ uintb AddrSpace::read(const string &s,int4 &size) const
             offset = point.offset;
             size = point.size;
         } else {
-            frontpart = s.substr(0,append);
+            frontpart = s.substr(0, append);
             const VarnodeData &point(trans->getRegister(frontpart));
             offset = point.offset;
             size = point.size;
         }
     } catch(LowlevelError &err) {	// Name doesn't exist
-        offset = strtoul(s.c_str(),&tmpdata,0);
-        offset = addressToByte(offset,wordsize);
+        offset = strtoul(s.c_str(), &tmpdata, 0);
+        offset = addressToByte(offset, wordsize);
         enddata = (const char *) tmpdata;
         if (enddata - s.c_str() == s.size()) { // If no size or offset override
             size = manage->getDefaultSize();	// Return "natural" size
@@ -267,9 +267,9 @@ uintb AddrSpace::read(const string &s,int4 &size) const
         size = manage->getDefaultSize();
     }
     if (append != string::npos) {
-        enddata = s.c_str()+append;
+        enddata = s.c_str() + append;
         expsize = get_offset_size( enddata, offset );
-        if (expsize!=-1) {
+        if (expsize != -1) {
             size = expsize;
             return offset;
         }
@@ -297,7 +297,7 @@ void AddrSpace::restoreXml(const Element *el)
 {
     int4 numAttribs = el->getNumAttributes();
     deadcodedelay = -1;
-    for (int4 i=0; i < numAttribs; i++) {
+    for (int4 i = 0; i < numAttribs; i++) {
         string attrName = el->getAttributeName(i);
         string attrValue = el->getAttributeValue(i);
 
@@ -351,18 +351,18 @@ void AddrSpace::restoreXml(const Element *el)
 /// \param t is the associated processor translator
 /// \param nm is the name
 /// \param ind is the integer identifier
-ConstantSpace::ConstantSpace(AddrSpaceManager *m,const Translate *t,
-                             const string &nm,int4 ind)
-    : AddrSpace(m,t,IPTR_CONSTANT,nm,sizeof(uintb),1,ind,0,0)
+ConstantSpace::ConstantSpace(AddrSpaceManager *m, const Translate *t,
+                             const string &nm, int4 ind)
+    : AddrSpace(m, t, IPTR_CONSTANT, nm, sizeof(uintb), 1, ind, 0, 0)
 {
-    clearFlags(heritaged|does_deadcode|big_endian);
-    if (HOST_ENDIAN==1)		// Endianness always matches host
+    clearFlags(heritaged | does_deadcode | big_endian);
+    if (HOST_ENDIAN == 1)		// Endianness always matches host
         setFlags(big_endian);
 }
 
 /// Constants are always printed as hexidecimal values in
 /// the debugger and console dumps
-void ConstantSpace::printRaw(ostream &s,uintb offset) const
+void ConstantSpace::printRaw(ostream &s, uintb offset) const
 
 {
     s << "0x" << hex << offset;
@@ -391,22 +391,22 @@ void ConstantSpace::restoreXml(const Element *el)
 /// \param t is the associated processor translator
 /// \param nm is the name of the space
 /// \param ind is the integer identifier
-OtherSpace::OtherSpace(AddrSpaceManager *m,const Translate *t,
-                       const string &nm,int4 ind)
-    : AddrSpace(m,t,IPTR_PROCESSOR,nm,sizeof(uintb),1,ind,0,0)
+OtherSpace::OtherSpace(AddrSpaceManager *m, const Translate *t,
+                       const string &nm, int4 ind)
+    : AddrSpace(m, t, IPTR_PROCESSOR, nm, sizeof(uintb), 1, ind, 0, 0)
 {
-    clearFlags(heritaged|does_deadcode);
+    clearFlags(heritaged | does_deadcode);
     setFlags(is_otherspace);
 }
 
-OtherSpace::OtherSpace(AddrSpaceManager *m,const Translate *t)
-    : AddrSpace(m,t,IPTR_PROCESSOR)
+OtherSpace::OtherSpace(AddrSpaceManager *m, const Translate *t)
+    : AddrSpace(m, t, IPTR_PROCESSOR)
 {
-    clearFlags(heritaged|does_deadcode);
+    clearFlags(heritaged | does_deadcode);
     setFlags(is_otherspace);
 }
 
-void OtherSpace::printRaw(ostream &s,uintb offset) const
+void OtherSpace::printRaw(ostream &s, uintb offset) const
 
 {
     s << "0x" << hex << offset;
@@ -428,15 +428,15 @@ void OtherSpace::saveXml(ostream &s) const
 /// \param nm is the name of the space
 /// \param ind is the integer identifier
 /// \param fl are attribute flags (currently unused)
-UniqueSpace::UniqueSpace(AddrSpaceManager *m,const Translate *t,const string &nm,
-                         int4 ind,uint4 fl)
-    : AddrSpace(m,t,IPTR_INTERNAL,nm,sizeof(uintm),1,ind,fl,0)
+UniqueSpace::UniqueSpace(AddrSpaceManager *m, const Translate *t, const string &nm,
+                         int4 ind, uint4 fl)
+    : AddrSpace(m, t, IPTR_INTERNAL, nm, sizeof(uintm), 1, ind, fl, 0)
 {
     setFlags(hasphysical);
 }
 
-UniqueSpace::UniqueSpace(AddrSpaceManager *m,const Translate *t)
-    : AddrSpace(m,t,IPTR_INTERNAL)
+UniqueSpace::UniqueSpace(AddrSpaceManager *m, const Translate *t)
+    : AddrSpace(m, t, IPTR_INTERNAL)
 {
     setFlags(hasphysical);
 }
@@ -455,8 +455,8 @@ void UniqueSpace::saveXml(ostream &s) const
 /// \param t is the associated processor translator
 /// \param nm is the name of the space
 /// \param ind is the integer identifier
-JoinSpace::JoinSpace(AddrSpaceManager *m,const Translate *t,const string &nm,int4 ind)
-    : AddrSpace(m,t,IPTR_JOIN,nm,sizeof(uintm),1,ind,0,0)
+JoinSpace::JoinSpace(AddrSpaceManager *m, const Translate *t, const string &nm, int4 ind)
+    : AddrSpace(m, t, IPTR_JOIN, nm, sizeof(uintm), 1, ind, 0, 0)
 {
     // This is a virtual space
     // setFlags(hasphysical);
@@ -468,22 +468,22 @@ JoinSpace::JoinSpace(AddrSpaceManager *m,const Translate *t,const string &nm,int
 /// be recursive tags into an attribute
 /// \param s is the stream being written to
 /// \param offset is the offset within the address space to encode
-void JoinSpace::saveXmlAttributes(ostream &s,uintb offset) const
+void JoinSpace::saveXmlAttributes(ostream &s, uintb offset) const
 
 {
     JoinRecord *rec = getManager()->findJoin(offset); // Record must already exist
-    a_v(s,"space",getName());
+    a_v(s, "space", getName());
     int4 num = rec->numPieces();
-    for(int4 i=0; i<num; ++i) {
+    for(int4 i = 0; i < num; ++i) {
         const VarnodeData &vdata( rec->getPiece(i) );
         ostringstream t;
-        t << " piece" << dec << (i+1) << "=\"";
+        t << " piece" << dec << (i + 1) << "=\"";
         t << vdata.space->getName() << ":0x";
         t << hex << vdata.offset << ':' << dec << vdata.size << '\"';
         s << t.str();
     }
     if (num == 1)
-        a_v_i(s,"logicalsize",rec->getUnified().size);
+        a_v_i(s, "logicalsize", rec->getUnified().size);
 
 }
 
@@ -493,25 +493,25 @@ void JoinSpace::saveXmlAttributes(ostream &s,uintb offset) const
 /// \param s is the stream being written to
 /// \param offset is the offset within the address space to encode
 /// \param size is the size of the memory location being encoded
-void JoinSpace::saveXmlAttributes(ostream &s,uintb offset,int4 size) const
+void JoinSpace::saveXmlAttributes(ostream &s, uintb offset, int4 size) const
 
 {
     JoinRecord *rec = getManager()->findJoin(offset); // Record must already exist
-    a_v(s,"space",getName());
+    a_v(s, "space", getName());
     int4 num = rec->numPieces();
     int4 count = 0;
-    for(int4 i=0; i<num; ++i) {
+    for(int4 i = 0; i < num; ++i) {
         const VarnodeData &vdata( rec->getPiece(i) );
         ostringstream t;
-        t << " piece" << dec << (i+1) << "=\"";
+        t << " piece" << dec << (i + 1) << "=\"";
         t << vdata.space->getName() << ":0x";
         t << hex << vdata.offset << ':' << dec << vdata.size << '\"';
         count += vdata.size;
         s << t.str();
     }
     if (num == 1)
-        a_v_i(s,"logicalsize",rec->getUnified().size);
-    if ((count != size)&&(num>1))
+        a_v_i(s, "logicalsize", rec->getUnified().size);
+    if ((count != size) && (num > 1))
         throw LowlevelError("size attribute in join tag does not match size of pieces");
 }
 
@@ -521,16 +521,16 @@ void JoinSpace::saveXmlAttributes(ostream &s,uintb offset,int4 size) const
 /// \param el is the parsed XML element to extract the address from
 /// \param size is a reference to be filled in as the size encoded by the tag
 /// \return the offset of the final address encoded by the tag
-uintb JoinSpace::restoreXmlAttributes(const Element *el,uint4 &size) const
+uintb JoinSpace::restoreXmlAttributes(const Element *el, uint4 &size) const
 
 {
     vector<VarnodeData> pieces;
     int4 numAttribs = el->getNumAttributes();
     uint4 sizesum = 0;
     uint4 logicalsize = 0;
-    for(int4 i=0; i<numAttribs; ++i) {
+    for(int4 i = 0; i < numAttribs; ++i) {
         string attrName = el->getAttributeName(i);
-        if (0!=attrName.compare(0,5,"piece")) {
+        if (0 != attrName.compare(0, 5, "piece")) {
             if (attrName == "logicalsize") {
                 istringstream s3(el->getAttributeValue(i));
                 s3.unsetf(ios::dec | ios::hex | ios::oct);
@@ -550,38 +550,38 @@ uintb JoinSpace::restoreXmlAttributes(const Element *el,uint4 &size) const
             const VarnodeData &point(trans->getRegister(attrVal));
             vdat = point;
         } else {
-            string::size_type szpos = attrVal.find(':',offpos+1);
-            if (szpos==string::npos)
+            string::size_type szpos = attrVal.find(':', offpos + 1);
+            if (szpos == string::npos)
                 throw LowlevelError("join address piece attribute is malformed");
-            string spcname = attrVal.substr(0,offpos);
+            string spcname = attrVal.substr(0, offpos);
             vdat.space = getManager()->getSpaceByName(spcname);
-            istringstream s1(attrVal.substr(offpos+1,szpos));
+            istringstream s1(attrVal.substr(offpos + 1, szpos));
             s1.unsetf(ios::dec | ios::hex | ios::oct);
             s1 >> vdat.offset;
-            istringstream s2(attrVal.substr(szpos+1));
+            istringstream s2(attrVal.substr(szpos + 1));
             s2.unsetf(ios::dec | ios::hex | ios::oct);
             s2 >> vdat.size;
         }
         sizesum += vdat.size;
     }
-    JoinRecord *rec = getManager()->findAddJoin(pieces,logicalsize);
+    JoinRecord *rec = getManager()->findAddJoin(pieces, logicalsize);
     size = rec->getUnified().size;
     return rec->getUnified().offset;
 }
 
-void JoinSpace::printRaw(ostream &s,uintb offset) const
+void JoinSpace::printRaw(ostream &s, uintb offset) const
 
 {
     JoinRecord *rec = getManager()->findJoin(offset);
     int4 szsum = 0;
     int4 num = rec->numPieces();
     s << '{';
-    for(int4 i=0; i<num; ++i) {
+    for(int4 i = 0; i < num; ++i) {
         const VarnodeData &vdat( rec->getPiece(i) );
         szsum += vdat.size;
-        if (i!=0)
+        if (i != 0)
             s << ',';
-        vdat.space->printRaw(s,vdat.offset);
+        vdat.space->printRaw(s, vdat.offset);
     }
     if (num == 1) {
         szsum = rec->getUnified().size;
@@ -590,16 +590,16 @@ void JoinSpace::printRaw(ostream &s,uintb offset) const
     s << '}';
 }
 
-uintb JoinSpace::read(const string &s,int4 &size) const
+uintb JoinSpace::read(const string &s, int4 &size) const
 
 {
     vector<VarnodeData> pieces;
     int4 szsum = 0;
-    int4 i=0;
+    int4 i = 0;
     while(i < s.size()) {
         pieces.push_back(VarnodeData()); // Prepare to read next VarnodeData
         string token;
-        while((i<s.size())&&(s[i]!=',')) {
+        while((i < s.size()) && (s[i] != ',')) {
             token += s[i];
             i += 1;
         }
@@ -614,12 +614,12 @@ uintb JoinSpace::read(const string &s,int4 &size) const
 
             int4 subsize;
             pieces.back().space = spc;
-            pieces.back().offset = spc->read(token.substr(1),subsize);
+            pieces.back().offset = spc->read(token.substr(1), subsize);
             pieces.back().size = subsize;
         }
         szsum += pieces.back().size;
     }
-    JoinRecord *rec = getManager()->findAddJoin(pieces,0);
+    JoinRecord *rec = getManager()->findAddJoin(pieces, 0);
     size = szsum;
     return rec->getUnified().offset;
 }
@@ -638,8 +638,8 @@ void JoinSpace::restoreXml(const Element *el)
 
 /// \param m is the address space manager
 /// \param t is the processor translator
-OverlaySpace::OverlaySpace(AddrSpaceManager *m,const Translate *t)
-    : AddrSpace(m,t,IPTR_PROCESSOR)
+OverlaySpace::OverlaySpace(AddrSpaceManager *m, const Translate *t)
+    : AddrSpace(m, t, IPTR_PROCESSOR)
 {
     baseSpace = (AddrSpace *)0;
     setFlags(overlay);
@@ -656,9 +656,9 @@ void OverlaySpace::saveXml(ostream &s) const
 
 {
     s << "<space_overlay";
-    a_v(s,"name",name);
-    a_v_i(s,"index",index);
-    a_v(s,"base",baseSpace->getName());
+    a_v(s, "name", name);
+    a_v_i(s, "index", index);
+    a_v(s, "base", baseSpace->getName());
     s << "/>\n";
 }
 
@@ -673,7 +673,7 @@ void OverlaySpace::restoreXml(const Element *el)
     string basename = el->getAttributeValue("base");
     baseSpace = getManager()->getSpaceByName(basename);
     if (baseSpace == (AddrSpace *)0)
-        throw LowlevelError("Base space does not exist for overlay space: "+name);
+        throw LowlevelError("Base space does not exist for overlay space: " + name);
     addressSize = baseSpace->getAddrSize();
     wordsize = baseSpace->getWordSize();
     delay = baseSpace->getDelay();

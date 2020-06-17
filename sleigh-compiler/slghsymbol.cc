@@ -20,7 +20,7 @@
 SleighSymbol *SymbolScope::addSymbol(SleighSymbol *a)
 
 {
-    pair<SymbolTree::iterator,bool> res;
+    pair<SymbolTree::iterator, bool> res;
 
     res = tree.insert( a );
     if (!res.second)
@@ -44,17 +44,17 @@ SymbolTable::~SymbolTable(void)
 
 {
     vector<SymbolScope *>::iterator iter;
-    for(iter=table.begin(); iter!=table.end(); ++iter)
+    for(iter = table.begin(); iter != table.end(); ++iter)
         delete *iter;
     vector<SleighSymbol *>::iterator siter;
-    for(siter=symbollist.begin(); siter!=symbollist.end(); ++siter)
+    for(siter = symbollist.begin(); siter != symbollist.end(); ++siter)
         delete *siter;
 }
 
 void SymbolTable::addScope(void)
 
 {
-    curscope = new SymbolScope(curscope,table.size());
+    curscope = new SymbolScope(curscope, table.size());
     table.push_back(curscope);
 }
 
@@ -69,7 +69,7 @@ SymbolScope *SymbolTable::skipScope(int4 i) const
 
 {
     SymbolScope *res = curscope;
-    while(i>0) {
+    while(i > 0) {
         if (res->parent == (SymbolScope *)0) return res;
         res = res->parent;
         --i;
@@ -97,10 +97,10 @@ void SymbolTable::addSymbol(SleighSymbol *a)
     a->scopeid = curscope->getId();
     SleighSymbol *res = curscope->addSymbol(a);
     if (res != a)
-        throw SleighError("Duplicate symbol name: "+a->getName());
+        throw SleighError("Duplicate symbol name: " + a->getName());
 }
 
-SleighSymbol *SymbolTable::findSymbolInternal(SymbolScope *scope,const string &nm) const
+SleighSymbol *SymbolTable::findSymbolInternal(SymbolScope *scope, const string &nm) const
 
 {
     SleighSymbol *res;
@@ -114,15 +114,15 @@ SleighSymbol *SymbolTable::findSymbolInternal(SymbolScope *scope,const string &n
     return (SleighSymbol *)0;
 }
 
-void SymbolTable::replaceSymbol(SleighSymbol *a,SleighSymbol *b)
+void SymbolTable::replaceSymbol(SleighSymbol *a, SleighSymbol *b)
 
 {
     // Replace symbol a with symbol b
     // assuming a and b have the same name
     SleighSymbol *sym;
-    int4 i = table.size()-1;
+    int4 i = table.size() - 1;
 
-    while(i>=0) {			// Find the particular symbol
+    while(i >= 0) {			// Find the particular symbol
         sym = table[i]->findSymbol( a->getName() );
         if (sym == a) {
             table[i]->removeSymbol(a);
@@ -143,7 +143,7 @@ void SymbolTable::saveXml(ostream &s) const
     s << "<symbol_table";
     s << " scopesize=\"" << dec << table.size() << "\"";
     s << " symbolsize=\"" << symbollist.size() << "\">\n";
-    for(int4 i=0; i<table.size(); ++i) {
+    for(int4 i = 0; i < table.size(); ++i) {
         s << "<scope id=\"0x" << hex << table[i]->getId() << "\"";
         s << " parent=\"0x";
         if (table[i]->getParent() == (SymbolScope *)0)
@@ -154,16 +154,16 @@ void SymbolTable::saveXml(ostream &s) const
     }
 
     // First save the headers
-    for(int4 i=0; i<symbollist.size(); ++i)
+    for(int4 i = 0; i < symbollist.size(); ++i)
         symbollist[i]->saveXmlHeader(s);
 
     // Now save the content of each symbol
-    for(int4 i=0; i<symbollist.size(); ++i) // Must save IN ORDER
+    for(int4 i = 0; i < symbollist.size(); ++i) // Must save IN ORDER
         symbollist[i]->saveXml(s);
     s << "</symbol_table>\n";
 }
 
-void SymbolTable::restoreXml(const Element *el,SleighBase *trans)
+void SymbolTable::restoreXml(const Element *el, SleighBase *trans)
 
 {
     {
@@ -171,19 +171,19 @@ void SymbolTable::restoreXml(const Element *el,SleighBase *trans)
         istringstream s(el->getAttributeValue("scopesize"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
         s >> size;
-        table.resize(size,(SymbolScope *)0);
+        table.resize(size, (SymbolScope *)0);
     }
     {
         uint4 size;
         istringstream s(el->getAttributeValue("symbolsize"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
         s >> size;
-        symbollist.resize(size,(SleighSymbol *)0);
+        symbollist.resize(size, (SleighSymbol *)0);
     }
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    for(int4 i=0; i<table.size(); ++i) { // Restore the scopes
+    for(int4 i = 0; i < table.size(); ++i) { // Restore the scopes
         Element *subel = *iter;
         if (subel->getName() != "scope")
             throw SleighError("Misnumbered symbol scopes");
@@ -199,14 +199,14 @@ void SymbolTable::restoreXml(const Element *el,SleighBase *trans)
             s.unsetf(ios::dec | ios::hex | ios::oct);
             s >> parent;
         }
-        SymbolScope *parscope = (parent==id) ? (SymbolScope *)0 : table[parent];
+        SymbolScope *parscope = (parent == id) ? (SymbolScope *)0 : table[parent];
         table[id] = new SymbolScope( parscope, id );
         ++iter;
     }
     curscope = table[0];		// Current scope is global
 
     // Now restore the symbol shells
-    for(int4 i=0; i<symbollist.size(); ++i) {
+    for(int4 i = 0; i < symbollist.size(); ++i) {
         restoreSymbolHeader(*iter);
         ++iter;
     }
@@ -221,7 +221,7 @@ void SymbolTable::restoreXml(const Element *el,SleighBase *trans)
             s >> id;
         }
         sym = findSymbol(id);
-        sym->restoreXml(subel,trans);
+        sym->restoreXml(subel, trans);
         ++iter;
     }
 }
@@ -272,7 +272,7 @@ void SymbolTable::purge(void)
 {
     // Get rid of unsavable symbols and scopes
     SleighSymbol *sym;
-    for(int4 i=0; i<symbollist.size(); ++i) {
+    for(int4 i = 0; i < symbollist.size(); ++i) {
         sym = symbollist[i];
         if (sym == (SleighSymbol *)0) continue;
         if (sym->scopeid != 0) { // Not in global scope
@@ -287,7 +287,7 @@ void SymbolTable::purge(void)
             case SleighSymbol::macro_symbol: {
                 // Delete macro's local symbols
                 MacroSymbol *macro = (MacroSymbol *)sym;
-                for(int4 i=0; i<macro->getNumOperands(); ++i) {
+                for(int4 i = 0; i < macro->getNumOperands(); ++i) {
                     SleighSymbol *opersym = macro->getOperand(i);
                     table[opersym->scopeid]->removeSymbol(opersym);
                     symbollist[opersym->id] = (SleighSymbol *)0;
@@ -299,9 +299,9 @@ void SymbolTable::purge(void)
                 // Delete unused subtables
                 SubtableSymbol *subsym = (SubtableSymbol *)sym;
                 if (subsym->getPattern() != (TokenPattern *)0) continue;
-                for(int4 i=0; i<subsym->getNumConstructors(); ++i) { // Go thru each constructor
+                for(int4 i = 0; i < subsym->getNumConstructors(); ++i) { // Go thru each constructor
                     Constructor *con = subsym->getConstructor(i);
-                    for(int4 j=0; j<con->getNumOperands(); ++j) { // Go thru each operand
+                    for(int4 j = 0; j < con->getNumOperands(); ++j) { // Go thru each operand
                         OperandSymbol *oper = con->getOperand(j);
                         table[oper->scopeid]->removeSymbol(oper);
                         symbollist[oper->id] = (SleighSymbol *)0;
@@ -318,7 +318,7 @@ void SymbolTable::purge(void)
         symbollist[i] = (SleighSymbol *)0;
         delete sym;
     }
-    for(int4 i=1; i<table.size(); ++i) { // Remove any empty scopes
+    for(int4 i = 1; i < table.size(); ++i) { // Remove any empty scopes
         if (table[i]->tree.empty()) {
             delete table[i];
             table[i] = (SymbolScope *)0;
@@ -336,7 +336,7 @@ void SymbolTable::renumber(void)
     vector<SleighSymbol *> newsymbol;
     // First renumber the scopes
     SymbolScope *scope;
-    for(int4 i=0; i<table.size(); ++i) {
+    for(int4 i = 0; i < table.size(); ++i) {
         scope = table[i];
         if (scope != (SymbolScope *)0) {
             scope->id = newtable.size();
@@ -345,7 +345,7 @@ void SymbolTable::renumber(void)
     }
     // Now renumber the symbols
     SleighSymbol *sym;
-    for(int4 i=0; i<symbollist.size(); ++i) {
+    for(int4 i = 0; i < symbollist.size(); ++i) {
         sym = symbollist[i];
         if (sym != (SleighSymbol *)0) {
             sym->scopeid = table[sym->scopeid]->id;
@@ -399,7 +399,7 @@ void UserOpSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void UserOpSymbol::restoreXml(const Element *el,SleighBase *trans)
+void UserOpSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     istringstream s(el->getAttributeValue("index"));
@@ -430,7 +430,7 @@ PatternlessSymbol::~PatternlessSymbol(void)
     PatternExpression::release(patexp);
 }
 
-void EpsilonSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
+void EpsilonSymbol::getFixedHandle(FixedHandle &hand, ParserWalker &walker) const
 
 {
     hand.space = const_space;
@@ -439,7 +439,7 @@ void EpsilonSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
     hand.size = 0;		// Cannot provide size
 }
 
-void EpsilonSymbol::print(ostream &s,ParserWalker &walker) const
+void EpsilonSymbol::print(ostream &s, ParserWalker &walker) const
 
 {
     s << '0';
@@ -449,8 +449,8 @@ VarnodeTpl *EpsilonSymbol::getVarnode(void) const
 
 {
     VarnodeTpl *res = new VarnodeTpl(ConstTpl(const_space),
-                                     ConstTpl(ConstTpl::real,0),
-                                     ConstTpl(ConstTpl::real,0));
+                                     ConstTpl(ConstTpl::real, 0),
+                                     ConstTpl(ConstTpl::real, 0));
     return res;
 }
 
@@ -470,16 +470,16 @@ void EpsilonSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void EpsilonSymbol::restoreXml(const Element *el,SleighBase *trans)
+void EpsilonSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     const_space = trans->getConstantSpace();
 }
 
-ValueSymbol::ValueSymbol(const string &nm,PatternValue *pv)
+ValueSymbol::ValueSymbol(const string &nm, PatternValue *pv)
     : FamilySymbol(nm)
 {
-    (patval=pv)->layClaim();
+    (patval = pv)->layClaim();
 }
 
 ValueSymbol::~ValueSymbol(void)
@@ -489,7 +489,7 @@ ValueSymbol::~ValueSymbol(void)
         PatternExpression::release(patval);
 }
 
-void ValueSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
+void ValueSymbol::getFixedHandle(FixedHandle &hand, ParserWalker &walker) const
 
 {
     hand.space = walker.getConstSpace();
@@ -498,7 +498,7 @@ void ValueSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
     hand.size = 0;		// Cannot provide size
 }
 
-void ValueSymbol::print(ostream &s,ParserWalker &walker) const
+void ValueSymbol::print(ostream &s, ParserWalker &walker) const
 
 {
     intb val = patval->getValue(walker);
@@ -526,13 +526,13 @@ void ValueSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void ValueSymbol::restoreXml(const Element *el,SleighBase *trans)
+void ValueSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    patval = (PatternValue *) PatternExpression::restoreExpression(*iter,trans);
+    patval = (PatternValue *) PatternExpression::restoreExpression(*iter, trans);
     patval->layClaim();
 }
 
@@ -542,8 +542,8 @@ void ValueMapSymbol::checkTableFill(void)
     // Check if all possible entries in the table have been filled
     intb min = patval->minValue();
     intb max = patval->maxValue();
-    tableisfilled = (min>=0)&&(max<valuetable.size());
-    for(uint4 i=0; i<valuetable.size(); ++i) {
+    tableisfilled = (min >= 0) && (max < valuetable.size());
+    for(uint4 i = 0; i < valuetable.size(); ++i) {
         if (valuetable[i] == 0xBADBEEF)
             tableisfilled = false;
     }
@@ -554,7 +554,7 @@ Constructor *ValueMapSymbol::resolve(ParserWalker &walker)
 {
     if (!tableisfilled) {
         intb ind = patval->getValue(walker);
-        if ((ind >= valuetable.size())||(ind<0)||(valuetable[ind] == 0xBADBEEF)) {
+        if ((ind >= valuetable.size()) || (ind < 0) || (valuetable[ind] == 0xBADBEEF)) {
             ostringstream s;
             s << walker.getAddr().getShortcut();
             walker.getAddr().printRaw(s);
@@ -565,7 +565,7 @@ Constructor *ValueMapSymbol::resolve(ParserWalker &walker)
     return (Constructor *)0;
 }
 
-void ValueMapSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
+void ValueMapSymbol::getFixedHandle(FixedHandle &hand, ParserWalker &walker) const
 
 {
     uint4 ind = (uint4) patval->getValue(walker);
@@ -576,7 +576,7 @@ void ValueMapSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) cons
     hand.size = 0;		// Cannot provide size
 }
 
-void ValueMapSymbol::print(ostream &s,ParserWalker &walker) const
+void ValueMapSymbol::print(ostream &s, ParserWalker &walker) const
 
 {
     uint4 ind = (uint4)patval->getValue(walker);
@@ -595,7 +595,7 @@ void ValueMapSymbol::saveXml(ostream &s) const
     SleighSymbol::saveXmlHeader(s);
     s << ">\n";
     patval->saveXml(s);
-    for(uint4 i=0; i<valuetable.size(); ++i)
+    for(uint4 i = 0; i < valuetable.size(); ++i)
         s << "<valuetab val=\"" << dec << valuetable[i] << "\"/>\n";
     s << "</valuemap_sym>\n";
 }
@@ -608,13 +608,13 @@ void ValueMapSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void ValueMapSymbol::restoreXml(const Element *el,SleighBase *trans)
+void ValueMapSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    patval = (PatternValue *) PatternExpression::restoreExpression(*iter,trans);
+    patval = (PatternValue *) PatternExpression::restoreExpression(*iter, trans);
     patval->layClaim();
     ++iter;
     while(iter != list.end()) {
@@ -634,9 +634,9 @@ void NameSymbol::checkTableFill(void)
     // Check if all possible entries in the table have been filled
     intb min = patval->minValue();
     intb max = patval->maxValue();
-    tableisfilled = (min>=0)&&(max<nametable.size());
-    for(uint4 i=0; i<nametable.size(); ++i) {
-        if ((nametable[i] == "_")||(nametable[i] == "\t")) {
+    tableisfilled = (min >= 0) && (max < nametable.size());
+    for(uint4 i = 0; i < nametable.size(); ++i) {
+        if ((nametable[i] == "_") || (nametable[i] == "\t")) {
             nametable[i] = "\t";		// TAB indicates illegal index
             tableisfilled = false;
         }
@@ -648,7 +648,7 @@ Constructor *NameSymbol::resolve(ParserWalker &walker)
 {
     if (!tableisfilled) {
         intb ind = patval->getValue(walker);
-        if ((ind >= nametable.size())||(ind<0)||((nametable[ind].size()==1)&&(nametable[ind][0]=='\t'))) {
+        if ((ind >= nametable.size()) || (ind < 0) || ((nametable[ind].size() == 1) && (nametable[ind][0] == '\t'))) {
             ostringstream s;
             s << walker.getAddr().getShortcut();
             walker.getAddr().printRaw(s);
@@ -659,7 +659,7 @@ Constructor *NameSymbol::resolve(ParserWalker &walker)
     return (Constructor *)0;
 }
 
-void NameSymbol::print(ostream &s,ParserWalker &walker) const
+void NameSymbol::print(ostream &s, ParserWalker &walker) const
 
 {
     uint4 ind = (uint4)patval->getValue(walker);
@@ -674,7 +674,7 @@ void NameSymbol::saveXml(ostream &s) const
     SleighSymbol::saveXmlHeader(s);
     s << ">\n";
     patval->saveXml(s);
-    for(int4 i=0; i<nametable.size(); ++i) {
+    for(int4 i = 0; i < nametable.size(); ++i) {
         if (nametable[i] == "\t")		// TAB indicates an illegal index
             s << "<nametab/>\n";		// Emit tag with no name attribute
         else
@@ -691,13 +691,13 @@ void NameSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void NameSymbol::restoreXml(const Element *el,SleighBase *trans)
+void NameSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    patval = (PatternValue *) PatternExpression::restoreExpression(*iter,trans);
+    patval = (PatternValue *) PatternExpression::restoreExpression(*iter, trans);
     patval->layClaim();
     ++iter;
     while(iter != list.end()) {
@@ -711,7 +711,7 @@ void NameSymbol::restoreXml(const Element *el,SleighBase *trans)
     checkTableFill();
 }
 
-VarnodeSymbol::VarnodeSymbol(const string &nm,AddrSpace *base,uintb offset,int4 size)
+VarnodeSymbol::VarnodeSymbol(const string &nm, AddrSpace *base, uintb offset, int4 size)
     : PatternlessSymbol(nm)
 {
     fix.space = base;
@@ -723,10 +723,10 @@ VarnodeSymbol::VarnodeSymbol(const string &nm,AddrSpace *base,uintb offset,int4 
 VarnodeTpl *VarnodeSymbol::getVarnode(void) const
 
 {
-    return new VarnodeTpl(ConstTpl(fix.space),ConstTpl(ConstTpl::real,fix.offset),ConstTpl(ConstTpl::real,fix.size));
+    return new VarnodeTpl(ConstTpl(fix.space), ConstTpl(ConstTpl::real, fix.offset), ConstTpl(ConstTpl::real, fix.size));
 }
 
-void VarnodeSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
+void VarnodeSymbol::getFixedHandle(FixedHandle &hand, ParserWalker &walker) const
 
 {
     hand.space = fix.space;
@@ -763,7 +763,7 @@ void VarnodeSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void VarnodeSymbol::restoreXml(const Element *el,SleighBase *trans)
+void VarnodeSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     fix.space = trans->getSpaceByName(el->getAttributeValue("space"));
@@ -780,9 +780,9 @@ void VarnodeSymbol::restoreXml(const Element *el,SleighBase *trans)
     // PatternlessSymbol does not need restoring
 }
 
-ContextSymbol::ContextSymbol(const string &nm,ContextField *pate,VarnodeSymbol *v,
-                             uint4 l,uint4 h,bool fl)
-    : ValueSymbol(nm,pate)
+ContextSymbol::ContextSymbol(const string &nm, ContextField *pate, VarnodeSymbol *v,
+                             uint4 l, uint4 h, bool fl)
+    : ValueSymbol(nm, pate)
 {
     vn = v;
     low = l;
@@ -798,7 +798,7 @@ void ContextSymbol::saveXml(ostream &s) const
     s << " varnode=\"0x" << hex << vn->getId() << "\"";
     s << " low=\"" << dec << low << "\"";
     s << " high=\"" << high << "\"";
-    a_v_b(s,"flow",flow);
+    a_v_b(s, "flow", flow);
     s << ">\n";
     patval->saveXml(s);
     s << "</context_sym>\n";
@@ -812,10 +812,10 @@ void ContextSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void ContextSymbol::restoreXml(const Element *el,SleighBase *trans)
+void ContextSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
-    ValueSymbol::restoreXml(el,trans);
+    ValueSymbol::restoreXml(el, trans);
     {
         uintm id;
         istringstream s(el->getAttributeValue("varnode"));
@@ -834,18 +834,18 @@ void ContextSymbol::restoreXml(const Element *el,SleighBase *trans)
         s >> high;
     }
     flow = true;
-    for(int4 i=el->getNumAttributes()-1; i>=0; --i) {
-        if (el->getAttributeName(i)=="flow") {
+    for(int4 i = el->getNumAttributes() - 1; i >= 0; --i) {
+        if (el->getAttributeName(i) == "flow") {
             flow = xml_readbool(el->getAttributeValue(i));
             break;
         }
     }
 }
 
-VarnodeListSymbol::VarnodeListSymbol(const string &nm,PatternValue *pv,const vector<SleighSymbol *> &vt)
-    : ValueSymbol(nm,pv)
+VarnodeListSymbol::VarnodeListSymbol(const string &nm, PatternValue *pv, const vector<SleighSymbol *> &vt)
+    : ValueSymbol(nm, pv)
 {
-    for(int4 i=0; i<vt.size(); ++i)
+    for(int4 i = 0; i < vt.size(); ++i)
         varnode_table.push_back((VarnodeSymbol *)vt[i]);
     checkTableFill();
 }
@@ -855,8 +855,8 @@ void VarnodeListSymbol::checkTableFill(void)
 {
     intb min = patval->minValue();
     intb max = patval->maxValue();
-    tableisfilled = (min>=0)&&(max<varnode_table.size());
-    for(uint4 i=0; i<varnode_table.size(); ++i) {
+    tableisfilled = (min >= 0) && (max < varnode_table.size());
+    for(uint4 i = 0; i < varnode_table.size(); ++i) {
         if (varnode_table[i] == (VarnodeSymbol *)0)
             tableisfilled = false;
     }
@@ -867,7 +867,7 @@ Constructor *VarnodeListSymbol::resolve(ParserWalker &walker)
 {
     if (!tableisfilled) {
         intb ind = patval->getValue(walker);
-        if ((ind<0)||(ind>=varnode_table.size())||(varnode_table[ind]==(VarnodeSymbol *)0)) {
+        if ((ind < 0) || (ind >= varnode_table.size()) || (varnode_table[ind] == (VarnodeSymbol *)0)) {
             ostringstream s;
             s << walker.getAddr().getShortcut();
             walker.getAddr().printRaw(s);
@@ -878,7 +878,7 @@ Constructor *VarnodeListSymbol::resolve(ParserWalker &walker)
     return (Constructor *)0;
 }
 
-void VarnodeListSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
+void VarnodeListSymbol::getFixedHandle(FixedHandle &hand, ParserWalker &walker) const
 
 {
     uint4 ind = (uint4) patval->getValue(walker);
@@ -893,15 +893,15 @@ void VarnodeListSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) c
 int4 VarnodeListSymbol::getSize(void) const
 
 {
-    for(int4 i=0; i<varnode_table.size(); ++i) {
+    for(int4 i = 0; i < varnode_table.size(); ++i) {
         VarnodeSymbol *vnsym = varnode_table[i]; // Assume all are same size
         if (vnsym != (VarnodeSymbol *)0)
             return vnsym->getSize();
     }
-    throw SleighError("No register attached to: "+getName());
+    throw SleighError("No register attached to: " + getName());
 }
 
-void VarnodeListSymbol::print(ostream &s,ParserWalker &walker) const
+void VarnodeListSymbol::print(ostream &s, ParserWalker &walker) const
 
 {
     uint4 ind = (uint4)patval->getValue(walker);
@@ -917,7 +917,7 @@ void VarnodeListSymbol::saveXml(ostream &s) const
     SleighSymbol::saveXmlHeader(s);
     s << ">\n";
     patval->saveXml(s);
-    for(int4 i=0; i<varnode_table.size(); ++i) {
+    for(int4 i = 0; i < varnode_table.size(); ++i) {
         if (varnode_table[i] == (VarnodeSymbol *)0)
             s << "<null/>\n";
         else
@@ -934,16 +934,16 @@ void VarnodeListSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void VarnodeListSymbol::restoreXml(const Element *el,SleighBase *trans)
+void VarnodeListSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    patval = (PatternValue *) PatternExpression::restoreExpression(*iter,trans);
+    patval = (PatternValue *) PatternExpression::restoreExpression(*iter, trans);
     patval->layClaim();
     ++iter;
-    while(iter!=list.end()) {
+    while(iter != list.end()) {
         const Element *subel = *iter;
         if (subel->getName() == "var") {
             uintm id;
@@ -958,12 +958,12 @@ void VarnodeListSymbol::restoreXml(const Element *el,SleighBase *trans)
     checkTableFill();
 }
 
-OperandSymbol::OperandSymbol(const string &nm,int4 index,Constructor *ct)
+OperandSymbol::OperandSymbol(const string &nm, int4 index, Constructor *ct)
     : SpecificSymbol(nm)
 {
     flags = 0;
     hand = index;
-    localexp = new OperandValue(index,ct);
+    localexp = new OperandValue(index, ct);
     localexp->layClaim();
     defexp = (PatternExpression *)0;
     triple = (TripleSymbol *)0;
@@ -972,7 +972,7 @@ OperandSymbol::OperandSymbol(const string &nm,int4 index,Constructor *ct)
 void OperandSymbol::defineOperand(PatternExpression *pe)
 
 {
-    if ((defexp != (PatternExpression *)0)||(triple!=(TripleSymbol *)0))
+    if ((defexp != (PatternExpression *)0) || (triple != (TripleSymbol *)0))
         throw SleighError("Redefining operand");
     defexp = pe;
     defexp->layClaim();
@@ -981,7 +981,7 @@ void OperandSymbol::defineOperand(PatternExpression *pe)
 void OperandSymbol::defineOperand(TripleSymbol *tri)
 
 {
-    if ((defexp != (PatternExpression *)0)||(triple!=(TripleSymbol *)0))
+    if ((defexp != (PatternExpression *)0) || (triple != (TripleSymbol *)0))
         throw SleighError("Redefining operand");
     triple = tri;
 }
@@ -999,21 +999,21 @@ VarnodeTpl *OperandSymbol::getVarnode(void) const
 {
     VarnodeTpl *res;
     if (defexp != (PatternExpression *)0)
-        res = new VarnodeTpl(hand,true); // Definite constant handle
+        res = new VarnodeTpl(hand, true); // Definite constant handle
     else {
         SpecificSymbol *specsym = dynamic_cast<SpecificSymbol *>(triple);
         if (specsym != (SpecificSymbol *)0)
             res = specsym->getVarnode();
-        else if ((triple != (TripleSymbol *)0)&&
-                 ((triple->getType() == valuemap_symbol)||(triple->getType() == name_symbol)))
-            res = new VarnodeTpl(hand,true); // Zero-size symbols
+        else if ((triple != (TripleSymbol *)0) &&
+                 ((triple->getType() == valuemap_symbol) || (triple->getType() == name_symbol)))
+            res = new VarnodeTpl(hand, true); // Zero-size symbols
         else
-            res = new VarnodeTpl(hand,false); // Possible dynamic handle
+            res = new VarnodeTpl(hand, false); // Possible dynamic handle
     }
     return res;
 }
 
-void OperandSymbol::getFixedHandle(FixedHandle &hnd,ParserWalker &walker) const
+void OperandSymbol::getFixedHandle(FixedHandle &hnd, ParserWalker &walker) const
 
 {
     hnd = walker.getFixedHandle(hand);
@@ -1027,15 +1027,15 @@ int4 OperandSymbol::getSize(void) const
     return 0;
 }
 
-void OperandSymbol::print(ostream &s,ParserWalker &walker) const
+void OperandSymbol::print(ostream &s, ParserWalker &walker) const
 
 {
     walker.pushOperand(getIndex());
     if (triple != (TripleSymbol *)0) {
         if (triple->getType() == SleighSymbol::subtable_symbol)
-            walker.getConstructor()->print(s,walker);
+            walker.getConstructor()->print(s, walker);
         else
-            triple->print(s,walker);
+            triple->print(s, walker);
     } else {
         intb val = defexp->getValue(walker);
         if (val >= 0)
@@ -1080,7 +1080,7 @@ void OperandSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void OperandSymbol::restoreXml(const Element *el,SleighBase *trans)
+void OperandSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     defexp = (PatternExpression *)0;
@@ -1106,7 +1106,7 @@ void OperandSymbol::restoreXml(const Element *el,SleighBase *trans)
         s.unsetf(ios::dec | ios::hex | ios::oct);
         s >> minimumlength;
     }
-    for(int4 i=0; i<el->getNumAttributes(); ++i) {
+    for(int4 i = 0; i < el->getNumAttributes(); ++i) {
         if (el->getAttributeName(i) == "subsym") {
             uintm id;
             istringstream s(el->getAttributeValue(i));
@@ -1121,16 +1121,16 @@ void OperandSymbol::restoreXml(const Element *el,SleighBase *trans)
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    localexp = (OperandValue *)PatternExpression::restoreExpression(*iter,trans);
+    localexp = (OperandValue *)PatternExpression::restoreExpression(*iter, trans);
     localexp->layClaim();
     ++iter;
     if (iter != list.end()) {
-        defexp = PatternExpression::restoreExpression(*iter,trans);
+        defexp = PatternExpression::restoreExpression(*iter, trans);
         defexp->layClaim();
     }
 }
 
-StartSymbol::StartSymbol(const string &nm,AddrSpace *cspc) : SpecificSymbol(nm)
+StartSymbol::StartSymbol(const string &nm, AddrSpace *cspc) : SpecificSymbol(nm)
 
 {
     const_space = cspc;
@@ -1152,10 +1152,10 @@ VarnodeTpl *StartSymbol::getVarnode(void) const
     ConstTpl spc(const_space);
     ConstTpl off(ConstTpl::j_start);
     ConstTpl sz_zero;
-    return new VarnodeTpl(spc,off,sz_zero);
+    return new VarnodeTpl(spc, off, sz_zero);
 }
 
-void StartSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
+void StartSymbol::getFixedHandle(FixedHandle &hand, ParserWalker &walker) const
 
 {
     hand.space = walker.getCurSpace();
@@ -1164,7 +1164,7 @@ void StartSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
     hand.size = hand.space->getAddrSize();
 }
 
-void StartSymbol::print(ostream &s,ParserWalker &walker) const
+void StartSymbol::print(ostream &s, ParserWalker &walker) const
 
 {
     intb val = (intb) walker.getAddr().getOffset();
@@ -1187,7 +1187,7 @@ void StartSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void StartSymbol::restoreXml(const Element *el,SleighBase *trans)
+void StartSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     const_space = trans->getConstantSpace();
@@ -1195,7 +1195,7 @@ void StartSymbol::restoreXml(const Element *el,SleighBase *trans)
     patexp->layClaim();
 }
 
-EndSymbol::EndSymbol(const string &nm,AddrSpace *cspc) : SpecificSymbol(nm)
+EndSymbol::EndSymbol(const string &nm, AddrSpace *cspc) : SpecificSymbol(nm)
 
 {
     const_space = cspc;
@@ -1217,10 +1217,10 @@ VarnodeTpl *EndSymbol::getVarnode(void) const
     ConstTpl spc(const_space);
     ConstTpl off(ConstTpl::j_next);
     ConstTpl sz_zero;
-    return new VarnodeTpl(spc,off,sz_zero);
+    return new VarnodeTpl(spc, off, sz_zero);
 }
 
-void EndSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
+void EndSymbol::getFixedHandle(FixedHandle &hand, ParserWalker &walker) const
 
 {
     hand.space = walker.getCurSpace();
@@ -1229,7 +1229,7 @@ void EndSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
     hand.size = hand.space->getAddrSize();
 }
 
-void EndSymbol::print(ostream &s,ParserWalker &walker) const
+void EndSymbol::print(ostream &s, ParserWalker &walker) const
 
 {
     intb val = (intb) walker.getNaddr().getOffset();
@@ -1252,7 +1252,7 @@ void EndSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void EndSymbol::restoreXml(const Element *el,SleighBase *trans)
+void EndSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     const_space = trans->getConstantSpace();
@@ -1260,7 +1260,7 @@ void EndSymbol::restoreXml(const Element *el,SleighBase *trans)
     patexp->layClaim();
 }
 
-FlowDestSymbol::FlowDestSymbol(const string &nm,AddrSpace *cspc) : SpecificSymbol(nm)
+FlowDestSymbol::FlowDestSymbol(const string &nm, AddrSpace *cspc) : SpecificSymbol(nm)
 
 {
     const_space = cspc;
@@ -1272,10 +1272,10 @@ VarnodeTpl *FlowDestSymbol::getVarnode(void) const
     ConstTpl spc(const_space);
     ConstTpl off(ConstTpl::j_flowdest);
     ConstTpl sz_zero;
-    return new VarnodeTpl(spc,off,sz_zero);
+    return new VarnodeTpl(spc, off, sz_zero);
 }
 
-void FlowDestSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
+void FlowDestSymbol::getFixedHandle(FixedHandle &hand, ParserWalker &walker) const
 
 {
     Address refAddr = walker.getDestAddr();
@@ -1285,7 +1285,7 @@ void FlowDestSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) cons
     hand.size = refAddr.getAddrSize();
 }
 
-void FlowDestSymbol::print(ostream &s,ParserWalker &walker) const
+void FlowDestSymbol::print(ostream &s, ParserWalker &walker) const
 
 {
     intb val = (intb) walker.getDestAddr().getOffset();
@@ -1308,13 +1308,13 @@ void FlowDestSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void FlowDestSymbol::restoreXml(const Element *el,SleighBase *trans)
+void FlowDestSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     const_space = trans->getConstantSpace();
 }
 
-FlowRefSymbol::FlowRefSymbol(const string &nm,AddrSpace *cspc) : SpecificSymbol(nm)
+FlowRefSymbol::FlowRefSymbol(const string &nm, AddrSpace *cspc) : SpecificSymbol(nm)
 
 {
     const_space = cspc;
@@ -1326,10 +1326,10 @@ VarnodeTpl *FlowRefSymbol::getVarnode(void) const
     ConstTpl spc(const_space);
     ConstTpl off(ConstTpl::j_flowref);
     ConstTpl sz_zero;
-    return new VarnodeTpl(spc,off,sz_zero);
+    return new VarnodeTpl(spc, off, sz_zero);
 }
 
-void FlowRefSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
+void FlowRefSymbol::getFixedHandle(FixedHandle &hand, ParserWalker &walker) const
 
 {
     Address refAddr = walker.getRefAddr();
@@ -1339,7 +1339,7 @@ void FlowRefSymbol::getFixedHandle(FixedHandle &hand,ParserWalker &walker) const
     hand.size = refAddr.getAddrSize();
 }
 
-void FlowRefSymbol::print(ostream &s,ParserWalker &walker) const
+void FlowRefSymbol::print(ostream &s, ParserWalker &walker) const
 
 {
     intb val = (intb) walker.getRefAddr().getOffset();
@@ -1362,7 +1362,7 @@ void FlowRefSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void FlowRefSymbol::restoreXml(const Element *el,SleighBase *trans)
+void FlowRefSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     const_space = trans->getConstantSpace();
@@ -1400,13 +1400,13 @@ Constructor::~Constructor(void)
         PatternEquation::release(pateq);
     if (templ != (ConstructTpl *)0)
         delete templ;
-    for(int4 i=0; i<namedtempl.size(); ++i) {
+    for(int4 i = 0; i < namedtempl.size(); ++i) {
         ConstructTpl *ntpl = namedtempl[i];
         if (ntpl != (ConstructTpl *)0)
             delete ntpl;
     }
     vector<ContextChange *>::iterator iter;
-    for(iter=context.begin(); iter!=context.end(); ++iter)
+    for(iter = context.begin(); iter != context.end(); ++iter)
         delete *iter;
 }
 
@@ -1420,7 +1420,7 @@ void Constructor::addOperand(OperandSymbol *sym)
 
 {
     string operstring = "\n ";	// Indicater character for operand
-    operstring[1] = ('A'+operands.size()); // Encode index of operand
+    operstring[1] = ('A' + operands.size()); // Encode index of operand
     operands.push_back(sym);
     printpiece.push_back(operstring); // Placeholder for operand's string
 }
@@ -1432,7 +1432,7 @@ void Constructor::addSyntax(const string &syn)
 
     if (syn.size() == 0) return;
     bool hasNonSpace = false;
-    for(int4 i=0; i<syn.size(); ++i) {
+    for(int4 i = 0; i < syn.size(); ++i) {
         if (syn[i] != ' ') {
             hasNonSpace = true;
             break;
@@ -1442,7 +1442,7 @@ void Constructor::addSyntax(const string &syn)
         syntrim = syn;
     else
         syntrim = " ";
-    if ((firstwhitespace==-1)&&(syntrim == " "))
+    if ((firstwhitespace == -1) && (syntrim == " "))
         firstwhitespace = printpiece.size();
     if (printpiece.empty())
         printpiece.push_back(syntrim);
@@ -1458,10 +1458,10 @@ void Constructor::addSyntax(const string &syn)
 void Constructor::addEquation(PatternEquation *pe)
 
 {
-    (pateq=pe)->layClaim();
+    (pateq = pe)->layClaim();
 }
 
-void Constructor::setNamedSection(ConstructTpl *tpl,int4 id)
+void Constructor::setNamedSection(ConstructTpl *tpl, int4 id)
 
 {
     // Add a named section to the constructor
@@ -1478,59 +1478,59 @@ ConstructTpl *Constructor::getNamedTempl(int4 secnum) const
     return (ConstructTpl *)0;
 }
 
-void Constructor::print(ostream &s,ParserWalker &walker) const
+void Constructor::print(ostream &s, ParserWalker &walker) const
 
 {
     vector<string>::const_iterator piter;
 
-    for(piter=printpiece.begin(); piter!=printpiece.end(); ++piter) {
+    for(piter = printpiece.begin(); piter != printpiece.end(); ++piter) {
         if ((*piter)[0] == '\n') {
-            int4 index = (*piter)[1]-'A';
-            operands[index]->print(s,walker);
+            int4 index = (*piter)[1] - 'A';
+            operands[index]->print(s, walker);
         } else
             s << *piter;
     }
 }
 
-void Constructor::printMnemonic(ostream &s,ParserWalker &walker) const
+void Constructor::printMnemonic(ostream &s, ParserWalker &walker) const
 
 {
     if (flowthruindex != -1) {
         SubtableSymbol *sym = dynamic_cast<SubtableSymbol *>(operands[flowthruindex]->getDefiningSymbol());
         if (sym != (SubtableSymbol *)0) {
             walker.pushOperand(flowthruindex);
-            walker.getConstructor()->printMnemonic(s,walker);
+            walker.getConstructor()->printMnemonic(s, walker);
             walker.popOperand();
             return;
         }
     }
-    int4 endind = (firstwhitespace==-1) ? printpiece.size() : firstwhitespace;
-    for(int4 i=0; i<endind; ++i) {
+    int4 endind = (firstwhitespace == -1) ? printpiece.size() : firstwhitespace;
+    for(int4 i = 0; i < endind; ++i) {
         if (printpiece[i][0] == '\n') {
-            int4 index = printpiece[i][1]-'A';
-            operands[index]->print(s,walker);
+            int4 index = printpiece[i][1] - 'A';
+            operands[index]->print(s, walker);
         } else
             s << printpiece[i];
     }
 }
 
-void Constructor::printBody(ostream &s,ParserWalker &walker) const
+void Constructor::printBody(ostream &s, ParserWalker &walker) const
 
 {
     if (flowthruindex != -1) {
         SubtableSymbol *sym = dynamic_cast<SubtableSymbol *>(operands[flowthruindex]->getDefiningSymbol());
         if (sym != (SubtableSymbol *)0) {
             walker.pushOperand(flowthruindex);
-            walker.getConstructor()->printBody(s,walker);
+            walker.getConstructor()->printBody(s, walker);
             walker.popOperand();
             return;
         }
     }
     if (firstwhitespace == -1) return; // Nothing to print after firstwhitespace
-    for(int4 i=firstwhitespace+1; i<printpiece.size(); ++i) {
-        if (printpiece[i][0]=='\n') {
-            int4 index = printpiece[i][1]-'A';
-            operands[index]->print(s,walker);
+    for(int4 i = firstwhitespace + 1; i < printpiece.size(); ++i) {
+        if (printpiece[i][0] == '\n') {
+            int4 index = printpiece[i][1] - 'A';
+            operands[index]->print(s, walker);
         } else
             s << printpiece[i];
     }
@@ -1540,7 +1540,7 @@ void Constructor::removeTrailingSpace(void)
 
 {
     // Allow for user to force extra space at end of printing
-    if ((!printpiece.empty())&&(printpiece.back()==" "))
+    if ((!printpiece.empty()) && (printpiece.back() == " "))
         printpiece.pop_back();
     //  while((!printpiece.empty())&&(printpiece.back()==" "))
     //    printpiece.pop_back();
@@ -1551,9 +1551,9 @@ void Constructor::markSubtableOperands(vector<int4> &check) const
 {
     // Adjust -check- so it has one entry for every operand, a 0 if it is a subtable, a 2 if it is not
     check.resize(operands.size());
-    for(int4 i=0; i<operands.size(); ++i) {
+    for(int4 i = 0; i < operands.size(); ++i) {
         TripleSymbol *sym = operands[i]->getDefiningSymbol();
-        if ((sym != (TripleSymbol *)0)&&(sym->getType() == SleighSymbol::subtable_symbol))
+        if ((sym != (TripleSymbol *)0) && (sym->getType() == SleighSymbol::subtable_symbol))
             check[i] = 0;
         else
             check[i] = 2;
@@ -1587,7 +1587,7 @@ bool Constructor::isRecursive(void) const
 
 {
     // Does this constructor cause recursion with its table
-    for(int4 i=0; i<operands.size(); ++i) {
+    for(int4 i = 0; i < operands.size(); ++i) {
         TripleSymbol *sym = operands[i]->getDefiningSymbol();
         if (sym == parent) return true;
     }
@@ -1602,11 +1602,11 @@ void Constructor::saveXml(ostream &s) const
     s << " first=\"" << dec << firstwhitespace << "\"";
     s << " length=\"" << minimumlength << "\"";
     s << " line=\"" << lineno << "\">\n";
-    for(int4 i=0; i<operands.size(); ++i)
+    for(int4 i = 0; i < operands.size(); ++i)
         s << "<oper id=\"0x" << hex << operands[i]->getId() << "\"/>\n";
-    for(int4 i=0; i<printpiece.size(); ++i) {
-        if (printpiece[i][0]=='\n') {
-            int4 index = printpiece[i][1]-'A';
+    for(int4 i = 0; i < printpiece.size(); ++i) {
+        if (printpiece[i][0] == '\n') {
+            int4 index = printpiece[i][1] - 'A';
             s << "<opprint id=\"" << dec << index << "\"/>\n";
         } else {
             s << "<print piece=\"";
@@ -1614,19 +1614,19 @@ void Constructor::saveXml(ostream &s) const
             s << "\"/>\n";
         }
     }
-    for(int4 i=0; i<context.size(); ++i)
+    for(int4 i = 0; i < context.size(); ++i)
         context[i]->saveXml(s);
     if (templ != (ConstructTpl *)0)
-        templ->saveXml(s,-1);
-    for(int4 i=0; i<namedtempl.size(); ++i) {
+        templ->saveXml(s, -1);
+    for(int4 i = 0; i < namedtempl.size(); ++i) {
         if (namedtempl[i] == (ConstructTpl *)0) // Some sections may be NULL
             continue;
-        namedtempl[i]->saveXml(s,i);
+        namedtempl[i]->saveXml(s, i);
     }
     s << "</constructor>\n";
 }
 
-void Constructor::restoreXml(const Element *el,SleighBase *trans)
+void Constructor::restoreXml(const Element *el, SleighBase *trans)
 
 {
     uintm id;
@@ -1676,15 +1676,15 @@ void Constructor::restoreXml(const Element *el,SleighBase *trans)
             printpiece.push_back(operstring);
         } else if ((*iter)->getName() == "context_op") {
             ContextOp *c_op = new ContextOp();
-            c_op->restoreXml(*iter,trans);
+            c_op->restoreXml(*iter, trans);
             context.push_back(c_op);
         } else if ((*iter)->getName() == "commit") {
             ContextCommit *c_op = new ContextCommit();
-            c_op->restoreXml(*iter,trans);
+            c_op->restoreXml(*iter, trans);
             context.push_back(c_op);
         } else {
             ConstructTpl *cur = new ConstructTpl();
-            int4 sectionid = cur->restoreXml(*iter,trans);
+            int4 sectionid = cur->restoreXml(*iter, trans);
             if (sectionid < 0) {
                 if (templ != (ConstructTpl *)0)
                     throw LowlevelError("Duplicate main section");
@@ -1700,7 +1700,7 @@ void Constructor::restoreXml(const Element *el,SleighBase *trans)
         ++iter;
     }
     pattern = (TokenPattern *)0;
-    if ((printpiece.size()==1)&&(printpiece[0][0]=='\n'))
+    if ((printpiece.size() == 1) && (printpiece[0][0] == '\n'))
         flowthruindex = printpiece[0][1] - 'A';
     else
         flowthruindex = -1;
@@ -1714,8 +1714,8 @@ void Constructor::orderOperands(void)
     vector<OperandSymbol *> newops; // New order of the operands
     int4 lastsize;
 
-    pateq->operandOrder(this,patternorder);
-    for(int4 i=0; i<operands.size(); ++i) { // Make sure patternorder contains all operands
+    pateq->operandOrder(this, patternorder);
+    for(int4 i = 0; i < operands.size(); ++i) { // Make sure patternorder contains all operands
         sym = operands[i];
         if (!sym->isMarked()) {
             patternorder.push_back(sym);
@@ -1724,17 +1724,17 @@ void Constructor::orderOperands(void)
     }
     do {
         lastsize = newops.size();
-        for(int4 i=0; i<patternorder.size(); ++i) {
+        for(int4 i = 0; i < patternorder.size(); ++i) {
             sym = patternorder[i];
             if (!sym->isMarked()) continue; // "unmarked" means it is already in newops
             if (sym->isOffsetIrrelevant()) continue; // expression Operands come last
-            if ((sym->offsetbase == -1)||(!operands[sym->offsetbase]->isMarked())) {
+            if ((sym->offsetbase == -1) || (!operands[sym->offsetbase]->isMarked())) {
                 newops.push_back(sym);
                 sym->clearMark();
             }
         }
     } while(newops.size() != lastsize);
-    for(int4 i=0; i<patternorder.size(); ++i) { // Tack on expression Operands
+    for(int4 i = 0; i < patternorder.size(); ++i) { // Tack on expression Operands
         sym = patternorder[i];
         if (sym->isOffsetIrrelevant()) {
             newops.push_back(sym);
@@ -1746,16 +1746,16 @@ void Constructor::orderOperands(void)
         throw SleighError("Circular offset dependency between operands");
 
 
-    for(int4 i=0; i<newops.size(); ++i) { // Fix up operand indices
+    for(int4 i = 0; i < newops.size(); ++i) { // Fix up operand indices
         newops[i]->hand = i;
         newops[i]->localexp->changeIndex(i);
     }
     vector<int4> handmap;		// Create index translation map
-    for(int4 i=0; i<operands.size(); ++i)
+    for(int4 i = 0; i < operands.size(); ++i)
         handmap.push_back(operands[i]->hand);
 
     // Fix up offsetbase
-    for(int4 i=0; i<newops.size(); ++i) {
+    for(int4 i = 0; i < newops.size(); ++i) {
         sym = newops[i];
         if (sym->offsetbase == -1) continue;
         sym->offsetbase = handmap[sym->offsetbase];
@@ -1763,18 +1763,18 @@ void Constructor::orderOperands(void)
 
     if (templ != (ConstructTpl *)0) // Fix up templates
         templ->changeHandleIndex(handmap);
-    for(int4 i=0; i<namedtempl.size(); ++i) {
+    for(int4 i = 0; i < namedtempl.size(); ++i) {
         ConstructTpl *ntempl = namedtempl[i];
         if (ntempl != (ConstructTpl *)0)
             ntempl->changeHandleIndex(handmap);
     }
 
     // Fix up printpiece operand refs
-    for(int4 i=0; i<printpiece.size(); ++i) {
+    for(int4 i = 0; i < printpiece.size(); ++i) {
         if (printpiece[i][0] == '\n') {
-            int4 index = printpiece[i][1]-'A';
+            int4 index = printpiece[i][1] - 'A';
             index = handmap[index];
-            printpiece[i][1] = 'A'+index;
+            printpiece[i][1] = 'A' + index;
         }
     }
     operands = newops;
@@ -1789,7 +1789,7 @@ TokenPattern *Constructor::buildPattern(ostream &s)
     vector<TokenPattern> oppattern;
     bool recursion = false;
     // Generate pattern for each operand, store in oppattern
-    for(int4 i=0; i<operands.size(); ++i) {
+    for(int4 i = 0; i < operands.size(); ++i) {
         OperandSymbol *sym = operands[i];
         TripleSymbol *triple = sym->getDefiningSymbol();
         PatternExpression *defexp = sym->getDefiningExpression();
@@ -1810,7 +1810,7 @@ TokenPattern *Constructor::buildPattern(ostream &s)
         } else if (defexp != (PatternExpression *)0)
             oppattern.push_back(defexp->genMinPattern(oppattern));
         else {
-            throw SleighError(sym->getName()+": operand is undefined");
+            throw SleighError(sym->getName() + ": operand is undefined");
         }
         TokenPattern &sympat( oppattern.back() );
         sym->minimumlength = sympat.getMinimumLength();
@@ -1835,8 +1835,8 @@ TokenPattern *Constructor::buildPattern(ostream &s)
     if (!pateq->resolveOperandLeft(resolve))
         throw SleighError("Unable to resolve operand offsets");
 
-    for(int4 i=0; i<operands.size(); ++i) { // Unravel relative offsets to absolute (if possible)
-        int4 base,offset;
+    for(int4 i = 0; i < operands.size(); ++i) { // Unravel relative offsets to absolute (if possible)
+        int4 base, offset;
         OperandSymbol *sym = operands[i];
         if (sym->isOffsetIrrelevant()) {
             sym->offsetbase = -1;
@@ -1859,7 +1859,7 @@ TokenPattern *Constructor::buildPattern(ostream &s)
     }
 
     // Make sure context expressions are valid
-    for(int4 i=0; i<context.size(); ++i)
+    for(int4 i = 0; i < context.size(); ++i)
         context[i]->validate();
 
     orderOperands();		// Order the operands based on offset dependency
@@ -1892,14 +1892,14 @@ SubtableSymbol::~SubtableSymbol(void)
     if (decisiontree != (DecisionNode *)0)
         delete decisiontree;
     vector<Constructor *>::iterator iter;
-    for(iter=construct.begin(); iter!=construct.end(); ++iter)
+    for(iter = construct.begin(); iter != construct.end(); ++iter)
         delete *iter;
 }
 
 void SubtableSymbol::collectLocalValues(vector<uintb> &results) const
 
 {
-    for(int4 i=0; i<construct.size(); ++i)
+    for(int4 i = 0; i < construct.size(); ++i)
         construct[i]->collectLocalExports(results);
 }
 
@@ -1910,7 +1910,7 @@ void SubtableSymbol::saveXml(ostream &s) const
     s << "<subtable_sym";
     SleighSymbol::saveXmlHeader(s);
     s << " numct=\"" << dec << construct.size() << "\">\n";
-    for(int4 i=0; i<construct.size(); ++i)
+    for(int4 i = 0; i < construct.size(); ++i)
         construct[i]->saveXml(s);
     decisiontree->saveXml(s);
     s << "</subtable_sym>\n";
@@ -1924,7 +1924,7 @@ void SubtableSymbol::saveXmlHeader(ostream &s) const
     s << "/>\n";
 }
 
-void SubtableSymbol::restoreXml(const Element *el,SleighBase *trans)
+void SubtableSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     {
@@ -1941,10 +1941,10 @@ void SubtableSymbol::restoreXml(const Element *el,SleighBase *trans)
         if ((*iter)->getName() == "constructor") {
             Constructor *ct = new Constructor();
             addConstructor(ct);
-            ct->restoreXml(*iter,trans);
+            ct->restoreXml(*iter, trans);
         } else if ((*iter)->getName() == "decision") {
             decisiontree = new DecisionNode();
-            decisiontree->restoreXml(*iter,(DecisionNode *)0,this);
+            decisiontree->restoreXml(*iter, (DecisionNode *)0, this);
         }
         ++iter;
     }
@@ -1960,13 +1960,13 @@ void SubtableSymbol::buildDecisionTree(DecisionProperties &props)
     if (pattern == (TokenPattern *)0) return; // Pattern not fully formed
     Pattern *pat;
     decisiontree = new DecisionNode((DecisionNode *)0);
-    for(int4 i=0; i<construct.size(); ++i) {
+    for(int4 i = 0; i < construct.size(); ++i) {
         pat = construct[i]->getPattern()->getPattern();
         if (pat->numDisjoint() == 0)
-            decisiontree->addConstructorPair((const DisjointPattern *)pat,construct[i]);
+            decisiontree->addConstructorPair((const DisjointPattern *)pat, construct[i]);
         else
-            for(int4 j=0; j<pat->numDisjoint(); ++j)
-                decisiontree->addConstructorPair(pat->getDisjoint(j),construct[i]);
+            for(int4 j = 0; j < pat->numDisjoint(); ++j)
+                decisiontree->addConstructorPair(pat->getDisjoint(j), construct[i]);
     }
     decisiontree->split(props);	// Create the decision strategy
 }
@@ -1980,7 +1980,7 @@ TokenPattern *SubtableSymbol::buildPattern(ostream &s)
     beingbuilt = true;
     pattern = new TokenPattern();
     if (construct.empty()) {
-        s << "Error: There are no constructors in table: "+getName() << endl;
+        s << "Error: There are no constructors in table: " + getName() << endl;
         errors = true;
         return pattern;
     }
@@ -1993,7 +1993,7 @@ TokenPattern *SubtableSymbol::buildPattern(ostream &s)
         errors = true;
     }
     *pattern = *construct.front()->getPattern();
-    for(int4 i=1; i<construct.size(); ++i) {
+    for(int4 i = 1; i < construct.size(); ++i) {
         try {
             construct[i]->buildPattern(s);
         } catch(SleighError &err) {
@@ -2008,11 +2008,11 @@ TokenPattern *SubtableSymbol::buildPattern(ostream &s)
     return pattern;
 }
 
-void DecisionProperties::identicalPattern(Constructor *a,Constructor *b)
+void DecisionProperties::identicalPattern(Constructor *a, Constructor *b)
 
 {
     // Note that -a- and -b- have identical patterns
-    if ((!a->isError())&&(!b->isError())) {
+    if ((!a->isError()) && (!b->isError())) {
         a->setError(true);
         b->setError(true);
 
@@ -2020,11 +2020,11 @@ void DecisionProperties::identicalPattern(Constructor *a,Constructor *b)
     }
 }
 
-void DecisionProperties::conflictingPattern(Constructor *a,Constructor *b)
+void DecisionProperties::conflictingPattern(Constructor *a, Constructor *b)
 
 {
     // Note that -a- and -b- have (potentially) conflicting patterns
-    if ((!a->isError())&&(!b->isError())) {
+    if ((!a->isError()) && (!b->isError())) {
         a->setError(true);
         b->setError(true);
 
@@ -2047,18 +2047,18 @@ DecisionNode::~DecisionNode(void)
 {
     // We own sub nodes
     vector<DecisionNode *>::iterator iter;
-    for(iter=children.begin(); iter!=children.end(); ++iter)
+    for(iter = children.begin(); iter != children.end(); ++iter)
         delete *iter;
-    vector<pair<DisjointPattern *,Constructor *> >::iterator piter;
-    for(piter=list.begin(); piter!=list.end(); ++piter)
+    vector<pair<DisjointPattern *, Constructor *> >::iterator piter;
+    for(piter = list.begin(); piter != list.end(); ++piter)
         delete (*piter).first;	// Delete the patterns
 }
 
-void DecisionNode::addConstructorPair(const DisjointPattern *pat,Constructor *ct)
+void DecisionNode::addConstructorPair(const DisjointPattern *pat, Constructor *ct)
 
 {
     DisjointPattern *clone = (DisjointPattern *)pat->simplifyClone(); // We need to own pattern
-    list.push_back(pair<DisjointPattern *,Constructor *>(clone,ct));
+    list.push_back(pair<DisjointPattern *, Constructor *>(clone, ct));
     num += 1;
 }
 
@@ -2067,9 +2067,9 @@ int4 DecisionNode::getMaximumLength(bool context)
 {
     // Get maximum length of instruction pattern in bytes
     int4 max = 0;
-    int4 val,i;
+    int4 val, i;
 
-    for(i=0; i<list.size(); ++i) {
+    for(i = 0; i < list.size(); ++i) {
         val = list[i].first->getLength(context);
         if (val > max)
             max = val;
@@ -2077,49 +2077,49 @@ int4 DecisionNode::getMaximumLength(bool context)
     return max;
 }
 
-int4 DecisionNode::getNumFixed(int4 low,int4 size,bool context)
+int4 DecisionNode::getNumFixed(int4 low, int4 size, bool context)
 
 {
     // Get number of patterns that specify this field
     int4 count = 0;
     uintm mask;
     // Bits which must be specified in the mask
-    uintm m = (size==8*sizeof(uintm)) ? 0 : (((uintm)1)<<size);
-    m = m-1;
+    uintm m = (size == 8 * sizeof(uintm)) ? 0 : (((uintm)1) << size);
+    m = m - 1;
 
-    for(int4 i=0; i<list.size(); ++i) {
-        mask = list[i].first->getMask(low,size,context);
-        if ((mask&m)==m)
+    for(int4 i = 0; i < list.size(); ++i) {
+        mask = list[i].first->getMask(low, size, context);
+        if ((mask & m) == m)
             count += 1;
     }
     return count;
 }
 
-double DecisionNode::getScore(int4 low,int4 size,bool context)
+double DecisionNode::getScore(int4 low, int4 size, bool context)
 
 {
     int4 numBins = 1 << size;		// size is between 1 and 8
     int4 i;
-    uintm val,mask;
-    uintm m = ((uintm)1)<<size;
-    m = m-1;
+    uintm val, mask;
+    uintm m = ((uintm)1) << size;
+    m = m - 1;
 
     int4 total = 0;
-    vector<int4> count(numBins,0);
+    vector<int4> count(numBins, 0);
 
-    for(i=0; i<list.size(); ++i) {
-        mask = list[i].first->getMask(low,size,context);
-        if ((mask&m)!=m) continue;	// Skip if field not fully specified
-        val = list[i].first->getValue(low,size,context);
+    for(i = 0; i < list.size(); ++i) {
+        mask = list[i].first->getMask(low, size, context);
+        if ((mask & m) != m) continue;	// Skip if field not fully specified
+        val = list[i].first->getValue(low, size, context);
         total += 1;
         count[val] += 1;
     }
     if (total <= 0) return -1.0;
     double sc = 0.0;
-    for(i=0; i<numBins; ++i) {
+    for(i = 0; i < numBins; ++i) {
         if (count[i] <= 0) continue;
         if (count[i] >= list.size()) return -1.0;
-        double p = ((double)count[i])/total;
+        double p = ((double)count[i]) / total;
         sc -= p * log(p);
     }
     return ( sc / log(2.0) );
@@ -2130,25 +2130,25 @@ void DecisionNode::chooseOptimalField(void)
 {
     double score = 0.0;
 
-    int4 sbit,size;		// The current field
+    int4 sbit, size;		// The current field
     bool context;
     double sc;
 
-    int4 maxlength,numfixed,maxfixed;
+    int4 maxlength, numfixed, maxfixed;
 
     maxfixed = 1;
     context = true;
     do {
-        maxlength = 8*getMaximumLength(context);
-        for(sbit=0; sbit<maxlength; ++sbit) {
-            numfixed = getNumFixed(sbit,1,context); // How may patterns specify this bit
+        maxlength = 8 * getMaximumLength(context);
+        for(sbit = 0; sbit < maxlength; ++sbit) {
+            numfixed = getNumFixed(sbit, 1, context); // How may patterns specify this bit
             if (numfixed < maxfixed) continue; // Skip this bit, if we don't have maximum specification
-            sc = getScore(sbit,1,context);
+            sc = getScore(sbit, 1, context);
 
 // if we got more patterns this time than previously, and a positive score, reset
 // the high score (we prefer this bit, because it has a higher numfixed, regardless
 // of the difference in score, as long as the new score is positive).
-            if ((numfixed > maxfixed)&&(sc > 0.0)) {
+            if ((numfixed > maxfixed) && (sc > 0.0)) {
                 score = sc;
                 maxfixed = numfixed;
                 startbit = sbit;
@@ -2169,11 +2169,11 @@ void DecisionNode::chooseOptimalField(void)
 
     context = true;
     do {
-        maxlength = 8*getMaximumLength(context);
-        for(size=2; size <= 8; ++size) {
-            for(sbit=0; sbit<maxlength-size+1; ++sbit) {
-                if (getNumFixed(sbit,size,context) < maxfixed) continue; // Consider only maximal fields
-                sc = getScore(sbit,size,context);
+        maxlength = 8 * getMaximumLength(context);
+        for(size = 2; size <= 8; ++size) {
+            for(sbit = 0; sbit < maxlength - size + 1; ++sbit) {
+                if (getNumFixed(sbit, size, context) < maxfixed) continue; // Consider only maximal fields
+                sc = getScore(sbit, size, context);
                 if (sc > score) {
                     score = sc;
                     startbit = sbit;
@@ -2188,21 +2188,21 @@ void DecisionNode::chooseOptimalField(void)
         bitsize = 0;		// treat the node as terminal
 }
 
-void DecisionNode::consistentValues(vector<uint4> &bins,DisjointPattern *pat)
+void DecisionNode::consistentValues(vector<uint4> &bins, DisjointPattern *pat)
 
 {
     // Produce all possible values of -pat- by
     // iterating through all possible values of the
     // "don't care" bits within the value of -pat-
     // that intersects with this node (startbit,bitsize,context)
-    uintm m = (bitsize==8*sizeof(uintm)) ? 0 : (((uintm)1)<<bitsize);
-    m = m-1;
-    uintm commonMask = m & pat->getMask(startbit,bitsize,contextdecision);
-    uintm commonValue = commonMask & pat->getValue(startbit,bitsize,contextdecision);
-    uintm dontCareMask = m^commonMask;
+    uintm m = (bitsize == 8 * sizeof(uintm)) ? 0 : (((uintm)1) << bitsize);
+    m = m - 1;
+    uintm commonMask = m & pat->getMask(startbit, bitsize, contextdecision);
+    uintm commonValue = commonMask & pat->getValue(startbit, bitsize, contextdecision);
+    uintm dontCareMask = m ^ commonMask;
 
-    for(uintm i=0; i<=dontCareMask; ++i) { // Iterate over values that contain all don't care bits
-        if ((i&dontCareMask)!=i) continue; // If all 1 bits in the value are don't cares
+    for(uintm i = 0; i <= dontCareMask; ++i) { // Iterate over values that contain all don't care bits
+        if ((i & dontCareMask) != i) continue; // If all 1 bits in the value are don't cares
         bins.push_back( commonValue | i ); // add 1 bits into full value and store
     }
 }
@@ -2225,23 +2225,23 @@ void DecisionNode::split(DecisionProperties &props)
 
     int4 numChildren = 1 << bitsize;
 
-    for(int4 i=0; i<numChildren; ++i) {
+    for(int4 i = 0; i < numChildren; ++i) {
         DecisionNode *nd = new DecisionNode( this );
         children.push_back( nd );
     }
-    for(int4 i=0; i<list.size(); ++i) {
+    for(int4 i = 0; i < list.size(); ++i) {
         vector<uint4> vals;		// Bins this pattern belongs in
         // If the pattern does not care about some
         // bits in the field we are splitting on, that
         // pattern will get put into multiple bins
-        consistentValues(vals,list[i].first);
-        for(int4 j=0; j<vals.size(); ++j)
-            children[vals[j]]->addConstructorPair(list[i].first,list[i].second);
+        consistentValues(vals, list[i].first);
+        for(int4 j = 0; j < vals.size(); ++j)
+            children[vals[j]]->addConstructorPair(list[i].first, list[i].second);
         delete list[i].first;	// We no longer need original pattern
     }
     list.clear();
 
-    for(int4 i=0; i<numChildren; ++i)
+    for(int4 i = 0; i < numChildren; ++i)
         children[i]->split(props);
 }
 
@@ -2268,23 +2268,23 @@ void DecisionNode::orderPatterns(DecisionProperties &props)
     //   4) Other situations where the ability to distinguish between constructors is hidden in
     //      the subconstructors.
     // This routine can determine if an intersection results from case 1) or case 2)
-    int4 i,j,k;
-    vector<pair<DisjointPattern *,Constructor *> > newlist;
-    vector<pair<DisjointPattern *,Constructor *> > conflictlist;
+    int4 i, j, k;
+    vector<pair<DisjointPattern *, Constructor *> > newlist;
+    vector<pair<DisjointPattern *, Constructor *> > conflictlist;
 
     // Check for identical patterns
-    for(i=0; i<list.size(); ++i) {
-        for(j=0; j<i; ++j) {
+    for(i = 0; i < list.size(); ++i) {
+        for(j = 0; j < i; ++j) {
             DisjointPattern *ipat = list[i].first;
             DisjointPattern *jpat = list[j].first;
             if (ipat->identical(jpat))
-                props.identicalPattern(list[i].second,list[j].second);
+                props.identicalPattern(list[i].second, list[j].second);
         }
     }
 
     newlist = list;
-    for(i=0; i<list.size(); ++i) {
-        for(j=0; j<i; ++j) {
+    for(i = 0; i < list.size(); ++i) {
+        for(j = 0; j < i; ++j) {
             DisjointPattern *ipat = newlist[i].first;
             DisjointPattern *jpat = list[j].first;
             if (ipat->specializes(jpat))
@@ -2295,37 +2295,37 @@ void DecisionNode::orderPatterns(DecisionProperties &props)
                 if (iconst == jconst) { // This is an OR in the pattern for ONE constructor
                     // So there is no conflict
                 } else {			// A true conflict that needs to be resolved
-                    conflictlist.push_back(pair<DisjointPattern *,Constructor *>(ipat,iconst));
-                    conflictlist.push_back(pair<DisjointPattern *,Constructor *>(jpat,jconst));
+                    conflictlist.push_back(pair<DisjointPattern *, Constructor *>(ipat, iconst));
+                    conflictlist.push_back(pair<DisjointPattern *, Constructor *>(jpat, jconst));
                 }
             }
         }
-        for(k=i-1; k>=j; --k)
-            list[k+1] = list[k];
+        for(k = i - 1; k >= j; --k)
+            list[k + 1] = list[k];
         list[j] = newlist[i];
     }
 
     // Check if intersection patterns are present, which resolve conflicts
-    for(i=0; i<conflictlist.size(); i+=2) {
-        DisjointPattern *pat1,*pat2;
-        Constructor *const1,*const2;
+    for(i = 0; i < conflictlist.size(); i += 2) {
+        DisjointPattern *pat1, *pat2;
+        Constructor *const1, *const2;
         pat1 = conflictlist[i].first;
         const1 = conflictlist[i].second;
-        pat2 = conflictlist[i+1].first;
-        const2 = conflictlist[i+1].second;
+        pat2 = conflictlist[i + 1].first;
+        const2 = conflictlist[i + 1].second;
         bool resolved = false;
-        for(j=0; j<list.size(); ++j) {
+        for(j = 0; j < list.size(); ++j) {
             DisjointPattern *tpat = list[j].first;
             Constructor *tconst = list[j].second;
-            if ((tpat == pat1)&&(tconst==const1)) break; // Ran out of possible specializations
-            if ((tpat == pat2)&&(tconst==const2)) break;
-            if (tpat->resolvesIntersect(pat1,pat2)) {
+            if ((tpat == pat1) && (tconst == const1)) break; // Ran out of possible specializations
+            if ((tpat == pat2) && (tconst == const2)) break;
+            if (tpat->resolvesIntersect(pat1, pat2)) {
                 resolved = true;
                 break;
             }
         }
         if (!resolved)
-            props.conflictingPattern(const1,const2);
+            props.conflictingPattern(const1, const2);
     }
 }
 
@@ -2333,8 +2333,8 @@ Constructor *DecisionNode::resolve(ParserWalker &walker) const
 
 {
     if (bitsize == 0) {		// The node is terminal
-        vector<pair<DisjointPattern *,Constructor *> >::const_iterator iter;
-        for(iter=list.begin(); iter!=list.end(); ++iter)
+        vector<pair<DisjointPattern *, Constructor *> >::const_iterator iter;
+        for(iter = list.begin(); iter != list.end(); ++iter)
             if ((*iter).first->isMatch(walker))
                 return (*iter).second;
         ostringstream s;
@@ -2345,9 +2345,9 @@ Constructor *DecisionNode::resolve(ParserWalker &walker) const
     }
     uintm val;
     if (contextdecision)
-        val = walker.getContextBits(startbit,bitsize);
+        val = walker.getContextBits(startbit, bitsize);
     else
-        val = walker.getInstructionBits(startbit,bitsize);
+        val = walker.getInstructionBits(startbit, bitsize);
     return children[val]->resolve(walker);
 }
 
@@ -2364,17 +2364,17 @@ void DecisionNode::saveXml(ostream &s) const
     s << " start=\"" << startbit << "\"";
     s << " size=\"" << bitsize << "\"";
     s << ">\n";
-    for(int4 i=0; i<list.size(); ++i) {
+    for(int4 i = 0; i < list.size(); ++i) {
         s << "<pair id=\"" << dec << list[i].second->getId() << "\">\n";
         list[i].first->saveXml(s);
         s << "</pair>\n";
     }
-    for(int4 i=0; i<children.size(); ++i)
+    for(int4 i = 0; i < children.size(); ++i)
         children[i]->saveXml(s);
     s << "</decision>\n";
 }
 
-void DecisionNode::restoreXml(const Element *el,DecisionNode *par,SubtableSymbol *sub)
+void DecisionNode::restoreXml(const Element *el, DecisionNode *par, SubtableSymbol *sub)
 
 {
     parent = par;
@@ -2408,35 +2408,35 @@ void DecisionNode::restoreXml(const Element *el,DecisionNode *par,SubtableSymbol
             ct = sub->getConstructor(id);
             pat = DisjointPattern::restoreDisjoint((*iter)->getChildren().front());
             //This increments num      addConstructorPair(pat,ct);
-            list.push_back(pair<DisjointPattern *,Constructor *>(pat,ct));
+            list.push_back(pair<DisjointPattern *, Constructor *>(pat, ct));
             //delete pat;		// addConstructorPair makes its own copy
         } else if ((*iter)->getName() == "decision") {
             DecisionNode *subnode = new DecisionNode();
-            subnode->restoreXml(*iter,this,sub);
+            subnode->restoreXml(*iter, this, sub);
             children.push_back(subnode);
         }
         ++iter;
     }
 }
 
-static void calc_maskword(int4 sbit,int4 ebit,int4 &num,int4 &shift,uintm &mask)
+static void calc_maskword(int4 sbit, int4 ebit, int4 &num, int4 &shift, uintm &mask)
 
 {
-    num = sbit/(8*sizeof(uintm));
-    if ( num != ebit/(8*sizeof(uintm)))
+    num = sbit / (8 * sizeof(uintm));
+    if ( num != ebit / (8 * sizeof(uintm)))
         throw SleighError("Context field not contained within one machine int");
-    sbit -= num*8*sizeof(uintm);
-    ebit -= num*8*sizeof(uintm);
+    sbit -= num * 8 * sizeof(uintm);
+    ebit -= num * 8 * sizeof(uintm);
 
-    shift = 8*sizeof(uintm)-ebit-1;
-    mask = (~((uintm)0))>>(sbit+shift);
+    shift = 8 * sizeof(uintm) - ebit - 1;
+    mask = (~((uintm)0)) >> (sbit + shift);
     mask <<= shift;
 }
 
-ContextOp::ContextOp(int4 startbit,int4 endbit,PatternExpression *pe)
+ContextOp::ContextOp(int4 startbit, int4 endbit, PatternExpression *pe)
 
 {
-    calc_maskword(startbit,endbit,num,shift,mask);
+    calc_maskword(startbit, endbit, num, shift, mask);
     patexp = pe;
     patexp->layClaim();
 }
@@ -2446,7 +2446,7 @@ void ContextOp::apply(ParserWalkerChange &walker) const
 {
     uintm val = patexp->getValue(walker); // Get our value based on context
     val <<= shift;
-    walker.getParserContext()->setContextWord(num,val,mask);
+    walker.getParserContext()->setContextWord(num, val, mask);
 }
 
 void ContextOp::validate(void) const
@@ -2456,7 +2456,7 @@ void ContextOp::validate(void) const
     vector<const PatternValue *> values;
 
     patexp->listValues(values);	// Get all the expression tokens
-    for(int4 i=0; i<values.size(); ++i) {
+    for(int4 i = 0; i < values.size(); ++i) {
         const OperandValue *val = dynamic_cast<const OperandValue *>(values[i]);
         if (val == (const OperandValue *)0) continue;
         // Certain operands cannot be used in context expressions
@@ -2464,7 +2464,7 @@ void ContextOp::validate(void) const
         // has been recovered. If the offset is not relative to
         // the base constructor, then we throw an error
         if (!val->isConstructorRelative())
-            throw SleighError(val->getName()+": cannot be used in context expression");
+            throw SleighError(val->getName() + ": cannot be used in context expression");
     }
 }
 
@@ -2479,7 +2479,7 @@ void ContextOp::saveXml(ostream &s) const
     s << "</context_op>\n";
 }
 
-void ContextOp::restoreXml(const Element *el,SleighBase *trans)
+void ContextOp::restoreXml(const Element *el, SleighBase *trans)
 
 {
     {
@@ -2500,7 +2500,7 @@ void ContextOp::restoreXml(const Element *el,SleighBase *trans)
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    patexp = (PatternValue *)PatternExpression::restoreExpression(*iter,trans);
+    patexp = (PatternValue *)PatternExpression::restoreExpression(*iter, trans);
     patexp->layClaim();
 }
 
@@ -2515,34 +2515,34 @@ ContextChange *ContextOp::clone(void) const
     return res;
 }
 
-ContextCommit::ContextCommit(TripleSymbol *s,int4 sbit,int4 ebit,bool fl)
+ContextCommit::ContextCommit(TripleSymbol *s, int4 sbit, int4 ebit, bool fl)
 
 {
     sym = s;
     flow = fl;
 
     int4 shift;
-    calc_maskword(sbit,ebit,num,shift,mask);
+    calc_maskword(sbit, ebit, num, shift, mask);
 }
 
 void ContextCommit::apply(ParserWalkerChange &walker) const
 
 {
-    walker.getParserContext()->addCommit(sym,num,mask,flow,walker.getPoint());
+    walker.getParserContext()->addCommit(sym, num, mask, flow, walker.getPoint());
 }
 
 void ContextCommit::saveXml(ostream &s) const
 
 {
     s << "<commit";
-    a_v_u(s,"id",sym->getId());
-    a_v_i(s,"num",num);
-    a_v_u(s,"mask",mask);
-    a_v_b(s,"flow",flow);
+    a_v_u(s, "id", sym->getId());
+    a_v_i(s, "num", num);
+    a_v_u(s, "mask", mask);
+    a_v_b(s, "flow", flow);
     s << "/>\n";
 }
 
-void ContextCommit::restoreXml(const Element *el,SleighBase *trans)
+void ContextCommit::restoreXml(const Element *el, SleighBase *trans)
 
 {
     uintm id;
@@ -2562,7 +2562,7 @@ void ContextCommit::restoreXml(const Element *el,SleighBase *trans)
         s.unsetf(ios::dec | ios::hex | ios::oct);
         s >> mask;
     }
-    if (el->getNumAttributes()==4)
+    if (el->getNumAttributes() == 4)
         flow = xml_readbool(el->getAttributeValue("flow"));
     else
         flow = true;		// Default is to flow.  flow=true

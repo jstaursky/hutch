@@ -35,9 +35,9 @@ void TruncationTag::restoreXml(const Element *el)
 /// \param sz is the size of the space
 /// \param base is the containing space
 /// \param dl is the heritage delay
-SpacebaseSpace::SpacebaseSpace(AddrSpaceManager *m,const Translate *t,const string &nm,int4 ind,int4 sz,
-                               AddrSpace *base,int4 dl)
-    : AddrSpace(m,t,IPTR_SPACEBASE,nm,sz,base->getWordSize(),ind,0,dl)
+SpacebaseSpace::SpacebaseSpace(AddrSpaceManager *m, const Translate *t, const string &nm, int4 ind, int4 sz,
+                               AddrSpace *base, int4 dl)
+    : AddrSpace(m, t, IPTR_SPACEBASE, nm, sz, base->getWordSize(), ind, 0, dl)
 {
     contain = base;
     hasbaseregister = false;	// No base register assigned yet
@@ -49,8 +49,8 @@ SpacebaseSpace::SpacebaseSpace(AddrSpaceManager *m,const Translate *t,const stri
 /// attributes
 /// \param m is the associated address space manager
 /// \param t is the associated processor translator
-SpacebaseSpace::SpacebaseSpace(AddrSpaceManager *m,const Translate *t)
-    : AddrSpace(m,t,IPTR_SPACEBASE)
+SpacebaseSpace::SpacebaseSpace(AddrSpaceManager *m, const Translate *t)
+    : AddrSpace(m, t, IPTR_SPACEBASE)
 {
     hasbaseregister = false;
     isNegativeStack = true;
@@ -62,12 +62,12 @@ SpacebaseSpace::SpacebaseSpace(AddrSpaceManager *m,const Translate *t)
 /// \param data is the location data for the base register
 /// \param truncSize is the size of the space covered by the register
 /// \param stackGrowth is \b true if the stack which this register manages grows in a negative direction
-void SpacebaseSpace::setBaseRegister(const VarnodeData &data,int4 truncSize,bool stackGrowth)
+void SpacebaseSpace::setBaseRegister(const VarnodeData &data, int4 truncSize, bool stackGrowth)
 
 {
     if (hasbaseregister) {
-        if ((baseloc != data)||(isNegativeStack != stackGrowth))
-            throw LowlevelError("Attempt to assign more than one base register to space: "+getName());
+        if ((baseloc != data) || (isNegativeStack != stackGrowth))
+            throw LowlevelError("Attempt to assign more than one base register to space: " + getName());
     }
     hasbaseregister = true;
     isNegativeStack = stackGrowth;
@@ -89,16 +89,16 @@ int4 SpacebaseSpace::numSpacebase(void) const
 const VarnodeData &SpacebaseSpace::getSpacebase(int4 i) const
 
 {
-    if ((!hasbaseregister)||(i!=0))
-        throw LowlevelError("No base register specified for space: "+getName());
+    if ((!hasbaseregister) || (i != 0))
+        throw LowlevelError("No base register specified for space: " + getName());
     return baseloc;
 }
 
 const VarnodeData &SpacebaseSpace::getSpacebaseFull(int4 i) const
 
 {
-    if ((!hasbaseregister)||(i!=0))
-        throw LowlevelError("No base register specified for space: "+getName());
+    if ((!hasbaseregister) || (i != 0))
+        throw LowlevelError("No base register specified for space: " + getName());
     return baseOrig;
 }
 
@@ -107,7 +107,7 @@ void SpacebaseSpace::saveXml(ostream &s) const
 {
     s << "<space_base";
     saveBasicAttributes(s);
-    a_v(s,"contain",contain->getName());
+    a_v(s, "contain", contain->getName());
     s << "/>\n";
 }
 
@@ -124,14 +124,14 @@ void SpacebaseSpace::restoreXml(const Element *el)
 /// \param offset is the offset within \b this range to map
 /// \param pos will hold the passed back piece index
 /// \return the Address mapped to
-Address JoinRecord::getEquivalentAddress(uintb offset,int4 &pos) const
+Address JoinRecord::getEquivalentAddress(uintb offset, int4 &pos) const
 
 {
     if (offset < unified.offset)
         return Address();		// offset comes before this range
     int4 smallOff = (int4)(offset - unified.offset);
     if (pieces[0].space->isBigEndian()) {
-        for(pos=0; pos<pieces.size(); ++pos) {
+        for(pos = 0; pos < pieces.size(); ++pos) {
             int4 pieceSize = pieces[pos].size;
             if (smallOff < pieceSize)
                 break;
@@ -149,7 +149,7 @@ Address JoinRecord::getEquivalentAddress(uintb offset,int4 &pos) const
         if (pos < 0)
             return Address();		// offset comes after this range
     }
-    return Address(pieces[pos].space,pieces[pos].offset + smallOff);
+    return Address(pieces[pos].space, pieces[pos].offset + smallOff);
 }
 
 /// Allow sorting on JoinRecords so that a collection of pieces can be quickly mapped to
@@ -161,12 +161,12 @@ bool JoinRecord::operator<(const JoinRecord &op2) const
     if (unified.size != op2.unified.size) // Compare size first
         return (unified.size < op2.unified.size);
     // Lexigraphic sort on pieces
-    int4 i=0;
+    int4 i = 0;
     for(;;) {
-        if (pieces.size()==i) {
-            return (op2.pieces.size()>i); // If more pieces in op2, it is bigger (return true), if same number this==op2, return false
+        if (pieces.size() == i) {
+            return (op2.pieces.size() > i); // If more pieces in op2, it is bigger (return true), if same number this==op2, return false
         }
-        if (op2.pieces.size()==i) return false; // More pieces in -this-, so it is bigger, return false
+        if (op2.pieces.size() == i) return false; // More pieces in -this-, so it is bigger, return false
         if (pieces[i] != op2.pieces[i])
             return (pieces[i] < op2.pieces[i]);
         i += 1;
@@ -196,21 +196,21 @@ AddrSpaceManager::AddrSpaceManager(void)
 /// \param el is the parsed XML tag
 /// \param trans is the translator object to be associated with the new space
 /// \return a pointer to the initialized AddrSpace
-AddrSpace *AddrSpaceManager::restoreXmlSpace(const Element *el,const Translate *trans)
+AddrSpace *AddrSpaceManager::restoreXmlSpace(const Element *el, const Translate *trans)
 
 {
     AddrSpace *res;
     const string &tp(el->getName());
     if (tp == "space_base")
-        res = new SpacebaseSpace(this,trans);
+        res = new SpacebaseSpace(this, trans);
     else if (tp == "space_unique")
-        res = new UniqueSpace(this,trans);
+        res = new UniqueSpace(this, trans);
     else if (tp == "space_other")
-        res = new OtherSpace(this,trans);
+        res = new OtherSpace(this, trans);
     else if (tp == "space_overlay")
-        res = new OverlaySpace(this,trans);
+        res = new OverlaySpace(this, trans);
     else
-        res = new AddrSpace(this,trans,IPTR_PROCESSOR);
+        res = new AddrSpace(this, trans, IPTR_PROCESSOR);
 
     res->restoreXml(el);
     return res;
@@ -224,24 +224,24 @@ AddrSpace *AddrSpaceManager::restoreXmlSpace(const Element *el,const Translate *
 /// spaces, but this is currently done by the Architecture class.
 /// \param el is the parsed \b \<spaces\> tag
 /// \param trans is the processor translator to be associated with the spaces
-void AddrSpaceManager::restoreXmlSpaces(const Element *el,const Translate *trans)
+void AddrSpaceManager::restoreXmlSpaces(const Element *el, const Translate *trans)
 
 {
     // The first space should always be the constant space
-    insertSpace(new ConstantSpace(this,trans,"const",AddrSpace::constant_space_index));
+    insertSpace(new ConstantSpace(this, trans, "const", AddrSpace::constant_space_index));
 
     string defname(el->getAttributeValue("defaultspace"));
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    while(iter!=list.end()) {
-        AddrSpace *spc = restoreXmlSpace(*iter,trans);
+    while(iter != list.end()) {
+        AddrSpace *spc = restoreXmlSpace(*iter, trans);
         insertSpace(spc);
         ++iter;
     }
     AddrSpace *spc = getSpaceByName(defname);
     if (spc == (AddrSpace *)0)
-        throw LowlevelError("Bad 'defaultspace' attribute: "+defname);
+        throw LowlevelError("Bad 'defaultspace' attribute: " + defname);
     setDefaultCodeSpace(spc->getIndex());
 }
 
@@ -255,7 +255,7 @@ void AddrSpaceManager::setDefaultCodeSpace(int4 index)
 {
     if (defaultcodespace != (AddrSpace *)0)
         throw LowlevelError("Default space set multiple times");
-    if (baselist.size()<=index || baselist[index] == (AddrSpace *)0)
+    if (baselist.size() <= index || baselist[index] == (AddrSpace *)0)
         throw LowlevelError("Bad index for default space");
     defaultcodespace = baselist[index];
     defaultdataspace = defaultcodespace;		// By default the default data space is the same
@@ -269,7 +269,7 @@ void AddrSpaceManager::setDefaultDataSpace(int4 index)
 {
     if (defaultcodespace == (AddrSpace *)0)
         throw LowlevelError("Default data space must be set after the code space");
-    if (baselist.size()<=index || baselist[index] == (AddrSpace *)0)
+    if (baselist.size() <= index || baselist[index] == (AddrSpace *)0)
         throw LowlevelError("Bad index for default data space");
     defaultdataspace = baselist[index];
 }
@@ -354,12 +354,12 @@ void AddrSpaceManager::insertSpace(AddrSpace *spc)
     }
 
     if (baselist.size() <= spc->index)
-        baselist.resize(spc->index+1, (AddrSpace *)0);
+        baselist.resize(spc->index + 1, (AddrSpace *)0);
 
     duplicateId = baselist[spc->index] != (AddrSpace *)0;
 
     if (!nameTypeMismatch && !duplicateName && !duplicateId) {
-        duplicateName = !name2Space.insert(pair<string,AddrSpace *>(spc->getName(),spc)).second;
+        duplicateName = !name2Space.insert(pair<string, AddrSpace *>(spc->getName(), spc)).second;
     }
 
     if (nameTypeMismatch || duplicateName || duplicateId) {
@@ -368,11 +368,11 @@ void AddrSpaceManager::insertSpace(AddrSpace *spc)
         spc = (AddrSpace *)0;
     }
     if (nameTypeMismatch)
-        throw LowlevelError("Space "+spc->getName()+" was initialized with wrong type");
+        throw LowlevelError("Space " + spc->getName() + " was initialized with wrong type");
     if (duplicateName)
-        throw LowlevelError("Space "+spc->getName()+" was initialized more than once");
+        throw LowlevelError("Space " + spc->getName() + " was initialized more than once");
     if (duplicateId)
-        throw LowlevelError("Space "+spc->getName()+" was assigned as id duplicating: "+baselist[spc->index]->getName());
+        throw LowlevelError("Space " + spc->getName() + " was assigned as id duplicating: " + baselist[spc->index]->getName());
     baselist[spc->index] = spc;
     spc->refcount += 1;
     assignShortcut(spc);
@@ -386,7 +386,7 @@ void AddrSpaceManager::copySpaces(const AddrSpaceManager *op2)
 
 {
     // Insert every space in -op2- into -this- manager
-    for(int4 i=0; i<op2->baselist.size(); ++i) {
+    for(int4 i = 0; i < op2->baselist.size(); ++i) {
         AddrSpace *spc = op2->baselist[i];
         if (spc != (AddrSpace *)0)
             insertSpace(spc);
@@ -400,16 +400,16 @@ void AddrSpaceManager::copySpaces(const AddrSpaceManager *op2)
 /// \param ptrdata is the location data for the base register
 /// \param truncSize is the size of the space covered by the base register
 /// \param stackGrowth is true if the stack grows "normally" towards address 0
-void AddrSpaceManager::addSpacebasePointer(SpacebaseSpace *basespace,const VarnodeData &ptrdata,int4 truncSize,bool stackGrowth)
+void AddrSpaceManager::addSpacebasePointer(SpacebaseSpace *basespace, const VarnodeData &ptrdata, int4 truncSize, bool stackGrowth)
 
 {
-    basespace->setBaseRegister(ptrdata,truncSize,stackGrowth);
+    basespace->setBaseRegister(ptrdata, truncSize, stackGrowth);
 }
 
 /// Provide a new specialized resolver for a specific AddrSpace.  The manager takes ownership of resolver.
 /// \param spc is the space to which the resolver is associated
 /// \param rsolv is the new resolver object
-void AddrSpaceManager::insertResolver(AddrSpace *spc,AddressResolver *rsolv)
+void AddrSpaceManager::insertResolver(AddrSpace *spc, AddressResolver *rsolv)
 
 {
     int4 ind = spc->getIndex();
@@ -425,7 +425,7 @@ void AddrSpaceManager::insertResolver(AddrSpace *spc,AddressResolver *rsolv)
 AddrSpaceManager::~AddrSpaceManager(void)
 
 {
-    for(vector<AddrSpace *>::iterator iter=baselist.begin(); iter!=baselist.end(); ++iter) {
+    for(vector<AddrSpace *>::iterator iter = baselist.begin(); iter != baselist.end(); ++iter) {
         AddrSpace *spc = *iter;
         if (spc == (AddrSpace *)0) continue;
         if (spc->refcount > 1)
@@ -433,11 +433,11 @@ AddrSpaceManager::~AddrSpaceManager(void)
         else
             delete spc;
     }
-    for(int4 i=0; i<resolvelist.size(); ++i) {
+    for(int4 i = 0; i < resolvelist.size(); ++i) {
         if (resolvelist[i] != (AddressResolver *)0)
             delete resolvelist[i];
     }
-    for(int4 i=0; i<splitlist.size(); ++i)
+    for(int4 i = 0; i < splitlist.size(); ++i)
         delete splitlist[i];	// Delete any join records
 }
 
@@ -451,7 +451,7 @@ void AddrSpaceManager::assignShortcut(AddrSpace *spc)
 
 {
     if (spc->shortcut != ' ') {	// If the shortcut is already assigned
-        shortcut2Space.insert(pair<int4,AddrSpace *>(spc->shortcut,spc));
+        shortcut2Space.insert(pair<int4, AddrSpace *>(spc->shortcut, spc));
         return;
     }
     char shortcut;
@@ -489,9 +489,9 @@ void AddrSpaceManager::assignShortcut(AddrSpace *spc)
         shortcut += 0x20;
 
     int4 collisionCount = 0;
-    while(!shortcut2Space.insert(pair<int4,AddrSpace *>(shortcut,spc)).second) {
+    while(!shortcut2Space.insert(pair<int4, AddrSpace *>(shortcut, spc)).second) {
         collisionCount += 1;
-        if (collisionCount >26) {
+        if (collisionCount > 26) {
             // Could not find a unique shortcut, but we just re-use 'z' as we
             // can always use the long form to specify the address if there are really so many
             // spaces that need to be distinguishable (in the console mode)
@@ -507,7 +507,7 @@ void AddrSpaceManager::assignShortcut(AddrSpace *spc)
 
 /// \param spc is the AddrSpace to mark
 /// \param size is the (minimum) size of a near pointer in bytes
-void AddrSpaceManager::markNearPointers(AddrSpace *spc,int4 size)
+void AddrSpaceManager::markNearPointers(AddrSpace *spc, int4 size)
 
 {
     spc->setFlags(AddrSpace::has_nearpointers);
@@ -523,7 +523,7 @@ void AddrSpaceManager::markNearPointers(AddrSpace *spc,int4 size)
 AddrSpace *AddrSpaceManager::getSpaceByName(const string &nm) const
 
 {
-    map<string,AddrSpace *>::const_iterator iter = name2Space.find(nm);
+    map<string, AddrSpace *>::const_iterator iter = name2Space.find(nm);
     if (iter == name2Space.end())
         return (AddrSpace *)0;
     return (*iter).second;
@@ -537,7 +537,7 @@ AddrSpace *AddrSpaceManager::getSpaceByName(const string &nm) const
 AddrSpace *AddrSpaceManager::getSpaceByShortcut(char sc) const
 
 {
-    map<int4,AddrSpace *>::const_iterator iter;
+    map<int4, AddrSpace *>::const_iterator iter;
     iter = shortcut2Space.find(sc);
     if (iter == shortcut2Space.end())
         return (AddrSpace *)0;
@@ -558,19 +558,19 @@ AddrSpace *AddrSpaceManager::getSpaceByShortcut(char sc) const
 /// \param point is the context address (for recovering full encoding info if necessary)
 /// \param fullEncoding is used to pass back the recovered full encoding of the pointer
 /// \return the formal Address associated with the encoding
-Address AddrSpaceManager::resolveConstant(AddrSpace *spc,uintb val,int4 sz,const Address &point,uintb &fullEncoding) const
+Address AddrSpaceManager::resolveConstant(AddrSpace *spc, uintb val, int4 sz, const Address &point, uintb &fullEncoding) const
 
 {
     int4 ind = spc->getIndex();
     if (ind < resolvelist.size()) {
         AddressResolver *resolve = resolvelist[ind];
         if (resolve != (AddressResolver *)0)
-            return resolve->resolve(val,sz,point,fullEncoding);
+            return resolve->resolve(val, sz, point, fullEncoding);
     }
     fullEncoding = val;
-    val = AddrSpace::addressToByte(val,spc->getWordSize());
+    val = AddrSpace::addressToByte(val, spc->getWordSize());
     val = spc->wrapOffset(val);
-    return Address(spc,val);
+    return Address(spc, val);
 }
 
 /// Get the next space in the absolute order of addresses.
@@ -600,14 +600,14 @@ AddrSpace *AddrSpaceManager::getNextSpaceInOrder(AddrSpace *spc) const
 /// \param pieces if the list memory locations to be joined
 /// \param logicalsize of a \e single \e piece join, or zero
 /// \return a pointer to the JoinRecord
-JoinRecord *AddrSpaceManager::findAddJoin(const vector<VarnodeData> &pieces,uint4 logicalsize)
+JoinRecord *AddrSpaceManager::findAddJoin(const vector<VarnodeData> &pieces, uint4 logicalsize)
 
 {
     // Find a pre-existing split record, or create a new one corresponding to the input -pieces-
     // If -logicalsize- is 0, calculate logical size as sum of pieces
     if (pieces.size() == 0)
         throw LowlevelError("Cannot create a join without pieces");
-    if ((pieces.size()==1)&&(logicalsize==0))
+    if ((pieces.size() == 1) && (logicalsize == 0))
         throw LowlevelError("Cannot create a single piece join without a logical size");
 
     uint4 totalsize;
@@ -617,7 +617,7 @@ JoinRecord *AddrSpaceManager::findAddJoin(const vector<VarnodeData> &pieces,uint
         totalsize = logicalsize;
     } else {
         totalsize = 0;
-        for(int4 i=0; i<pieces.size(); ++i) // Calculate sum of the sizes of all pieces
+        for(int4 i = 0; i < pieces.size(); ++i) // Calculate sum of the sizes of all pieces
             totalsize += pieces[i].size;
         if (totalsize == 0)
             throw LowlevelError("Cannot create a zero size join");
@@ -627,7 +627,7 @@ JoinRecord *AddrSpaceManager::findAddJoin(const vector<VarnodeData> &pieces,uint
 
     testnode.pieces = pieces;
     testnode.unified.size = totalsize;
-    set<JoinRecord *,JoinRecordCompare>::const_iterator iter;
+    set<JoinRecord *, JoinRecordCompare>::const_iterator iter;
     iter = splitset.find(&testnode);
     if (iter != splitset.end())		// If already in the set
         return *iter;
@@ -654,10 +654,10 @@ JoinRecord *AddrSpaceManager::findAddJoin(const vector<VarnodeData> &pieces,uint
 JoinRecord *AddrSpaceManager::findJoinInternal(uintb offset) const
 
 {
-    int4 min=0;
-    int4 max=splitlist.size()-1;
-    while(min<=max) {		// Binary search
-        int4 mid = (min+max)/2;
+    int4 min = 0;
+    int4 max = splitlist.size() - 1;
+    while(min <= max) {		// Binary search
+        int4 mid = (min + max) / 2;
         JoinRecord *rec = splitlist[mid];
         uintb val = rec->unified.offset;
         if (val + rec->unified.size <= offset)
@@ -678,10 +678,10 @@ JoinRecord *AddrSpaceManager::findJoinInternal(uintb offset) const
 JoinRecord *AddrSpaceManager::findJoin(uintb offset) const
 
 {
-    int4 min=0;
-    int4 max=splitlist.size()-1;
-    while(min<=max) {		// Binary search
-        int4 mid = (min+max)/2;
+    int4 min = 0;
+    int4 max = splitlist.size() - 1;
+    while(min <= max) {		// Binary search
+        int4 mid = (min + max) / 2;
         JoinRecord *rec = splitlist[mid];
         uintb val = rec->unified.offset;
         if (val == offset) return rec;
@@ -697,7 +697,7 @@ JoinRecord *AddrSpaceManager::findJoin(uintb offset) const
 /// for that space.
 /// \param spc is the AddrSpace to change
 /// \param delaydelta is the number of rounds to the delay should be set to
-void AddrSpaceManager::setDeadcodeDelay(AddrSpace *spc,int4 delaydelta)
+void AddrSpaceManager::setDeadcodeDelay(AddrSpace *spc, int4 delaydelta)
 
 {
     spc->deadcodedelay = delaydelta;
@@ -710,7 +710,7 @@ void AddrSpaceManager::truncateSpace(const TruncationTag &tag)
 {
     AddrSpace *spc = getSpaceByName(tag.getName());
     if (spc == (AddrSpace *)0)
-        throw LowlevelError("Unknown space in <truncate_space> command: "+tag.getName());
+        throw LowlevelError("Unknown space in <truncate_space> command: " + tag.getName());
     spc->truncateSpace(tag.getSize());
 }
 
@@ -721,7 +721,7 @@ void AddrSpaceManager::truncateSpace(const TruncationTag &tag)
 /// \param realaddr is the address of the real floating-point register
 /// \param realsize is the size of the real floating-point register
 /// \param logicalsize is the size (lower precision) size of the logical value
-Address AddrSpaceManager::constructFloatExtensionAddress(const Address &realaddr,int4 realsize,
+Address AddrSpaceManager::constructFloatExtensionAddress(const Address &realaddr, int4 realsize,
         int4 logicalsize)
 {
     if (logicalsize == realsize)
@@ -732,7 +732,7 @@ Address AddrSpaceManager::constructFloatExtensionAddress(const Address &realaddr
     pieces.back().offset = realaddr.getOffset();
     pieces.back().size = realsize;
 
-    JoinRecord *join = findAddJoin(pieces,logicalsize);
+    JoinRecord *join = findAddJoin(pieces, logicalsize);
     return join->getUnified().getAddr();
 }
 
@@ -747,30 +747,30 @@ Address AddrSpaceManager::constructFloatExtensionAddress(const Address &realaddr
 /// \param losz is the size of the least significant piece
 /// \return an address representing the start of the joined range
 Address AddrSpaceManager::constructJoinAddress(const Translate *translate,
-        const Address &hiaddr,int4 hisz,
-        const Address &loaddr,int4 losz)
+        const Address &hiaddr, int4 hisz,
+        const Address &loaddr, int4 losz)
 {
     spacetype hitp = hiaddr.getSpace()->getType();
     spacetype lotp = loaddr.getSpace()->getType();
     bool usejoinspace = true;
-    if (((hitp != IPTR_SPACEBASE)&&(hitp != IPTR_PROCESSOR))||
-            ((lotp != IPTR_SPACEBASE)&&(lotp != IPTR_PROCESSOR)))
+    if (((hitp != IPTR_SPACEBASE) && (hitp != IPTR_PROCESSOR)) ||
+            ((lotp != IPTR_SPACEBASE) && (lotp != IPTR_PROCESSOR)))
         throw LowlevelError("Trying to join in appropriate locations");
-    if ((hitp == IPTR_SPACEBASE)||(lotp == IPTR_SPACEBASE)||
-            (hiaddr.getSpace() == getDefaultCodeSpace())||
+    if ((hitp == IPTR_SPACEBASE) || (lotp == IPTR_SPACEBASE) ||
+            (hiaddr.getSpace() == getDefaultCodeSpace()) ||
             (loaddr.getSpace() == getDefaultCodeSpace()))
         usejoinspace = false;
-    if (hiaddr.isContiguous(hisz,loaddr,losz)) { // If we are contiguous
+    if (hiaddr.isContiguous(hisz, loaddr, losz)) { // If we are contiguous
         if (!usejoinspace) { // and in a mappable space, just return the earliest address
             if (hiaddr.isBigEndian())
                 return hiaddr;
             return loaddr;
         } else {			// If we are in a non-mappable (register) space, check to see if a parent register exists
             if (hiaddr.isBigEndian()) {
-                if (translate->getRegisterName(hiaddr.getSpace(),hiaddr.getOffset(),(hisz+losz)).size() != 0)
+                if (translate->getRegisterName(hiaddr.getSpace(), hiaddr.getOffset(), (hisz + losz)).size() != 0)
                     return hiaddr;
             } else {
-                if (translate->getRegisterName(loaddr.getSpace(),loaddr.getOffset(),(hisz+losz)).size() != 0)
+                if (translate->getRegisterName(loaddr.getSpace(), loaddr.getOffset(), (hisz + losz)).size() != 0)
                     return loaddr;
             }
         }
@@ -785,7 +785,7 @@ Address AddrSpaceManager::constructJoinAddress(const Translate *translate,
     pieces[1].space = loaddr.getSpace();
     pieces[1].offset = loaddr.getOffset();
     pieces[1].size = losz;
-    JoinRecord *join = findAddJoin(pieces,0);
+    JoinRecord *join = findAddJoin(pieces, 0);
     return join->getUnified().getAddr();
 }
 
@@ -797,7 +797,7 @@ Address AddrSpaceManager::constructJoinAddress(const Translate *translate,
 /// either to the offset corresponding to the new JoinRecord or to a normal \e non-join Address.
 /// \param addr is the given Address
 /// \param size is the size of the range in bytes
-void AddrSpaceManager::renormalizeJoinAddress(Address &addr,int4 size)
+void AddrSpaceManager::renormalizeJoinAddress(Address &addr, int4 size)
 
 {
     JoinRecord *joinRecord = findJoinInternal(addr.getOffset());
@@ -808,7 +808,7 @@ void AddrSpaceManager::renormalizeJoinAddress(Address &addr,int4 size)
     int4 pos1;
     Address addr1 = joinRecord->getEquivalentAddress(addr.getOffset(), pos1);
     int4 pos2;
-    Address addr2 = joinRecord->getEquivalentAddress(addr.getOffset() + (size-1), pos2);
+    Address addr2 = joinRecord->getEquivalentAddress(addr.getOffset() + (size - 1), pos2);
     if (addr2.isInvalid())
         throw LowlevelError("Join address range not covered");
     if (pos1 == pos2) {
@@ -828,7 +828,7 @@ void AddrSpaceManager::renormalizeJoinAddress(Address &addr,int4 size)
     newPieces.front().size -= sizeTrunc1;
     newPieces.back().size -= sizeTrunc2;
     JoinRecord *newJoinRecord = findAddJoin(newPieces, size);
-    addr = Address(newJoinRecord->unified.space,newJoinRecord->unified.offset);
+    addr = Address(newJoinRecord->unified.space, newJoinRecord->unified.offset);
 }
 
 /// This constructs only a shell for the Translate object.  It
@@ -839,7 +839,7 @@ Translate::Translate(void)
 
 {
     target_isbigendian = false;
-    unique_base=0;
+    unique_base = 0;
     alignment = 1;
 }
 
@@ -866,7 +866,7 @@ const FloatFormat *Translate::getFloatFormat(int4 size) const
 {
     vector<FloatFormat>::const_iterator iter;
 
-    for(iter=floatformats.begin(); iter!=floatformats.end(); ++iter) {
+    for(iter = floatformats.begin(); iter != floatformats.end(); ++iter) {
         if ((*iter).getSize() == size)
             return &(*iter);
     }
@@ -878,7 +878,7 @@ const FloatFormat *Translate::getFloatFormat(int4 size) const
 /// returned to the application via the PcodeEmit::dump method.
 /// \param el is the pcode operation XML tag
 /// \param manage is the AddrSpace manager object of the associated processor
-void PcodeEmit::restoreXmlOp(const Element *el,const AddrSpaceManager *manage)
+void PcodeEmit::restoreXmlOp(const Element *el, const AddrSpaceManager *manage)
 
 {
     // Read a raw pcode op from DOM (and dump it)
@@ -891,12 +891,12 @@ void PcodeEmit::restoreXmlOp(const Element *el,const AddrSpaceManager *manage)
     i >> opcode;
     const List &list(el->getChildren());
     List::const_iterator iter = list.begin();
-    Address pc = Address::restoreXml(*iter,manage);
+    Address pc = Address::restoreXml(*iter, manage);
     ++iter;
     if ((*iter)->getName() == "void")
         outptr = (VarnodeData *)0;
     else {
-        outvar.restoreXml(*iter,manage);
+        outvar.restoreXml(*iter, manage);
         outptr = &outvar;
     }
     ++iter;
@@ -907,29 +907,29 @@ void PcodeEmit::restoreXmlOp(const Element *el,const AddrSpaceManager *manage)
             invar[isize].offset = (uintb)(uintp)manage->getSpaceByName( (*iter)->getAttributeValue("name") );
             invar[isize].size = sizeof(void *);
         } else
-            invar[isize].restoreXml(*iter,manage);
+            invar[isize].restoreXml(*iter, manage);
         isize += 1;
         ++iter;
     }
-    dump(pc,(OpCode)opcode,outptr,invar,isize);
+    dump(pc, (OpCode)opcode, outptr, invar, isize);
 }
 
 /// A Helper function for PcodeEmit::restorePackedOp that reads an unsigned offset from a packed stream
 /// \param ptr is a pointer into a packed byte stream
 /// \param off is where the offset read from the stream is stored
 /// \return a pointer to the next unconsumed byte of the stream
-const uint1 *PcodeEmit::unpackOffset(const uint1 *ptr,uintb &off)
+const uint1 *PcodeEmit::unpackOffset(const uint1 *ptr, uintb &off)
 
 {
     uintb res = 0;
     int4 shift;
-    for(shift=0; shift<67; shift+=6) {
+    for(shift = 0; shift < 67; shift += 6) {
         uint1 val = *ptr++;
         if (val == end_tag) {
             off = res;
             return ptr;
         }
-        uintb bits = ((uintb)(val-0x20))<<shift;
+        uintb bits = ((uintb)(val - 0x20)) << shift;
         res |= bits;
     }
     throw LowlevelError("Bad packed offset");
@@ -940,14 +940,14 @@ const uint1 *PcodeEmit::unpackOffset(const uint1 *ptr,uintb &off)
 /// \param v is the VarnodeData object being filled in by the stream
 /// \param manage is the AddrSpace manager object of the associated processor
 /// \return a pointer to the next unconsumed byte of the stream
-const uint1 *PcodeEmit::unpackVarnodeData(const uint1 *ptr,VarnodeData &v,const AddrSpaceManager *manage)
+const uint1 *PcodeEmit::unpackVarnodeData(const uint1 *ptr, VarnodeData &v, const AddrSpaceManager *manage)
 
 {
     uint1 tag = *ptr++;
     if (tag == addrsz_tag) {
         int4 spcindex = (int4)(*ptr++ - 0x20);
         v.space = manage->getSpace(spcindex);
-        ptr = unpackOffset(ptr,v.offset);
+        ptr = unpackOffset(ptr, v.offset);
         v.size = (uint4)(*ptr++ - 0x20);
     } else if (tag == spaceid_tag) {
         v.space = manage->getConstantSpace();
@@ -966,7 +966,7 @@ const uint1 *PcodeEmit::unpackVarnodeData(const uint1 *ptr,VarnodeData &v,const 
 /// \param ptr is a pointer into a packed byte stream
 /// \param manage is the AddrSpace manager object of the associated processor
 /// \return a pointer to the next unconsumed byte of the stream
-const uint1 *PcodeEmit::restorePackedOp(const Address &addr,const uint1 *ptr,const AddrSpaceManager *manage)
+const uint1 *PcodeEmit::restorePackedOp(const Address &addr, const uint1 *ptr, const AddrSpaceManager *manage)
 
 {
     int4 opcode;
@@ -980,15 +980,15 @@ const uint1 *PcodeEmit::restorePackedOp(const Address &addr,const uint1 *ptr,con
         ptr += 1;
         outptr = (VarnodeData *)0;
     } else {
-        ptr = unpackVarnodeData(ptr,outvar,manage);
+        ptr = unpackVarnodeData(ptr, outvar, manage);
         outptr = &outvar;
     }
     int4 isize = 0;
     while(*ptr != end_tag) {
-        ptr = unpackVarnodeData(ptr,invar[isize],manage);
+        ptr = unpackVarnodeData(ptr, invar[isize], manage);
         isize += 1;
     }
     ptr += 1;			// Consume the end tag
-    dump(addr,(OpCode)opcode,outptr,invar,isize);
+    dump(addr, (OpCode)opcode, outptr, invar, isize);
     return ptr;
 }

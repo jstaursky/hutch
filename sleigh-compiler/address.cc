@@ -16,7 +16,7 @@
 #include "address.hh"
 #include "translate.hh"
 
-ostream &operator<<(ostream &s,const SeqNum &sq)
+ostream &operator<<(ostream &s, const SeqNum &sq)
 
 {
     sq.pc.printRaw(s);
@@ -31,7 +31,7 @@ ostream &operator<<(ostream &s,const SeqNum &sq)
 /// \param s is the stream being written to
 /// \param addr is the Address to write
 /// \return the output stream
-ostream &operator<<(ostream &s,const Address &addr)
+ostream &operator<<(ostream &s, const Address &addr)
 
 {
     addr.printRaw(s);
@@ -48,24 +48,24 @@ void SeqNum::saveXml(ostream &s) const
 
 {
     s << "<seqnum";
-    pc.getSpace()->saveXmlAttributes(s,pc.getOffset());
-    a_v_u(s,"uniq",uniq);
+    pc.getSpace()->saveXmlAttributes(s, pc.getOffset());
+    a_v_u(s, "uniq", uniq);
     s << "/>";
 }
 
-SeqNum SeqNum::restoreXml(const Element *el,const AddrSpaceManager *manage)
+SeqNum SeqNum::restoreXml(const Element *el, const AddrSpaceManager *manage)
 
 {
     uintm uniq = ~((uintm)0);
-    Address pc = Address::restoreXml(el,manage); // Recover address
-    for(int4 i=0; i<el->getNumAttributes(); ++i)
+    Address pc = Address::restoreXml(el, manage); // Recover address
+    for(int4 i = 0; i < el->getNumAttributes(); ++i)
         if (el->getAttributeName(i) == "uniq") {
             istringstream s2(el->getAttributeValue(i)); // Recover unique (if present)
             s2.unsetf(ios::dec | ios::hex | ios::oct);
             s2 >> uniq;
             break;
         }
-    return SeqNum(pc,uniq);
+    return SeqNum(pc, uniq);
 }
 
 /// Some data structures sort on an Address, and it is convenient
@@ -91,7 +91,7 @@ void Address::toPhysical(void)
 
 {
     AddrSpace *phys = base->getContain();
-    if ((phys != (AddrSpace *)0)&&(base->getType()==IPTR_SPACEBASE))
+    if ((phys != (AddrSpace *)0) && (base->getType() == IPTR_SPACEBASE))
         base = phys;
 }
 
@@ -101,13 +101,13 @@ void Address::toPhysical(void)
 /// \param op2 is the start of the second given range
 /// \param sz2 is the number of bytes in the second given range
 /// \return \b true if the second given range contains \b this range
-bool Address::containedBy(int4 sz,const Address &op2,int4 sz2) const
+bool Address::containedBy(int4 sz, const Address &op2, int4 sz2) const
 
 {
     if (base != op2.base) return false;
     if (op2.offset > offset) return false;
-    uintb off1 = offset + (sz-1);
-    uintb off2 = op2.offset + (sz2-1);
+    uintb off1 = offset + (sz - 1);
+    uintb off2 = op2.offset + (sz2 - 1);
     return (off2 >= off1);
 }
 
@@ -122,15 +122,15 @@ bool Address::containedBy(int4 sz,const Address &op2,int4 sz2) const
 /// \param sz2 is the size of the second range
 /// \param forceleft is \b true if containments is forced to be on the left even for big endian
 /// \return the endian aware offset, or -1
-int4 Address::justifiedContain(int4 sz,const Address &op2,int4 sz2,bool forceleft) const
+int4 Address::justifiedContain(int4 sz, const Address &op2, int4 sz2, bool forceleft) const
 
 {
     if (base != op2.base) return -1;
     if (op2.offset < offset) return -1;
-    uintb off1 = offset + (sz-1);
-    uintb off2 = op2.offset + (sz2-1);
+    uintb off1 = offset + (sz - 1);
+    uintb off2 = op2.offset + (sz2 - 1);
     if (off2 > off1) return -1;
-    if (base->isBigEndian()&&(!forceleft)) {
+    if (base->isBigEndian() && (!forceleft)) {
         return (int4)(off1 - off2);
     }
     return (int4)(op2.offset - offset);
@@ -145,15 +145,15 @@ int4 Address::justifiedContain(int4 sz,const Address &op2,int4 sz2,bool forcelef
 /// \param op is the start of the range to check
 /// \param size is the size of the range
 /// \return an integer indicating how overlap occurs
-int4 Address::overlap(int4 skip,const Address &op,int4 size) const
+int4 Address::overlap(int4 skip, const Address &op, int4 size) const
 
 {
     uintb dist;
 
     if (base != op.base) return -1; // Must be in same address space to overlap
-    if (base->getType()==IPTR_CONSTANT) return -1; // Must not be constants
+    if (base->getType() == IPTR_CONSTANT) return -1; // Must not be constants
 
-    dist = base->wrapOffset(offset+skip-op.offset);
+    dist = base->wrapOffset(offset + skip - op.offset);
 
     if (dist >= size) return -1; // but must fall before op+size
     return (int4) dist;
@@ -165,15 +165,15 @@ int4 Address::overlap(int4 skip,const Address &op,int4 size) const
 /// \param loaddr is the starting address of the low region
 /// \param losz is the size of the low region
 /// \return \b true if the pieces form a contiguous whole
-bool Address::isContiguous(int4 sz,const Address &loaddr,int4 losz) const
+bool Address::isContiguous(int4 sz, const Address &loaddr, int4 losz) const
 
 {
     if (base != loaddr.base) return false;
     if (base->isBigEndian()) {
-        uintb nextoff = base->wrapOffset(offset+sz);
+        uintb nextoff = base->wrapOffset(offset + sz);
         if (nextoff == loaddr.offset) return true;
     } else {
-        uintb nextoff = base->wrapOffset(loaddr.offset+losz);
+        uintb nextoff = base->wrapOffset(loaddr.offset + losz);
         if (nextoff == offset) return true;
     }
     return false;
@@ -185,7 +185,7 @@ bool Address::isContiguous(int4 sz,const Address &loaddr,int4 losz) const
 void Address::renormalize(int4 size)
 {
     if (base->getType() == IPTR_JOIN)
-        base->getManager()->renormalizeJoinAddress(*this,size);
+        base->getManager()->renormalizeJoinAddress(*this, size);
 }
 
 /// This is usually used to build an address from an \b \<addr\>
@@ -199,13 +199,13 @@ void Address::renormalize(int4 size)
 /// \param el is the parsed tag
 /// \param manage is the address space manager for the program
 /// \return the resulting Address
-Address Address::restoreXml(const Element *el,const AddrSpaceManager *manage)
+Address Address::restoreXml(const Element *el, const AddrSpaceManager *manage)
 
 {
     VarnodeData var;
 
-    var.restoreXml(el,manage);
-    return Address(var.space,var.offset);
+    var.restoreXml(el, manage);
+    return Address(var.space, var.offset);
 }
 
 /// This is usually used to build an address from an \b \<addr\>
@@ -222,14 +222,14 @@ Address Address::restoreXml(const Element *el,const AddrSpaceManager *manage)
 /// \param manage is the address space manager for the program
 /// \param size is the reference to any recovered size
 /// \return the resulting Address
-Address Address::restoreXml(const Element *el,const AddrSpaceManager *manage,int4 &size)
+Address Address::restoreXml(const Element *el, const AddrSpaceManager *manage, int4 &size)
 
 {
     VarnodeData var;
 
-    var.restoreXml(el,manage);
+    var.restoreXml(el, manage);
     size = var.size;
-    return Address(var.space,var.offset);
+    return Address(var.space, var.offset);
 }
 
 /// Get the last address +1, updating the space, or returning
@@ -247,7 +247,7 @@ Address Range::getLastAddrOpen(const AddrSpaceManager *manage) const
         curlast += 1;
     if (curspc == (AddrSpace *)0)
         return Address(Address::m_maximal);
-    return Address(curspc,curlast);
+    return Address(curspc, curlast);
 }
 
 /// Output a description of this Range like:  ram: 7f-9c
@@ -265,26 +265,26 @@ void Range::saveXml(ostream &s) const
 
 {
     s << "<range";
-    a_v(s,"space",spc->getName());
-    a_v_u(s,"first",first);
-    a_v_u(s,"last",last);
+    a_v(s, "space", spc->getName());
+    a_v_u(s, "first", first);
+    a_v_u(s, "last", last);
     s << "/>\n";
 }
 
 /// Reconstruct this object from an XML \<range> element
 /// \param el is the XML element
 /// \param manage is the space manage for recovering AddrSpace objects
-void Range::restoreXml(const Element *el,const AddrSpaceManager *manage)
+void Range::restoreXml(const Element *el, const AddrSpaceManager *manage)
 
 {
     spc = (AddrSpace *)0;
     first = 0;
     last = ~((uintb)0);
-    for(int4 i=0; i<el->getNumAttributes(); ++i) {
+    for(int4 i = 0; i < el->getNumAttributes(); ++i) {
         if (el->getAttributeName(i) == "space") {
             spc = manage->getSpaceByName(el->getAttributeValue(i));
             if (spc == (AddrSpace *)0)
-                throw LowlevelError("Undefined space: "+el->getAttributeValue(i));
+                throw LowlevelError("Undefined space: " + el->getAttributeValue(i));
         } else if (el->getAttributeName(i) == "first") {
             istringstream s(el->getAttributeValue(i));
             s.unsetf(ios::dec | ios::hex | ios::oct);
@@ -298,7 +298,7 @@ void Range::restoreXml(const Element *el,const AddrSpaceManager *manage)
             const VarnodeData &point(trans->getRegister(el->getAttributeValue(i)));
             spc = point.space;
             first = point.offset;
-            last = (first-1) + point.size;
+            last = (first - 1) + point.size;
             break;		// There should be no (space,first,last) attributes
         }
     }
@@ -311,33 +311,33 @@ void Range::restoreXml(const Element *el,const AddrSpaceManager *manage)
 /// \param spc is the address space containing the new range
 /// \param first is the offset of the first byte in the new range
 /// \param last is the offset of the last byte in the new range
-void RangeList::insertRange(AddrSpace *spc,uintb first,uintb last)
+void RangeList::insertRange(AddrSpace *spc, uintb first, uintb last)
 
 {
-    set<Range>::iterator iter1,iter2;
+    set<Range>::iterator iter1, iter2;
 
     // we must have iter1.first > first
-    iter1 = tree.upper_bound(Range(spc,first,first));
+    iter1 = tree.upper_bound(Range(spc, first, first));
 
     // Set iter1 to first range with range.last >=first
     // It is either current iter1 or the one before
     if (iter1 != tree.begin()) {
         --iter1;
-        if (((*iter1).spc!=spc)||((*iter1).last < first))
+        if (((*iter1).spc != spc) || ((*iter1).last < first))
             ++iter1;
     }
 
     // Set iter2 to first range with range.first > last
-    iter2 = tree.upper_bound(Range(spc,last,last));
+    iter2 = tree.upper_bound(Range(spc, last, last));
 
-    while(iter1!=iter2) {
+    while(iter1 != iter2) {
         if ((*iter1).first < first)
             first = (*iter1).first;
         if ((*iter1).last > last)
             last = (*iter1).last;
         tree.erase(iter1++);
     }
-    tree.insert(Range(spc,first,last));
+    tree.insert(Range(spc, first, last));
 }
 
 /// Remove/narrow/split existing Range objects to eliminate the indicated addresses
@@ -345,38 +345,38 @@ void RangeList::insertRange(AddrSpace *spc,uintb first,uintb last)
 /// \param spc is the address space of the address range to remove
 /// \param first is the offset of the first byte of the range
 /// \param last is the offset of the last byte of the range
-void RangeList::removeRange(AddrSpace *spc,uintb first,uintb last)
+void RangeList::removeRange(AddrSpace *spc, uintb first, uintb last)
 
 {
     // remove a range
-    set<Range>::iterator iter1,iter2;
+    set<Range>::iterator iter1, iter2;
 
     if (tree.empty()) return;	// Nothing to do
 
     // we must have iter1.first > first
-    iter1 = tree.upper_bound(Range(spc,first,first));
+    iter1 = tree.upper_bound(Range(spc, first, first));
 
     // Set iter1 to first range with range.last >=first
     // It is either current iter1 or the one before
     if (iter1 != tree.begin()) {
         --iter1;
-        if (((*iter1).spc!=spc)||((*iter1).last < first))
+        if (((*iter1).spc != spc) || ((*iter1).last < first))
             ++iter1;
     }
 
     // Set iter2 to first range with range.first > last
-    iter2 = tree.upper_bound(Range(spc,last,last));
+    iter2 = tree.upper_bound(Range(spc, last, last));
 
-    while(iter1!=iter2) {
-        uintb a,b;
+    while(iter1 != iter2) {
+        uintb a, b;
 
         a = (*iter1).first;
         b = (*iter1).last;
         tree.erase(iter1++);
-        if (a <first)
-            tree.insert(Range(spc,a,first-1));
+        if (a < first)
+            tree.insert(Range(spc, a, first - 1));
         if (b > last)
-            tree.insert(Range(spc,last+1,b));
+            tree.insert(Range(spc, last + 1, b));
     }
 }
 
@@ -384,7 +384,7 @@ void RangeList::merge(const RangeList &op2)
 
 {
     // Merge -op2- into this rangelist
-    set<Range>::const_iterator iter1,iter2;
+    set<Range>::const_iterator iter1, iter2;
     iter1 = op2.tree.begin();
     iter2 = op2.tree.end();
     while(iter1 != iter2) {
@@ -398,7 +398,7 @@ void RangeList::merge(const RangeList &op2)
 /// \param addr is the first Address in the target range
 /// \param size is the number of bytes in the target range
 /// \return \b true is the range is fully contained by this RangeList
-bool RangeList::inRange(const Address &addr,int4 size) const
+bool RangeList::inRange(const Address &addr, int4 size) const
 
 {
     set<Range>::const_iterator iter;
@@ -407,27 +407,27 @@ bool RangeList::inRange(const Address &addr,int4 size) const
     if (tree.empty()) return false;
 
     // iter = first range with its first > addr
-    iter = tree.upper_bound(Range(addr.getSpace(),addr.getOffset(),addr.getOffset()));
+    iter = tree.upper_bound(Range(addr.getSpace(), addr.getOffset(), addr.getOffset()));
     if (iter == tree.begin()) return false;
     // Set iter to last range with range.first <= addr
     --iter;
     //  if (iter == tree.end())   // iter can't be end if non-empty
     //    return false;
     if ((*iter).spc != addr.getSpace()) return false;
-    if ((*iter).last >= addr.getOffset()+size-1)
+    if ((*iter).last >= addr.getOffset() + size - 1)
         return true;
     return false;
 }
 
 /// If \b this RangeList contains the specific address (spaceid,offset), return it
 /// \return the containing Range or NULL
-const Range *RangeList::getRange(AddrSpace *spaceid,uintb offset) const
+const Range *RangeList::getRange(AddrSpace *spaceid, uintb offset) const
 
 {
     if (tree.empty()) return (const Range *)0;
 
     // iter = first range with its first > offset
-    set<Range>::const_iterator iter = tree.upper_bound(Range(spaceid,offset,offset));
+    set<Range>::const_iterator iter = tree.upper_bound(Range(spaceid, offset, offset));
     if (iter == tree.begin()) return (const Range *)0;
     // Set iter to last range with range.first <= offset
     --iter;
@@ -442,7 +442,7 @@ const Range *RangeList::getRange(AddrSpace *spaceid,uintb offset) const
 /// \param addr is the given address
 /// \param maxsize is the large range to consider before giving up
 /// \return the size (in bytes) of the biggest range
-uintb RangeList::longestFit(const Address &addr,uintb maxsize) const
+uintb RangeList::longestFit(const Address &addr, uintb maxsize) const
 
 {
     set<Range>::const_iterator iter;
@@ -452,7 +452,7 @@ uintb RangeList::longestFit(const Address &addr,uintb maxsize) const
 
     // iter = first range with its first > addr
     uintb offset = addr.getOffset();
-    iter = tree.upper_bound(Range(addr.getSpace(),offset,offset));
+    iter = tree.upper_bound(Range(addr.getSpace(), offset, offset));
     if (iter == tree.begin()) return 0;
     // Set iter to last range with range.first <= addr
     --iter;
@@ -496,17 +496,17 @@ const Range *RangeList::getLastSignedRange(AddrSpace *spaceid) const
 
 {
     uintb midway = spaceid->getHighest() / 2;		// Maximal signed value
-    Range range(spaceid,midway,midway);
+    Range range(spaceid, midway, midway);
     set<Range>::const_iterator iter = tree.upper_bound(range);	// First element greater than -range- (should be MOST negative)
 
-    if (iter!=tree.begin()) {
+    if (iter != tree.begin()) {
         --iter;
         if ((*iter).getSpace() == spaceid)
             return &(*iter);
     }
 
     // If there were no "positive" ranges, search for biggest negative range
-    range = Range(spaceid,spaceid->getHighest(),spaceid->getHighest());
+    range = Range(spaceid, spaceid->getHighest(), spaceid->getHighest());
     iter = tree.upper_bound(range);
     if (iter != tree.begin()) {
         --iter;
@@ -525,7 +525,7 @@ void RangeList::printBounds(ostream &s) const
         s << "all" << endl;
     else {
         set<Range>::const_iterator iter;
-        for(iter=tree.begin(); iter!=tree.end(); ++iter) {
+        for(iter = tree.begin(); iter != tree.end(); ++iter) {
             (*iter).printBounds(s);
             s << endl;
         }
@@ -540,7 +540,7 @@ void RangeList::saveXml(ostream &s) const
     set<Range>::const_iterator iter;
 
     s << "<rangelist>\n";
-    for(iter=tree.begin(); iter!=tree.end(); ++iter) {
+    for(iter = tree.begin(); iter != tree.end(); ++iter) {
         (*iter).saveXml(s);
     }
     s << "</rangelist>\n";
@@ -550,16 +550,16 @@ void RangeList::saveXml(ostream &s) const
 /// in a \<rangelist> tag.
 /// \param el is the XML element
 /// \param manage is manager for retrieving address spaces
-void RangeList::restoreXml(const Element *el,const AddrSpaceManager *manage)
+void RangeList::restoreXml(const Element *el, const AddrSpaceManager *manage)
 
 {
     const List &list(el->getChildren());
     List::const_iterator iter;
 
-    for(iter=list.begin(); iter!=list.end(); ++iter) {
+    for(iter = list.begin(); iter != list.end(); ++iter) {
         const Element *subel = *iter;
         Range range;
-        range.restoreXml(subel,manage);
+        range.restoreXml(subel, manage);
         tree.insert(range);
     }
 }
@@ -576,13 +576,13 @@ uintb uintbmasks[9] = { 0, 0xff, 0xffff, 0xffffff, 0xffffffff, 0xffffffffffLL,
 /// \param val is the given value
 /// \param size is the size in bytes
 /// \return \b true if the constant (as sized) has its sign bit set
-bool signbit_negative(uintb val,int4 size)
+bool signbit_negative(uintb val, int4 size)
 
 {
     // Return true if signbit is set (negative)
     uintb mask = 0x80;
-    mask <<= 8*(size-1);
-    return ((val&mask) != 0);
+    mask <<= 8 * (size - 1);
+    return ((val & mask) != 0);
 }
 
 /// Treat the given \b in as a constant of \b size bytes.
@@ -590,7 +590,7 @@ bool signbit_negative(uintb val,int4 size)
 /// \param in is the given value
 /// \param size is the size in bytes
 /// \return the negation of the sized constant
-uintb uintb_negate(uintb in,int4 size)
+uintb uintb_negate(uintb in, int4 size)
 
 {
     // Invert bits
@@ -603,19 +603,19 @@ uintb uintb_negate(uintb in,int4 size)
 /// \param sizein is the size to treat that value as an input
 /// \param sizeout is the size to sign-extend the value to
 /// \return the sign-extended value
-uintb sign_extend(uintb in,int4 sizein,int4 sizeout)
+uintb sign_extend(uintb in, int4 sizein, int4 sizeout)
 
 {
     int4 signbit;
     uintb mask;
 
-    signbit = sizein*8 - 1;
+    signbit = sizein * 8 - 1;
     in &= calc_mask(sizein);
     if (sizein >= sizeout) return in;
-    if ((in>>signbit) != 0) {
+    if ((in >> signbit) != 0) {
         mask = calc_mask(sizeout);
         uintb tmp = mask << signbit; // Split shift into two pieces
-        tmp = (tmp<<1) & mask;	// In case, everything is shifted out
+        tmp = (tmp << 1) & mask;	// In case, everything is shifted out
         in |= tmp;
     }
     return in;
@@ -624,12 +624,12 @@ uintb sign_extend(uintb in,int4 sizein,int4 sizeout)
 /// Sign extend \b val starting at \b bit
 /// \param val is a reference to the value to be sign-extended
 /// \param bit is the index of the bit to extend from (0=least significant bit)
-void sign_extend(intb &val,int4 bit)
+void sign_extend(intb &val, int4 bit)
 
 {
     intb mask = 0;
-    mask = (~mask)<<bit;
-    if (((val>>bit)&1)!=0)
+    mask = (~mask) << bit;
+    if (((val >> bit) & 1) != 0)
         val |= mask;
     else
         val &= (~mask);
@@ -638,11 +638,11 @@ void sign_extend(intb &val,int4 bit)
 /// Zero extend \b val starting at \b bit
 /// \param val is a reference to the value to be zero extended
 /// \param bit is the index of the bit to extend from (0=least significant bit)
-void zero_extend(intb &val,int4 bit)
+void zero_extend(intb &val, int4 bit)
 
 {
     intb mask = 0;
-    mask = (~mask)<<bit;
+    mask = (~mask) << bit;
     mask <<= 1;
     val &= (~mask);
 }
@@ -650,13 +650,13 @@ void zero_extend(intb &val,int4 bit)
 /// Swap the least significant \b size bytes in \b val
 /// \param val is a reference to the value to swap
 /// \param size is the number of bytes to swap
-void byte_swap(intb &val,int4 size)
+void byte_swap(intb &val, int4 size)
 
 {
     intb res = 0;
-    while(size>0) {
+    while(size > 0) {
         res <<= 8;
-        res |= (val&0xff);
+        res |= (val & 0xff);
         val >>= 8;
         size -= 1;
     }
@@ -667,13 +667,13 @@ void byte_swap(intb &val,int4 size)
 /// \param val is the value to swap
 /// \param size is the number of bytes to swap
 /// \return the swapped value
-uintb byte_swap(uintb val,int4 size)
+uintb byte_swap(uintb val, int4 size)
 
 {
-    uintb res=0;
-    while(size>0) {
+    uintb res = 0;
+    while(size > 0) {
         res <<= 8;
-        res |= (val&0xff);
+        res |= (val & 0xff);
         val >>= 8;
         size -= 1;
     }
@@ -686,18 +686,18 @@ uintb byte_swap(uintb val,int4 size)
 int4 leastsigbit_set(uintb val)
 
 {
-    if (val==0) return -1;
+    if (val == 0) return -1;
     int4 res = 0;
-    int4 sz = 4*sizeof(uintb);
+    int4 sz = 4 * sizeof(uintb);
     uintb mask = ~((uintb)0);
     do {
         mask >>= sz;
-        if ((mask&val)==0) {
+        if ((mask & val) == 0) {
             res += sz;
             val >>= sz;
         }
         sz >>= 1;
-    } while(sz!=0);
+    } while(sz != 0);
     return res;
 }
 
@@ -707,13 +707,13 @@ int4 leastsigbit_set(uintb val)
 int4 mostsigbit_set(uintb val)
 
 {
-    if (val==0) return -1;
-    int4 res = 8*sizeof(uintb)-1;
-    int4 sz = 4*sizeof(uintb);
+    if (val == 0) return -1;
+    int4 res = 8 * sizeof(uintb) - 1;
+    int4 sz = 4 * sizeof(uintb);
     uintb mask = ~((uintb)0);
     do {
         mask <<= sz;
-        if ((mask&val)==0) {
+        if ((mask & val) == 0) {
             res -= sz;
             val <<= sz;
         }
@@ -746,14 +746,14 @@ int4 count_leading_zeros(uintb val)
 
 {
     if (val == 0)
-        return 8*sizeof(uintb);
+        return 8 * sizeof(uintb);
     uintb mask = ~((uintb)0);
-    int4 maskSize = 4*sizeof(uintb);
+    int4 maskSize = 4 * sizeof(uintb);
     mask &= (mask << maskSize);
     int4 bit = 0;
 
     do {
-        if ((mask & val)==0) {
+        if ((mask & val) == 0) {
             bit += maskSize;
             maskSize >>= 1;
             mask |= (mask >> maskSize);
@@ -773,8 +773,8 @@ uintb coveringmask(uintb val)
 {
     uintb res = val;
     int4 sz = 1;
-    while(sz < 8*sizeof(uintb)) {
-        res = res | (res>>sz);
+    while(sz < 8 * sizeof(uintb)) {
+        res = res | (res >> sz);
         sz <<= 1;
     }
     return res;
@@ -786,20 +786,20 @@ uintb coveringmask(uintb val)
 /// \param val is the given value
 /// \param sz is the size to treat the value as
 /// \return the number of transitions
-int4 bit_transitions(uintb val,int4 sz)
+int4 bit_transitions(uintb val, int4 sz)
 
 {
     int4 res = 0;
     int4 last = val & 1;
     int4 cur;
-    for(int4 i=1; i<8*sz; ++i) {
+    for(int4 i = 1; i < 8 * sz; ++i) {
         val >>= 1;
         cur = val & 1;
         if (cur != last) {
             res += 1;
             last = cur;
         }
-        if (val==0) break;
+        if (val == 0) break;
     }
     return res;
 }
@@ -810,7 +810,7 @@ int4 bit_transitions(uintb val,int4 sz)
 /// \param res points to the result array (2 uint8 pieces)
 /// \param x is the first 64-bit value
 /// \param y is the second 64-bit value
-void mult64to128(uint8 *res,uint8 x,uint8 y)
+void mult64to128(uint8 *res, uint8 x, uint8 y)
 
 {
     uint8 f = x & 0xffffffff;
@@ -822,8 +822,8 @@ void mult64to128(uint8 *res,uint8 x,uint8 y)
     uint8 ed = e * d;
     uint8 ec = e * c;
     uint8 tmp = (fd >> 32) + (fc & 0xffffffff) + (ed & 0xffffffff);
-    res[1] = (tmp>>32) + (fc>>32) + (ed>>32) + ec;
-    res[0] = (tmp<<32) + (fd & 0xffffffff);
+    res[1] = (tmp >> 32) + (fc >> 32) + (ed >> 32) + ec;
+    res[0] = (tmp << 32) + (fd & 0xffffffff);
 }
 
 /// \brief Subtract (in-place) a 128-bit value from a base 128-value
@@ -832,7 +832,7 @@ void mult64to128(uint8 *res,uint8 x,uint8 y)
 /// TODO: Remove once we import a full multiprecision library.
 /// \param a is the base 128-bit value being subtracted from in-place
 /// \param b is the other 128-bit value being subtracted
-void unsignedSubtract128(uint8 *a,uint8 *b)
+void unsignedSubtract128(uint8 *a, uint8 *b)
 
 {
     bool borrow = (a[0] < b[0]);
@@ -850,7 +850,7 @@ void unsignedSubtract128(uint8 *a,uint8 *b)
 /// \param a is the first 128-bit value (as an array of 2 uint8 elements)
 /// \param b is the second 128-bit value
 /// \return the comparison code
-int4 unsignedCompare128(uint8 *a,uint8 *b)
+int4 unsignedCompare128(uint8 *a, uint8 *b)
 
 {
     if (a[1] != b[1])
@@ -868,7 +868,7 @@ int4 unsignedCompare128(uint8 *a,uint8 *b)
 /// \param q is the passed back 64-bit quotient
 /// \param r is the passed back 64-bit remainder
 /// \return 0 if successful, 1 if result is too big, 2 if divide by 0
-int4 power2Divide(int4 n,uint8 divisor,uint8 &q,uint8 &r)
+int4 power2Divide(int4 n, uint8 divisor, uint8 &q, uint8 &r)
 
 {
     if (divisor == 0) return 2;
@@ -880,7 +880,7 @@ int4 power2Divide(int4 n,uint8 divisor,uint8 &q,uint8 &r)
         return 0;
     }
     // Divide numerand and divisor by 2^(n-63) to get approximation of result
-    uint8 y = divisor >> (n-64);	// Most of the way on divisor
+    uint8 y = divisor >> (n - 64);	// Most of the way on divisor
     if (y == 0) return 1;		// Check if result will be too big
     y >>= 1;			// Divide divisor by final bit
     power <<= 63;
@@ -889,36 +889,36 @@ int4 power2Divide(int4 n,uint8 divisor,uint8 &q,uint8 &r)
         max = 0;
         max -= 1;			// Could be maximal
         // Check if divisor is a power of 2
-        if ((((uint8)1) << (n-64)) == divisor)
+        if ((((uint8)1) << (n - 64)) == divisor)
             return 1;
     } else
         max = power / y + 1;
-    uint8 min = power / (y+1);
+    uint8 min = power / (y + 1);
     if (min != 0)
         min -= 1;
     uint8 fullpower[2];
-    fullpower[1] = ((uint8)1)<<(n-64);
+    fullpower[1] = ((uint8)1) << (n - 64);
     fullpower[0] = 0;
     uint8 mult[2];
     mult[0] = 0;
     mult[1] = 0;
     uint8 tmpq = 0;
-    while(max > min+1) {
+    while(max > min + 1) {
         tmpq = max + min;
         if (tmpq < min) {
-            tmpq = (tmpq>>1) + 0x8000000000000000L;
+            tmpq = (tmpq >> 1) + 0x8000000000000000L;
         } else
             tmpq >>= 1;
-        mult64to128(mult,divisor,tmpq);
-        if (unsignedCompare128(fullpower,mult) < 0)
-            max = tmpq-1;
+        mult64to128(mult, divisor, tmpq);
+        if (unsignedCompare128(fullpower, mult) < 0)
+            max = tmpq - 1;
         else
             min = tmpq;
     }
     // min is now our putative quotient
     if (tmpq != min)
-        mult64to128(mult,divisor,min);
-    unsignedSubtract128(fullpower,mult); // Calculate remainder
+        mult64to128(mult, divisor, min);
+    unsignedSubtract128(fullpower, mult); // Calculate remainder
     // min might be 1 too small
     if (fullpower[1] != 0 || fullpower[0] >= divisor) {
         q = min + 1;

@@ -16,7 +16,7 @@
 #include "slghpatexpress.hh"
 #include "sleighbase.hh"
 
-int4 TokenPattern::resolveTokens(const TokenPattern &tok1,const TokenPattern &tok2)
+int4 TokenPattern::resolveTokens(const TokenPattern &tok1, const TokenPattern &tok2)
 
 {
     // Use the token lists to decide how the two patterns
@@ -30,12 +30,12 @@ int4 TokenPattern::resolveTokens(const TokenPattern &tok1,const TokenPattern &to
     int4 minsize = tok1.toklist.size() < tok2.toklist.size() ? tok1.toklist.size() : tok2.toklist.size();
     if (minsize == 0) {
         // Check if pattern doesn't care about tokens
-        if ((tok1.toklist.size()==0)&&(tok1.leftellipsis==false)&&(tok1.rightellipsis==false)) {
+        if ((tok1.toklist.size() == 0) && (tok1.leftellipsis == false) && (tok1.rightellipsis == false)) {
             toklist = tok2.toklist;
             leftellipsis = tok2.leftellipsis;
             rightellipsis = tok2.rightellipsis;
             return 0;
-        } else if ((tok2.toklist.size()==0)&&(tok2.leftellipsis==false)&&(tok2.rightellipsis==false)) {
+        } else if ((tok2.toklist.size() == 0) && (tok2.leftellipsis == false) && (tok2.rightellipsis == false)) {
             toklist = tok1.toklist;
             leftellipsis = tok1.leftellipsis;
             rightellipsis = tok1.rightellipsis;
@@ -58,7 +58,7 @@ int4 TokenPattern::resolveTokens(const TokenPattern &tok1,const TokenPattern &to
                 << " != "
                 << dec << minsize;
             throw SleighError(msg.str());
-        } else if (tok1.toklist.size()==tok2.toklist.size())
+        } else if (tok1.toklist.size() == tok2.toklist.size())
             throw SleighError("Pattern size cannot vary (missing '...'?)");
     } else if (tok1.rightellipsis) {
         if (tok2.leftellipsis)
@@ -71,7 +71,7 @@ int4 TokenPattern::resolveTokens(const TokenPattern &tok1,const TokenPattern &to
                 << " != "
                 << dec << minsize;
             throw SleighError(msg.str());
-        } else if (tok1.toklist.size()==tok2.toklist.size())
+        } else if (tok1.toklist.size() == tok2.toklist.size())
             throw SleighError("Pattern size cannot vary (missing '...'?)");
     } else {
         if (tok2.leftellipsis) {
@@ -82,7 +82,7 @@ int4 TokenPattern::resolveTokens(const TokenPattern &tok1,const TokenPattern &to
                     << " != "
                     << dec << minsize;
                 throw SleighError(msg.str());
-            } else if (tok1.toklist.size()==tok2.toklist.size())
+            } else if (tok1.toklist.size() == tok2.toklist.size())
                 throw SleighError("Pattern size cannot vary (missing '...'?)");
         } else if (tok2.rightellipsis) {
             if (tok2.toklist.size() != minsize) {
@@ -91,7 +91,7 @@ int4 TokenPattern::resolveTokens(const TokenPattern &tok1,const TokenPattern &to
                     << " != "
                     << dec << minsize;
                 throw SleighError(msg.str());
-            } else if (tok1.toklist.size()==tok2.toklist.size())
+            } else if (tok1.toklist.size() == tok2.toklist.size())
                 throw SleighError("Pattern size cannot vary (missing '...'?)");
         } else {
             if (tok2.toklist.size() != tok1.toklist.size()) {
@@ -104,26 +104,26 @@ int4 TokenPattern::resolveTokens(const TokenPattern &tok1,const TokenPattern &to
         }
     }
     if (reversedirection) {
-        for(int4 i=0; i<minsize; ++i)
-            if (tok1.toklist[tok1.toklist.size()-1-i] != tok2.toklist[tok2.toklist.size()-1-i]) {
+        for(int4 i = 0; i < minsize; ++i)
+            if (tok1.toklist[tok1.toklist.size() - 1 - i] != tok2.toklist[tok2.toklist.size() - 1 - i]) {
 
                 ostringstream msg;
                 msg << "Mismatched tokens when combining patterns -- "
-                    << dec << tok1.toklist[tok1.toklist.size()-1-i]
+                    << dec << tok1.toklist[tok1.toklist.size() - 1 - i]
                     << " != "
-                    << dec << tok2.toklist[tok2.toklist.size()-1-i];
+                    << dec << tok2.toklist[tok2.toklist.size() - 1 - i];
                 throw SleighError(msg.str());
             }
         if (tok1.toklist.size() <= tok2.toklist.size())
-            for(int4 i=minsize; i<tok2.toklist.size(); ++i)
-                ressa += tok2.toklist[tok2.toklist.size()-1-i]->getSize();
+            for(int4 i = minsize; i < tok2.toklist.size(); ++i)
+                ressa += tok2.toklist[tok2.toklist.size() - 1 - i]->getSize();
         else
-            for(int4 i=minsize; i<tok1.toklist.size(); ++i)
-                ressa += tok1.toklist[tok1.toklist.size()-1-i]->getSize();
+            for(int4 i = minsize; i < tok1.toklist.size(); ++i)
+                ressa += tok1.toklist[tok1.toklist.size() - 1 - i]->getSize();
         if (tok1.toklist.size() < tok2.toklist.size())
             ressa = -ressa;
     } else {
-        for(int4 i=0; i<minsize; ++i)
+        for(int4 i = 0; i < minsize; ++i)
             if (tok1.toklist[i] != tok2.toklist[i]) {
                 ostringstream msg;
                 msg << "Mismatched tokens when combining patterns -- "
@@ -141,7 +141,7 @@ int4 TokenPattern::resolveTokens(const TokenPattern &tok1,const TokenPattern &to
     return ressa;
 }
 
-PatternBlock *TokenPattern::buildSingle(int4 startbit,int4 endbit,uintm byteval)
+PatternBlock *TokenPattern::buildSingle(int4 startbit, int4 endbit, uintm byteval)
 
 {
     // Create a mask/value pattern within a single word
@@ -151,36 +151,36 @@ PatternBlock *TokenPattern::buildSingle(int4 startbit,int4 endbit,uintm byteval)
     // the field's value
     uintm mask;
     int4 offset = 0;
-    int4 size = endbit-startbit+1;
+    int4 size = endbit - startbit + 1;
     while(startbit >= 8) {
         offset += 1;
         startbit -= 8;
         endbit -= 8;
     }
-    mask = (~((uintm)0)) << (sizeof(uintm)*8-size);
-    byteval = (byteval << (sizeof(uintm)*8-size))& mask;
+    mask = (~((uintm)0)) << (sizeof(uintm) * 8 - size);
+    byteval = (byteval << (sizeof(uintm) * 8 - size))& mask;
     mask >>= startbit;
     byteval >>= startbit;
-    return new PatternBlock(offset,mask,byteval);
+    return new PatternBlock(offset, mask, byteval);
 }
 
-PatternBlock *TokenPattern::buildBigBlock(int4 size,int4 bitstart,int4 bitend,intb value)
+PatternBlock *TokenPattern::buildBigBlock(int4 size, int4 bitstart, int4 bitend, intb value)
 
 {
     // Build pattern block given a bigendian contiguous
     // range of bits and a value for those bits
-    int4 tmpstart,startbit,endbit;
-    PatternBlock *tmpblock,*block;
+    int4 tmpstart, startbit, endbit;
+    PatternBlock *tmpblock, *block;
 
-    startbit = 8*size - 1 - bitend;
-    endbit = 8*size - 1 - bitstart;
+    startbit = 8 * size - 1 - bitend;
+    endbit = 8 * size - 1 - bitstart;
 
     block = (PatternBlock *)0;
     while(endbit >= startbit) {
         tmpstart = endbit - (endbit & 7);
         if (tmpstart < startbit)
             tmpstart = startbit;
-        tmpblock = buildSingle(tmpstart,endbit,(uintm)value);
+        tmpblock = buildSingle(tmpstart, endbit, (uintm)value);
         if (block == (PatternBlock *)0)
             block = tmpblock;
         else {
@@ -189,19 +189,19 @@ PatternBlock *TokenPattern::buildBigBlock(int4 size,int4 bitstart,int4 bitend,in
             delete tmpblock;
             block = newblock;
         }
-        value >>= (endbit-tmpstart+1);
+        value >>= (endbit - tmpstart + 1);
         endbit = tmpstart - 1;
     }
     return block;
 }
 
-PatternBlock *TokenPattern::buildLittleBlock(int4 size,int4 bitstart,int4 bitend,intb value)
+PatternBlock *TokenPattern::buildLittleBlock(int4 size, int4 bitstart, int4 bitend, intb value)
 
 {
     // Build pattern block given a littleendian contiguous
     // range of bits and a value for those bits
-    PatternBlock *tmpblock,*block;
-    int4 startbit,endbit;
+    PatternBlock *tmpblock, *block;
+    int4 startbit, endbit;
 
     block = (PatternBlock *)0;
 
@@ -212,21 +212,21 @@ PatternBlock *TokenPattern::buildLittleBlock(int4 size,int4 bitstart,int4 bitend
     // labelling, but not on the lower 3 bits.  So the transform becomes
     // leave the upper bits the same, but transform the lower 3-bit value x into 7-x.
 
-    startbit = (bitstart/8) * 8;	// Get the high-order portion of little/LSB labelling
-    endbit = (bitend/8) * 8;
+    startbit = (bitstart / 8) * 8;	// Get the high-order portion of little/LSB labelling
+    endbit = (bitend / 8) * 8;
     bitend = bitend % 8;		// Get the low-order portion of little/LSB labelling
     bitstart = bitstart % 8;
 
     if (startbit == endbit) {
         startbit += 7 - bitend;
         endbit += 7 - bitstart;
-        block = buildSingle(startbit,endbit,(uintm)value);
+        block = buildSingle(startbit, endbit, (uintm)value);
     } else {
-        block = buildSingle(startbit,startbit+(7-bitstart),(uintm)value);
-        value >>= (8-bitstart);	// Cut off bits we just encoded
+        block = buildSingle(startbit, startbit + (7 - bitstart), (uintm)value);
+        value >>= (8 - bitstart);	// Cut off bits we just encoded
         startbit += 8;
         while(startbit != endbit) {
-            tmpblock = buildSingle(startbit,startbit+7,(uintm)value);
+            tmpblock = buildSingle(startbit, startbit + 7, (uintm)value);
             if (block == (PatternBlock *)0)
                 block = tmpblock;
             else {
@@ -238,7 +238,7 @@ PatternBlock *TokenPattern::buildLittleBlock(int4 size,int4 bitstart,int4 bitend
             value >>= 8;
             startbit += 8;
         }
-        tmpblock = buildSingle(endbit+(7-bitend),endbit+7,(uintm)value);
+        tmpblock = buildSingle(endbit + (7 - bitend), endbit + 7, (uintm)value);
         if (block == (PatternBlock *)0)
             block = tmpblock;
         else {
@@ -277,7 +277,7 @@ TokenPattern::TokenPattern(Token *tok)
     toklist.push_back(tok);
 }
 
-TokenPattern::TokenPattern(Token *tok,intb value,int4 bitstart,int4 bitend)
+TokenPattern::TokenPattern(Token *tok, intb value, int4 bitstart, int4 bitend)
 
 {
     // A basic instruction pattern
@@ -288,22 +288,22 @@ TokenPattern::TokenPattern(Token *tok,intb value,int4 bitstart,int4 bitend)
     PatternBlock *block;
 
     if (tok->isBigEndian())
-        block = buildBigBlock(tok->getSize(),bitstart,bitend,value);
+        block = buildBigBlock(tok->getSize(), bitstart, bitend, value);
     else
-        block = buildLittleBlock(tok->getSize(),bitstart,bitend,value);
+        block = buildLittleBlock(tok->getSize(), bitstart, bitend, value);
     pattern = new InstructionPattern(block);
 }
 
-TokenPattern::TokenPattern(intb value,int4 startbit,int4 endbit)
+TokenPattern::TokenPattern(intb value, int4 startbit, int4 endbit)
 
 {
     // A basic context pattern
     leftellipsis = false;
     rightellipsis = false;
     PatternBlock *block;
-    int4 size = (endbit/8) + 1;
+    int4 size = (endbit / 8) + 1;
 
-    block = buildBigBlock(size,size*8-1-endbit,size*8-1-startbit,value);
+    block = buildBigBlock(size, size * 8 - 1 - endbit, size * 8 - 1 - startbit, value);
     pattern = new ContextPattern(block);
 }
 
@@ -333,9 +333,9 @@ TokenPattern TokenPattern::doAnd(const TokenPattern &tokpat) const
 {
     // Return -this- AND tokpat
     TokenPattern res((Pattern *)0);
-    int4 sa = res.resolveTokens(*this,tokpat);
+    int4 sa = res.resolveTokens(*this, tokpat);
 
-    res.pattern = pattern->doAnd(tokpat.pattern,sa);
+    res.pattern = pattern->doAnd(tokpat.pattern, sa);
     return res;
 }
 
@@ -344,9 +344,9 @@ TokenPattern TokenPattern::doOr(const TokenPattern &tokpat) const
 {
     // Return -this- OR tokpat
     TokenPattern res((Pattern *)0);
-    int4 sa = res.resolveTokens(*this,tokpat);
+    int4 sa = res.resolveTokens(*this, tokpat);
 
-    res.pattern = pattern->doOr(tokpat.pattern,sa);
+    res.pattern = pattern->doOr(tokpat.pattern, sa);
     return res;
 }
 
@@ -360,7 +360,7 @@ TokenPattern TokenPattern::doCat(const TokenPattern &tokpat) const
     res.leftellipsis = leftellipsis;
     res.rightellipsis = rightellipsis;
     res.toklist = toklist;
-    if (rightellipsis||tokpat.leftellipsis) { // Check for interior ellipsis
+    if (rightellipsis || tokpat.leftellipsis) { // Check for interior ellipsis
         if (rightellipsis) {
             if (!tokpat.alwaysInstructionTrue())
                 throw SleighError("Interior ellipsis in pattern");
@@ -375,18 +375,18 @@ TokenPattern TokenPattern::doCat(const TokenPattern &tokpat) const
         sa = 0;
         vector<Token *>::const_iterator iter;
 
-        for(iter=toklist.begin(); iter!=toklist.end(); ++iter)
+        for(iter = toklist.begin(); iter != toklist.end(); ++iter)
             sa += (*iter)->getSize();
-        for(iter=tokpat.toklist.begin(); iter!=tokpat.toklist.end(); ++iter)
+        for(iter = tokpat.toklist.begin(); iter != tokpat.toklist.end(); ++iter)
             res.toklist.push_back(*iter);
         res.rightellipsis = tokpat.rightellipsis;
     }
     if (res.rightellipsis && res.leftellipsis)
         throw SleighError("Double ellipsis in pattern");
     if (sa < 0)
-        res.pattern = pattern->doAnd(tokpat.pattern,0);
+        res.pattern = pattern->doAnd(tokpat.pattern, 0);
     else
-        res.pattern = pattern->doAnd(tokpat.pattern,sa);
+        res.pattern = pattern->doAnd(tokpat.pattern, sa);
     return res;
 }
 
@@ -399,8 +399,8 @@ TokenPattern TokenPattern::commonSubPattern(const TokenPattern &tokpat) const
     int4 i;
     bool reversedirection = false;
 
-    if (leftellipsis||tokpat.leftellipsis) {
-        if (rightellipsis||tokpat.rightellipsis)
+    if (leftellipsis || tokpat.leftellipsis) {
+        if (rightellipsis || tokpat.rightellipsis)
             throw SleighError("Right/left ellipsis in commonSubPattern");
         reversedirection = true;
     }
@@ -416,28 +416,28 @@ TokenPattern TokenPattern::commonSubPattern(const TokenPattern &tokpat) const
         maxnum = tmp;
     }
     if (reversedirection) {
-        for(i=0; i<minnum; ++i) {
-            Token *tok = toklist[toklist.size()-1-i];
-            if (tok == tokpat.toklist[tokpat.toklist.size()-1-i])
-                patres.toklist.insert(patres.toklist.begin(),tok);
+        for(i = 0; i < minnum; ++i) {
+            Token *tok = toklist[toklist.size() - 1 - i];
+            if (tok == tokpat.toklist[tokpat.toklist.size() - 1 - i])
+                patres.toklist.insert(patres.toklist.begin(), tok);
             else
                 break;
         }
-        if (i<maxnum)
+        if (i < maxnum)
             patres.leftellipsis = true;
     } else {
-        for(i=0; i<minnum; ++i) {
+        for(i = 0; i < minnum; ++i) {
             Token *tok = toklist[i];
             if (tok == tokpat.toklist[i])
                 patres.toklist.push_back(tok);
             else
                 break;
         }
-        if (i<maxnum)
+        if (i < maxnum)
             patres.rightellipsis = true;
     }
 
-    patres.pattern = pattern->commonSubPattern(tokpat.pattern,0);
+    patres.pattern = pattern->commonSubPattern(tokpat.pattern, 0);
     return patres;
 }
 
@@ -446,7 +446,7 @@ int4 TokenPattern::getMinimumLength(void) const
 {
     // Add up length of concatenated tokens
     int4 length = 0;
-    for(int4 i=0; i<toklist.size(); ++i)
+    for(int4 i = 0; i < toklist.size(); ++i)
         length += toklist[i]->getSize();
     return length;
 }
@@ -459,7 +459,7 @@ void PatternExpression::release(PatternExpression *p)
         delete p;
 }
 
-PatternExpression *PatternExpression::restoreExpression(const Element *el,Translate *trans)
+PatternExpression *PatternExpression::restoreExpression(const Element *el, Translate *trans)
 
 {
     PatternExpression *res;
@@ -502,38 +502,38 @@ PatternExpression *PatternExpression::restoreExpression(const Element *el,Transl
     else
         return (PatternExpression *)0;
 
-    res->restoreXml(el,trans);
+    res->restoreXml(el, trans);
     return res;
 }
 
-static intb getInstructionBytes(ParserWalker &walker,int4 bytestart,int4 byteend,bool bigendian)
+static intb getInstructionBytes(ParserWalker &walker, int4 bytestart, int4 byteend, bool bigendian)
 
 {
     // Build a intb from the instruction bytes
     intb res = 0;
     uintm tmp;
-    int4 size,tmpsize;
+    int4 size, tmpsize;
 
-    size = byteend-bytestart+1;
+    size = byteend - bytestart + 1;
     tmpsize = size;
     while(tmpsize >= sizeof(uintm)) {
-        tmp = walker.getInstructionBytes(bytestart,sizeof(uintm));
-        res <<= 8*sizeof(uintm);
+        tmp = walker.getInstructionBytes(bytestart, sizeof(uintm));
+        res <<= 8 * sizeof(uintm);
         res |= tmp;
         bytestart += sizeof(uintm);
         tmpsize -= sizeof(uintm);
     }
     if (tmpsize > 0) {
-        tmp = walker.getInstructionBytes(bytestart,tmpsize);
-        res <<= 8*tmpsize;
+        tmp = walker.getInstructionBytes(bytestart, tmpsize);
+        res <<= 8 * tmpsize;
         res |= tmp;
     }
     if (!bigendian)
-        byte_swap(res,size);
+        byte_swap(res, size);
     return res;
 }
 
-static intb getContextBytes(ParserWalker &walker,int4 bytestart,int4 byteend)
+static intb getContextBytes(ParserWalker &walker, int4 bytestart, int4 byteend)
 
 {
     // Build a intb from the context bytes
@@ -541,23 +541,23 @@ static intb getContextBytes(ParserWalker &walker,int4 bytestart,int4 byteend)
     uintm tmp;
     int4 size;
 
-    size = byteend-bytestart+1;
+    size = byteend - bytestart + 1;
     while(size >= sizeof(uintm)) {
-        tmp = walker.getContextBytes(bytestart,sizeof(uintm));
-        res <<= 8*sizeof(uintm);
+        tmp = walker.getContextBytes(bytestart, sizeof(uintm));
+        res <<= 8 * sizeof(uintm);
         res |= tmp;
         bytestart += sizeof(uintm);
-        size = byteend-bytestart+1;
+        size = byteend - bytestart + 1;
     }
     if (size > 0) {
-        tmp = walker.getContextBytes(bytestart,size);
-        res <<= 8*size;
+        tmp = walker.getContextBytes(bytestart, size);
+        res <<= 8 * size;
         res |= tmp;
     }
     return res;
 }
 
-TokenField::TokenField(Token *tk,bool s,int4 bstart,int4 bend)
+TokenField::TokenField(Token *tk, bool s, int4 bstart, int4 bend)
 
 {
     tok = tk;
@@ -566,11 +566,11 @@ TokenField::TokenField(Token *tk,bool s,int4 bstart,int4 bend)
     bitstart = bstart;
     bitend = bend;
     if (tk->isBigEndian()) {
-        byteend = (tk->getSize()*8 - bitstart - 1)/8;
-        bytestart = (tk->getSize()*8 - bitend - 1)/8;
+        byteend = (tk->getSize() * 8 - bitstart - 1) / 8;
+        bytestart = (tk->getSize() * 8 - bitend - 1) / 8;
     } else {
-        bytestart = bitstart/8;
-        byteend = bitend/8;
+        bytestart = bitstart / 8;
+        byteend = bitend / 8;
     }
     shift = bitstart % 8;
 }
@@ -579,13 +579,13 @@ intb TokenField::getValue(ParserWalker &walker) const
 
 {
     // Construct value given specific instruction stream
-    intb res = getInstructionBytes(walker,bytestart,byteend,bigendian);
+    intb res = getInstructionBytes(walker, bytestart, byteend, bigendian);
 
     res >>= shift;
     if (signbit)
-        sign_extend(res,bitend-bitstart);
+        sign_extend(res, bitend - bitstart);
     else
-        zero_extend(res,bitend-bitstart);
+        zero_extend(res, bitend - bitstart);
     return res;
 }
 
@@ -594,7 +594,7 @@ TokenPattern TokenField::genPattern(intb val) const
 {
     // Generate corresponding pattern if the
     // value is forced to be val
-    return TokenPattern(tok,val,bitstart,bitend);
+    return TokenPattern(tok, val, bitstart, bitend);
 }
 
 void TokenField::saveXml(ostream &s) const
@@ -618,7 +618,7 @@ void TokenField::saveXml(ostream &s) const
     s << " shift=\"" << shift << "\"/>\n";
 }
 
-void TokenField::restoreXml(const Element *el,Translate *trans)
+void TokenField::restoreXml(const Element *el, Translate *trans)
 
 {
     tok = (Token *)0;
@@ -651,33 +651,33 @@ void TokenField::restoreXml(const Element *el,Translate *trans)
     }
 }
 
-ContextField::ContextField(bool s,int4 sbit,int4 ebit)
+ContextField::ContextField(bool s, int4 sbit, int4 ebit)
 
 {
     signbit = s;
     startbit = sbit;
     endbit = ebit;
-    startbyte = startbit/8;
-    endbyte = endbit/8;
-    shift = 7 - (endbit%8);
+    startbyte = startbit / 8;
+    endbyte = endbit / 8;
+    shift = 7 - (endbit % 8);
 }
 
 intb ContextField::getValue(ParserWalker &walker) const
 
 {
-    intb res = getContextBytes(walker,startbyte,endbyte);
+    intb res = getContextBytes(walker, startbyte, endbyte);
     res >>= shift;
     if (signbit)
-        sign_extend(res,endbit-startbit);
+        sign_extend(res, endbit - startbit);
     else
-        zero_extend(res,endbit-startbit);
+        zero_extend(res, endbit - startbit);
     return res;
 }
 
 TokenPattern ContextField::genPattern(intb val) const
 
 {
-    return TokenPattern(val,startbit,endbit);
+    return TokenPattern(val, startbit, endbit);
 }
 
 void ContextField::saveXml(ostream &s) const
@@ -696,7 +696,7 @@ void ContextField::saveXml(ostream &s) const
     s << " shift=\"" << shift << "\"/>\n";
 }
 
-void ContextField::restoreXml(const Element *el,Translate *trans)
+void ContextField::restoreXml(const Element *el, Translate *trans)
 
 {
     signbit = xml_readbool(el->getAttributeValue("signbit"));
@@ -733,7 +733,7 @@ void ConstantValue::saveXml(ostream &s) const
     s << "<intb val=\"" << dec << val << "\"/>\n";
 }
 
-void ConstantValue::restoreXml(const Element *el,Translate *trans)
+void ConstantValue::restoreXml(const Element *el, Translate *trans)
 
 {
     istringstream s(el->getAttributeValue("val"));
@@ -784,23 +784,23 @@ intb OperandValue::getValue(ParserWalker &walker) const
     }
     ConstructState tempstate;
     ParserWalker newwalker(walker.getParserContext());
-    newwalker.setOutOfBandState(ct,index,&tempstate,walker);
+    newwalker.setOutOfBandState(ct, index, &tempstate, walker);
     intb res = patexp->getValue(newwalker);
     return res;
 }
 
-intb OperandValue::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb OperandValue::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
     OperandSymbol *sym = ct->getOperand(index);
-    return sym->getDefiningExpression()->getSubValue(replace,listpos);
+    return sym->getDefiningExpression()->getSubValue(replace, listpos);
 }
 
 bool OperandValue::isConstructorRelative(void) const
 
 {
     OperandSymbol *sym = ct->getOperand(index);
-    return (sym->getOffsetBase()==-1);
+    return (sym->getOffsetBase() == -1);
 }
 
 const string &OperandValue::getName(void) const
@@ -819,10 +819,10 @@ void OperandValue::saveXml(ostream &s) const
     s << " ct=\"0x" << ct->getId() << "\"/>\n"; // Save id of our constructor
 }
 
-void OperandValue::restoreXml(const Element *el,Translate *trans)
+void OperandValue::restoreXml(const Element *el, Translate *trans)
 
 {
-    uintm ctid,tabid;
+    uintm ctid, tabid;
     {
         istringstream s(el->getAttributeValue("index"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
@@ -843,11 +843,11 @@ void OperandValue::restoreXml(const Element *el,Translate *trans)
     ct = tab->getConstructor(ctid);
 }
 
-BinaryExpression::BinaryExpression(PatternExpression *l,PatternExpression *r)
+BinaryExpression::BinaryExpression(PatternExpression *l, PatternExpression *r)
 
 {
-    (left=l)->layClaim();
-    (right=r)->layClaim();
+    (left = l)->layClaim();
+    (right = r)->layClaim();
 }
 
 BinaryExpression::~BinaryExpression(void)
@@ -868,15 +868,15 @@ void BinaryExpression::saveXml(ostream &s) const
     right->saveXml(s);
 }
 
-void BinaryExpression::restoreXml(const Element *el,Translate *trans)
+void BinaryExpression::restoreXml(const Element *el, Translate *trans)
 
 {
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    left = PatternExpression::restoreExpression(*iter,trans);
+    left = PatternExpression::restoreExpression(*iter, trans);
     ++iter;
-    right = PatternExpression::restoreExpression(*iter,trans);
+    right = PatternExpression::restoreExpression(*iter, trans);
     left->layClaim();
     right->layClaim();
 }
@@ -884,7 +884,7 @@ void BinaryExpression::restoreXml(const Element *el,Translate *trans)
 UnaryExpression::UnaryExpression(PatternExpression *u)
 
 {
-    (unary=u)->layClaim();
+    (unary = u)->layClaim();
 }
 
 UnaryExpression::~UnaryExpression(void)
@@ -902,13 +902,13 @@ void UnaryExpression::saveXml(ostream &s) const
     unary->saveXml(s);
 }
 
-void UnaryExpression::restoreXml(const Element *el,Translate *trans)
+void UnaryExpression::restoreXml(const Element *el, Translate *trans)
 
 {
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    unary = PatternExpression::restoreExpression(*iter,trans);
+    unary = PatternExpression::restoreExpression(*iter, trans);
     unary->layClaim();
 }
 
@@ -920,11 +920,11 @@ intb PlusExpression::getValue(ParserWalker &walker) const
     return leftval + rightval;
 }
 
-intb PlusExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb PlusExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb leftval = getLeft()->getSubValue(replace,listpos); // Must be left first
-    intb rightval = getRight()->getSubValue(replace,listpos);
+    intb leftval = getLeft()->getSubValue(replace, listpos); // Must be left first
+    intb rightval = getRight()->getSubValue(replace, listpos);
     return leftval + rightval;
 }
 
@@ -944,11 +944,11 @@ intb SubExpression::getValue(ParserWalker &walker) const
     return leftval - rightval;
 }
 
-intb SubExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb SubExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb leftval = getLeft()->getSubValue(replace,listpos); // Must be left first
-    intb rightval = getRight()->getSubValue(replace,listpos);
+    intb leftval = getLeft()->getSubValue(replace, listpos); // Must be left first
+    intb rightval = getRight()->getSubValue(replace, listpos);
     return leftval - rightval;
 }
 
@@ -968,11 +968,11 @@ intb MultExpression::getValue(ParserWalker &walker) const
     return leftval * rightval;
 }
 
-intb MultExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb MultExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb leftval = getLeft()->getSubValue(replace,listpos); // Must be left first
-    intb rightval = getRight()->getSubValue(replace,listpos);
+    intb leftval = getLeft()->getSubValue(replace, listpos); // Must be left first
+    intb rightval = getRight()->getSubValue(replace, listpos);
     return leftval * rightval;
 }
 
@@ -992,11 +992,11 @@ intb LeftShiftExpression::getValue(ParserWalker &walker) const
     return leftval << rightval;
 }
 
-intb LeftShiftExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb LeftShiftExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb leftval = getLeft()->getSubValue(replace,listpos); // Must be left first
-    intb rightval = getRight()->getSubValue(replace,listpos);
+    intb leftval = getLeft()->getSubValue(replace, listpos); // Must be left first
+    intb rightval = getRight()->getSubValue(replace, listpos);
     return leftval << rightval;
 }
 
@@ -1016,11 +1016,11 @@ intb RightShiftExpression::getValue(ParserWalker &walker) const
     return leftval >> rightval;
 }
 
-intb RightShiftExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb RightShiftExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb leftval = getLeft()->getSubValue(replace,listpos); // Must be left first
-    intb rightval = getRight()->getSubValue(replace,listpos);
+    intb leftval = getLeft()->getSubValue(replace, listpos); // Must be left first
+    intb rightval = getRight()->getSubValue(replace, listpos);
     return leftval >> rightval;
 }
 
@@ -1040,11 +1040,11 @@ intb AndExpression::getValue(ParserWalker &walker) const
     return leftval & rightval;
 }
 
-intb AndExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb AndExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb leftval = getLeft()->getSubValue(replace,listpos); // Must be left first
-    intb rightval = getRight()->getSubValue(replace,listpos);
+    intb leftval = getLeft()->getSubValue(replace, listpos); // Must be left first
+    intb rightval = getRight()->getSubValue(replace, listpos);
     return leftval & rightval;
 }
 
@@ -1064,11 +1064,11 @@ intb OrExpression::getValue(ParserWalker &walker) const
     return leftval | rightval;
 }
 
-intb OrExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb OrExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb leftval = getLeft()->getSubValue(replace,listpos); // Must be left first
-    intb rightval = getRight()->getSubValue(replace,listpos);
+    intb leftval = getLeft()->getSubValue(replace, listpos); // Must be left first
+    intb rightval = getRight()->getSubValue(replace, listpos);
     return leftval | rightval;
 }
 
@@ -1088,11 +1088,11 @@ intb XorExpression::getValue(ParserWalker &walker) const
     return leftval ^ rightval;
 }
 
-intb XorExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb XorExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb leftval = getLeft()->getSubValue(replace,listpos); // Must be left first
-    intb rightval = getRight()->getSubValue(replace,listpos);
+    intb leftval = getLeft()->getSubValue(replace, listpos); // Must be left first
+    intb rightval = getRight()->getSubValue(replace, listpos);
     return leftval ^ rightval;
 }
 
@@ -1112,11 +1112,11 @@ intb DivExpression::getValue(ParserWalker &walker) const
     return leftval / rightval;
 }
 
-intb DivExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb DivExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb leftval = getLeft()->getSubValue(replace,listpos); // Must be left first
-    intb rightval = getRight()->getSubValue(replace,listpos);
+    intb leftval = getLeft()->getSubValue(replace, listpos); // Must be left first
+    intb rightval = getRight()->getSubValue(replace, listpos);
     return leftval / rightval;
 }
 
@@ -1135,10 +1135,10 @@ intb MinusExpression::getValue(ParserWalker &walker) const
     return -val;
 }
 
-intb MinusExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb MinusExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb val = getUnary()->getSubValue(replace,listpos);
+    intb val = getUnary()->getSubValue(replace, listpos);
     return -val;
 }
 
@@ -1157,10 +1157,10 @@ intb NotExpression::getValue(ParserWalker &walker) const
     return ~val;
 }
 
-intb NotExpression::getSubValue(const vector<intb> &replace,int4 &listpos) const
+intb NotExpression::getSubValue(const vector<intb> &replace, int4 &listpos) const
 
 {
-    intb val = getUnary()->getSubValue(replace,listpos);
+    intb val = getUnary()->getSubValue(replace, listpos);
     return ~val;
 }
 
@@ -1172,13 +1172,13 @@ void NotExpression::saveXml(ostream &s) const
     s << "</not_exp>\n";
 }
 
-static bool advance_combo(vector<intb> &val,const vector<intb> &min,vector<intb> &max)
+static bool advance_combo(vector<intb> &val, const vector<intb> &min, vector<intb> &max)
 
 {
     int4 i;
 
     i = 0;
-    while(i<val.size()) {
+    while(i < val.size()) {
         val[i] += 1;
         if (val[i] <= max[i])	// maximum is inclusive
             return true;
@@ -1188,13 +1188,13 @@ static bool advance_combo(vector<intb> &val,const vector<intb> &min,vector<intb>
     return false;
 }
 
-static TokenPattern buildPattern(PatternValue *lhs,intb lhsval,vector<const PatternValue *> &semval,
+static TokenPattern buildPattern(PatternValue *lhs, intb lhsval, vector<const PatternValue *> &semval,
                                  vector<intb> &val)
 
 {
     TokenPattern respattern = lhs->genPattern(lhsval);
 
-    for(int4 i=0; i<semval.size(); ++i)
+    for(int4 i = 0; i < semval.size(); ++i)
         respattern = respattern.doAnd(semval[i]->genPattern(val[i]));
     return respattern;
 }
@@ -1231,7 +1231,7 @@ bool OperandEquation::resolveOperandLeft(OperandResolve &state) const
     return true;
 }
 
-void OperandEquation::operandOrder(Constructor *ct,vector<OperandSymbol *> &order) const
+void OperandEquation::operandOrder(Constructor *ct, vector<OperandSymbol *> &order) const
 
 {
     OperandSymbol *sym = ct->getOperand(index);
@@ -1244,7 +1244,7 @@ void OperandEquation::operandOrder(Constructor *ct,vector<OperandSymbol *> &orde
 UnconstrainedEquation::UnconstrainedEquation(PatternExpression *p)
 
 {
-    (patex=p)->layClaim();
+    (patex = p)->layClaim();
 }
 
 UnconstrainedEquation::~UnconstrainedEquation(void)
@@ -1263,18 +1263,18 @@ bool UnconstrainedEquation::resolveOperandLeft(OperandResolve &state) const
 
 {
     state.cur_rightmost = -1;
-    if (resultpattern.getLeftEllipsis()||resultpattern.getRightEllipsis()) // don't know length
+    if (resultpattern.getLeftEllipsis() || resultpattern.getRightEllipsis()) // don't know length
         state.size = -1;
     else
         state.size = resultpattern.getMinimumLength();
     return true;
 }
 
-ValExpressEquation::ValExpressEquation(PatternValue *l,PatternExpression *r)
+ValExpressEquation::ValExpressEquation(PatternValue *l, PatternExpression *r)
 
 {
-    (lhs=l)->layClaim();
-    (rhs=r)->layClaim();
+    (lhs = l)->layClaim();
+    (rhs = r)->layClaim();
 }
 
 ValExpressEquation::~ValExpressEquation(void)
@@ -1288,7 +1288,7 @@ bool ValExpressEquation::resolveOperandLeft(OperandResolve &state) const
 
 {
     state.cur_rightmost = -1;
-    if (resultpattern.getLeftEllipsis()||resultpattern.getRightEllipsis()) // don't know length
+    if (resultpattern.getLeftEllipsis() || resultpattern.getRightEllipsis()) // don't know length
         state.size = -1;
     else
         state.size = resultpattern.getMinimumLength();
@@ -1304,22 +1304,22 @@ void EqualEquation::genPattern(const vector<TokenPattern> &ops) const
     vector<intb> min;
     vector<intb> max;
     vector<intb> cur;
-    int4 count=0;
+    int4 count = 0;
 
     rhs->listValues(semval);
-    rhs->getMinMax(min,max);
+    rhs->getMinMax(min, max);
     cur = min;
 
     do {
         intb val = rhs->getSubValue(cur);
-        if ((val>=lhsmin)&&(val<=lhsmax)) {
-            if (count==0)
-                resultpattern = buildPattern(lhs,val,semval,cur);
+        if ((val >= lhsmin) && (val <= lhsmax)) {
+            if (count == 0)
+                resultpattern = buildPattern(lhs, val, semval, cur);
             else
-                resultpattern = resultpattern.doOr(buildPattern(lhs,val,semval,cur));
+                resultpattern = resultpattern.doOr(buildPattern(lhs, val, semval, cur));
             count += 1;
         }
-    } while(advance_combo(cur,min,max));
+    } while(advance_combo(cur, min, max));
     if (count == 0)
         throw SleighError("Equal constraint is impossible to match");
 }
@@ -1333,24 +1333,24 @@ void NotEqualEquation::genPattern(const vector<TokenPattern> &ops) const
     vector<intb> min;
     vector<intb> max;
     vector<intb> cur;
-    int4 count=0;
+    int4 count = 0;
 
     rhs->listValues(semval);
-    rhs->getMinMax(min,max);
+    rhs->getMinMax(min, max);
     cur = min;
 
     do {
         intb lhsval;
         intb val = rhs->getSubValue(cur);
-        for(lhsval=lhsmin; lhsval<=lhsmax; ++lhsval) {
+        for(lhsval = lhsmin; lhsval <= lhsmax; ++lhsval) {
             if (lhsval == val) continue;
-            if (count==0)
-                resultpattern = buildPattern(lhs,lhsval,semval,cur);
+            if (count == 0)
+                resultpattern = buildPattern(lhs, lhsval, semval, cur);
             else
-                resultpattern = resultpattern.doOr(buildPattern(lhs,lhsval,semval,cur));
+                resultpattern = resultpattern.doOr(buildPattern(lhs, lhsval, semval, cur));
             count += 1;
         }
-    } while(advance_combo(cur,min,max));
+    } while(advance_combo(cur, min, max));
     if (count == 0)
         throw SleighError("Notequal constraint is impossible to match");
 }
@@ -1364,24 +1364,24 @@ void LessEquation::genPattern(const vector<TokenPattern> &ops) const
     vector<intb> min;
     vector<intb> max;
     vector<intb> cur;
-    int4 count=0;
+    int4 count = 0;
 
     rhs->listValues(semval);
-    rhs->getMinMax(min,max);
+    rhs->getMinMax(min, max);
     cur = min;
 
     do {
         intb lhsval;
         intb val = rhs->getSubValue(cur);
-        for(lhsval=lhsmin; lhsval<=lhsmax; ++lhsval) {
+        for(lhsval = lhsmin; lhsval <= lhsmax; ++lhsval) {
             if (lhsval >= val) continue;
-            if (count==0)
-                resultpattern = buildPattern(lhs,lhsval,semval,cur);
+            if (count == 0)
+                resultpattern = buildPattern(lhs, lhsval, semval, cur);
             else
-                resultpattern = resultpattern.doOr(buildPattern(lhs,lhsval,semval,cur));
+                resultpattern = resultpattern.doOr(buildPattern(lhs, lhsval, semval, cur));
             count += 1;
         }
-    } while(advance_combo(cur,min,max));
+    } while(advance_combo(cur, min, max));
     if (count == 0)
         throw SleighError("Less than constraint is impossible to match");
 }
@@ -1395,24 +1395,24 @@ void LessEqualEquation::genPattern(const vector<TokenPattern> &ops) const
     vector<intb> min;
     vector<intb> max;
     vector<intb> cur;
-    int4 count=0;
+    int4 count = 0;
 
     rhs->listValues(semval);
-    rhs->getMinMax(min,max);
+    rhs->getMinMax(min, max);
     cur = min;
 
     do {
         intb lhsval;
         intb val = rhs->getSubValue(cur);
-        for(lhsval=lhsmin; lhsval<=lhsmax; ++lhsval) {
+        for(lhsval = lhsmin; lhsval <= lhsmax; ++lhsval) {
             if (lhsval > val) continue;
-            if (count==0)
-                resultpattern = buildPattern(lhs,lhsval,semval,cur);
+            if (count == 0)
+                resultpattern = buildPattern(lhs, lhsval, semval, cur);
             else
-                resultpattern = resultpattern.doOr(buildPattern(lhs,lhsval,semval,cur));
+                resultpattern = resultpattern.doOr(buildPattern(lhs, lhsval, semval, cur));
             count += 1;
         }
-    } while(advance_combo(cur,min,max));
+    } while(advance_combo(cur, min, max));
     if (count == 0)
         throw SleighError("Less than or equal constraint is impossible to match");
 }
@@ -1426,24 +1426,24 @@ void GreaterEquation::genPattern(const vector<TokenPattern> &ops) const
     vector<intb> min;
     vector<intb> max;
     vector<intb> cur;
-    int4 count=0;
+    int4 count = 0;
 
     rhs->listValues(semval);
-    rhs->getMinMax(min,max);
+    rhs->getMinMax(min, max);
     cur = min;
 
     do {
         intb lhsval;
         intb val = rhs->getSubValue(cur);
-        for(lhsval=lhsmin; lhsval<=lhsmax; ++lhsval) {
+        for(lhsval = lhsmin; lhsval <= lhsmax; ++lhsval) {
             if (lhsval <= val) continue;
-            if (count==0)
-                resultpattern = buildPattern(lhs,lhsval,semval,cur);
+            if (count == 0)
+                resultpattern = buildPattern(lhs, lhsval, semval, cur);
             else
-                resultpattern = resultpattern.doOr(buildPattern(lhs,lhsval,semval,cur));
+                resultpattern = resultpattern.doOr(buildPattern(lhs, lhsval, semval, cur));
             count += 1;
         }
-    } while(advance_combo(cur,min,max));
+    } while(advance_combo(cur, min, max));
     if (count == 0)
         throw SleighError("Greater than constraint is impossible to match");
 }
@@ -1457,33 +1457,33 @@ void GreaterEqualEquation::genPattern(const vector<TokenPattern> &ops) const
     vector<intb> min;
     vector<intb> max;
     vector<intb> cur;
-    int4 count=0;
+    int4 count = 0;
 
     rhs->listValues(semval);
-    rhs->getMinMax(min,max);
+    rhs->getMinMax(min, max);
     cur = min;
 
     do {
         intb lhsval;
         intb val = rhs->getSubValue(cur);
-        for(lhsval=lhsmin; lhsval<=lhsmax; ++lhsval) {
+        for(lhsval = lhsmin; lhsval <= lhsmax; ++lhsval) {
             if (lhsval < val) continue;
-            if (count==0)
-                resultpattern = buildPattern(lhs,lhsval,semval,cur);
+            if (count == 0)
+                resultpattern = buildPattern(lhs, lhsval, semval, cur);
             else
-                resultpattern = resultpattern.doOr(buildPattern(lhs,lhsval,semval,cur));
+                resultpattern = resultpattern.doOr(buildPattern(lhs, lhsval, semval, cur));
             count += 1;
         }
-    } while(advance_combo(cur,min,max));
+    } while(advance_combo(cur, min, max));
     if (count == 0)
         throw SleighError("Greater than or equal constraint is impossible to match");
 }
 
-EquationAnd::EquationAnd(PatternEquation *l,PatternEquation *r)
+EquationAnd::EquationAnd(PatternEquation *l, PatternEquation *r)
 
 {
-    (left=l)->layClaim();
-    (right=r)->layClaim();
+    (left = l)->layClaim();
+    (right = r)->layClaim();
 }
 
 EquationAnd::~EquationAnd(void)
@@ -1508,31 +1508,31 @@ bool EquationAnd::resolveOperandLeft(OperandResolve &state) const
     int4 cur_size = -1;		//   or size traversed since rightmost
     bool res = right->resolveOperandLeft(state);
     if (!res) return false;
-    if ((state.cur_rightmost != -1)&&(state.size != -1)) {
+    if ((state.cur_rightmost != -1) && (state.size != -1)) {
         cur_rightmost = state.cur_rightmost;
         cur_size = state.size;
     }
     res = left->resolveOperandLeft(state);
     if (!res) return false;
-    if ((state.cur_rightmost == -1)||(state.size == -1)) {
+    if ((state.cur_rightmost == -1) || (state.size == -1)) {
         state.cur_rightmost = cur_rightmost;
         state.size = cur_size;
     }
     return true;
 }
 
-void EquationAnd::operandOrder(Constructor *ct,vector<OperandSymbol *> &order) const
+void EquationAnd::operandOrder(Constructor *ct, vector<OperandSymbol *> &order) const
 
 {
-    left->operandOrder(ct,order);	// List operands left
-    right->operandOrder(ct,order); //  to right
+    left->operandOrder(ct, order);	// List operands left
+    right->operandOrder(ct, order); //  to right
 }
 
-EquationOr::EquationOr(PatternEquation *l,PatternEquation *r)
+EquationOr::EquationOr(PatternEquation *l, PatternEquation *r)
 
 {
-    (left=l)->layClaim();
-    (right=r)->layClaim();
+    (left = l)->layClaim();
+    (right = r)->layClaim();
 }
 
 EquationOr::~EquationOr(void)
@@ -1557,31 +1557,31 @@ bool EquationOr::resolveOperandLeft(OperandResolve &state) const
     int4 cur_size = -1;		//   or size traversed since rightmost
     bool res = right->resolveOperandLeft(state);
     if (!res) return false;
-    if ((state.cur_rightmost != -1)&&(state.size != -1)) {
+    if ((state.cur_rightmost != -1) && (state.size != -1)) {
         cur_rightmost = state.cur_rightmost;
         cur_size = state.size;
     }
     res = left->resolveOperandLeft(state);
     if (!res) return false;
-    if ((state.cur_rightmost == -1)||(state.size == -1)) {
+    if ((state.cur_rightmost == -1) || (state.size == -1)) {
         state.cur_rightmost = cur_rightmost;
         state.size = cur_size;
     }
     return true;
 }
 
-void EquationOr::operandOrder(Constructor *ct,vector<OperandSymbol *> &order) const
+void EquationOr::operandOrder(Constructor *ct, vector<OperandSymbol *> &order) const
 
 {
-    left->operandOrder(ct,order);	// List operands left
-    right->operandOrder(ct,order); //  to right
+    left->operandOrder(ct, order);	// List operands left
+    right->operandOrder(ct, order); //  to right
 }
 
-EquationCat::EquationCat(PatternEquation *l,PatternEquation *r)
+EquationCat::EquationCat(PatternEquation *l, PatternEquation *r)
 
 {
-    (left=l)->layClaim();
-    (right=r)->layClaim();
+    (left = l)->layClaim();
+    (right = r)->layClaim();
 }
 
 EquationCat::~EquationCat(void)
@@ -1606,7 +1606,7 @@ bool EquationCat::resolveOperandLeft(OperandResolve &state) const
     if (!res) return false;
     int4 cur_base = state.base;
     int4 cur_offset = state.offset;
-    if ((!left->getTokenPattern().getLeftEllipsis())&&(!left->getTokenPattern().getRightEllipsis())) {
+    if ((!left->getTokenPattern().getLeftEllipsis()) && (!left->getTokenPattern().getRightEllipsis())) {
         // Keep the same base
         state.offset += left->getTokenPattern().getMinimumLength(); // But add to its size
     } else if (state.cur_rightmost != -1) {
@@ -1624,7 +1624,7 @@ bool EquationCat::resolveOperandLeft(OperandResolve &state) const
     state.base = cur_base;	// Restore base and offset
     state.offset = cur_offset;
     if (state.cur_rightmost == -1) {
-        if ((state.size != -1)&&(cur_rightmost != -1)&&(cur_size != -1)) {
+        if ((state.size != -1) && (cur_rightmost != -1) && (cur_size != -1)) {
             state.cur_rightmost = cur_rightmost;
             state.size += cur_size;
         }
@@ -1632,11 +1632,11 @@ bool EquationCat::resolveOperandLeft(OperandResolve &state) const
     return true;
 }
 
-void EquationCat::operandOrder(Constructor *ct,vector<OperandSymbol *> &order) const
+void EquationCat::operandOrder(Constructor *ct, vector<OperandSymbol *> &order) const
 
 {
-    left->operandOrder(ct,order);	// List operands left
-    right->operandOrder(ct,order); //  to right
+    left->operandOrder(ct, order);	// List operands left
+    right->operandOrder(ct, order); //  to right
 }
 
 void EquationLeftEllipsis::genPattern(const vector<TokenPattern> &ops) const
@@ -1659,10 +1659,10 @@ bool EquationLeftEllipsis::resolveOperandLeft(OperandResolve &state) const
     return true;
 }
 
-void EquationLeftEllipsis::operandOrder(Constructor *ct,vector<OperandSymbol *> &order) const
+void EquationLeftEllipsis::operandOrder(Constructor *ct, vector<OperandSymbol *> &order) const
 
 {
-    eq->operandOrder(ct,order);	// List operands
+    eq->operandOrder(ct, order);	// List operands
 }
 
 void EquationRightEllipsis::genPattern(const vector<TokenPattern> &ops) const
@@ -1682,8 +1682,8 @@ bool EquationRightEllipsis::resolveOperandLeft(OperandResolve &state) const
     return true;
 }
 
-void EquationRightEllipsis::operandOrder(Constructor *ct,vector<OperandSymbol *> &order) const
+void EquationRightEllipsis::operandOrder(Constructor *ct, vector<OperandSymbol *> &order) const
 
 {
-    eq->operandOrder(ct,order);	// List operands
+    eq->operandOrder(ct, order);	// List operands
 }

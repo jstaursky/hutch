@@ -36,11 +36,11 @@ void SleighBase::buildXrefs(vector<string> &errorPairs)
     SleighSymbol *sym;
     ostringstream s;
 
-    for(iter=glb->begin(); iter!=glb->end(); ++iter) {
+    for(iter = glb->begin(); iter != glb->end(); ++iter) {
         sym = *iter;
         if (sym->getType() == SleighSymbol::varnode_symbol) {
-            pair<VarnodeData,string> ins(((VarnodeSymbol *)sym)->getFixedVarnode(),sym->getName());
-            pair<map<VarnodeData,string>::iterator,bool> res = varnode_xref.insert(ins);
+            pair<VarnodeData, string> ins(((VarnodeSymbol *)sym)->getFixedVarnode(), sym->getName());
+            pair<map<VarnodeData, string>::iterator, bool> res = varnode_xref.insert(ins);
             if (!res.second) {
                 errorPairs.push_back(sym->getName());
                 errorPairs.push_back((*(res.first)).second);
@@ -55,7 +55,7 @@ void SleighBase::buildXrefs(vector<string> &errorPairs)
             ContextField *field = (ContextField *)csym->getPatternValue();
             int4 startbit = field->getStartBit();
             int4 endbit = field->getEndBit();
-            registerContext(csym->getName(),startbit,endbit);
+            registerContext(csym->getName(), startbit, endbit);
         }
     }
 }
@@ -68,22 +68,22 @@ void SleighBase::reregisterContext(void)
     SymbolScope *glb = symtab.getGlobalScope();
     SymbolTree::const_iterator iter;
     SleighSymbol *sym;
-    for(iter=glb->begin(); iter!=glb->end(); ++iter) {
+    for(iter = glb->begin(); iter != glb->end(); ++iter) {
         sym = *iter;
         if (sym->getType() == SleighSymbol::context_symbol) {
             ContextSymbol *csym = (ContextSymbol *)sym;
             ContextField *field = (ContextField *)csym->getPatternValue();
             int4 startbit = field->getStartBit();
             int4 endbit = field->getEndBit();
-            registerContext(csym->getName(),startbit,endbit);
+            registerContext(csym->getName(), startbit, endbit);
         }
     }
 }
 
-void SleighBase::addRegister(const string &nm,AddrSpace *base,uintb offset,int4 size)
+void SleighBase::addRegister(const string &nm, AddrSpace *base, uintb offset, int4 size)
 
 {
-    VarnodeSymbol *sym = new VarnodeSymbol(nm,base,offset,size);
+    VarnodeSymbol *sym = new VarnodeSymbol(nm, base, offset, size);
     symtab.addSymbol(sym);
 }
 
@@ -92,39 +92,39 @@ const VarnodeData &SleighBase::getRegister(const string &nm) const
 {
     VarnodeSymbol *sym = (VarnodeSymbol *)findSymbol(nm);
     if (sym == (VarnodeSymbol *)0)
-        throw SleighError("Unknown register name: "+nm);
+        throw SleighError("Unknown register name: " + nm);
     if (sym->getType() != SleighSymbol::varnode_symbol)
-        throw SleighError("Symbol is not a register: "+nm);
+        throw SleighError("Symbol is not a register: " + nm);
     return sym->getFixedVarnode();
 }
 
-string SleighBase::getRegisterName(AddrSpace *base,uintb off,int4 size) const
+string SleighBase::getRegisterName(AddrSpace *base, uintb off, int4 size) const
 
 {
     VarnodeData sym;
     sym.space = base;
     sym.offset = off;
     sym.size = size;
-    map<VarnodeData,string>::const_iterator iter = varnode_xref.upper_bound(sym); // First point greater than offset
+    map<VarnodeData, string>::const_iterator iter = varnode_xref.upper_bound(sym); // First point greater than offset
     if (iter == varnode_xref.begin()) return "";
     iter--;
     const VarnodeData &point((*iter).first);
     if (point.space != base) return "";
     uintb offbase = point.offset;
-    if (point.offset+point.size >= off+size)
+    if (point.offset + point.size >= off + size)
         return (*iter).second;
 
     while(iter != varnode_xref.begin()) {
         --iter;
         const VarnodeData &point((*iter).first);
-        if ((point.space != base)||(point.offset != offbase)) return "";
-        if (point.offset+point.size >= off+size)
+        if ((point.space != base) || (point.offset != offbase)) return "";
+        if (point.offset + point.size >= off + size)
             return (*iter).second;
     }
     return "";
 }
 
-void SleighBase::getAllRegisters(map<VarnodeData,string> &reglist) const
+void SleighBase::getAllRegisters(map<VarnodeData, string> &reglist) const
 
 {
     reglist = varnode_xref;
@@ -142,28 +142,28 @@ void SleighBase::saveXml(ostream &s) const
 
 {
     s << "<sleigh";
-    a_v_i(s,"version",SLA_FORMAT_VERSION);
-    a_v_b(s,"bigendian",isBigEndian());
-    a_v_i(s,"align",alignment);
-    a_v_u(s,"uniqbase",getUniqueBase());
+    a_v_i(s, "version", SLA_FORMAT_VERSION);
+    a_v_b(s, "bigendian", isBigEndian());
+    a_v_i(s, "align", alignment);
+    a_v_u(s, "uniqbase", getUniqueBase());
     if (maxdelayslotbytes > 0)
-        a_v_u(s,"maxdelay",maxdelayslotbytes);
+        a_v_u(s, "maxdelay", maxdelayslotbytes);
     if (unique_allocatemask != 0)
-        a_v_u(s,"uniqmask",unique_allocatemask);
+        a_v_u(s, "uniqmask", unique_allocatemask);
     if (numSections != 0)
-        a_v_u(s,"numsections",numSections);
+        a_v_u(s, "numsections", numSections);
     s << ">\n";
 
     s << "<spaces";
-    a_v(s,"defaultspace",getDefaultCodeSpace()->getName());
+    a_v(s, "defaultspace", getDefaultCodeSpace()->getName());
     s << ">\n";
-    for(int4 i=0; i<numSpaces(); ++i) {
+    for(int4 i = 0; i < numSpaces(); ++i) {
         AddrSpace *spc = getSpace(i);
         if (spc == (AddrSpace *)0) continue;
-        if ((spc->getType()==IPTR_CONSTANT) ||
-                (spc->getType()==IPTR_FSPEC)||
-                (spc->getType()==IPTR_IOP)||
-                (spc->getType()==IPTR_JOIN))
+        if ((spc->getType() == IPTR_CONSTANT) ||
+                (spc->getType() == IPTR_FSPEC) ||
+                (spc->getType() == IPTR_IOP) ||
+                (spc->getType() == IPTR_JOIN))
             continue;
         spc->saveXml(s);
     }
@@ -196,7 +196,7 @@ void SleighBase::restoreXml(const Element *el)
         setUniqueBase(ubase);
     }
     int4 numattr = el->getNumAttributes();
-    for(int4 i=0; i<numattr; ++i) {
+    for(int4 i = 0; i < numattr; ++i) {
         const string &attrname( el->getAttributeName(i) );
         if (attrname == "maxdelay") {
             istringstream s1(el->getAttributeValue(i));
@@ -226,9 +226,9 @@ void SleighBase::restoreXml(const Element *el)
         floatformats.back().restoreXml(*iter);
         ++iter;
     }
-    restoreXmlSpaces(*iter,this);
+    restoreXmlSpaces(*iter, this);
     iter++;
-    symtab.restoreXml(*iter,this);
+    symtab.restoreXml(*iter, this);
     root = (SubtableSymbol *)symtab.getGlobalScope()->findSymbol("instruction");
     vector<string> errorPairs;
     buildXrefs(errorPairs);

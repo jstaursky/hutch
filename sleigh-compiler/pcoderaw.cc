@@ -19,20 +19,20 @@
 /// Build this VarnodeData from an \b \<addr\> tag
 /// \param el is the parsed tag
 /// \param manage is the address space manager
-void VarnodeData::restoreXml(const Element *el,const AddrSpaceManager *manage)
+void VarnodeData::restoreXml(const Element *el, const AddrSpaceManager *manage)
 
 {
     space = (AddrSpace *)0;
     size = 0;
     int4 num = el->getNumAttributes();
-    for(int4 i=0; i<num; ++i) {
-        if (el->getAttributeName(i)=="space") {
+    for(int4 i = 0; i < num; ++i) {
+        if (el->getAttributeName(i) == "space") {
             space = manage->getSpaceByName(el->getAttributeValue(i));
             if (space == (AddrSpace *)0)
-                throw LowlevelError("Unknown space name: "+el->getAttributeValue(i));
-            offset = space->restoreXmlAttributes(el,size);
+                throw LowlevelError("Unknown space name: " + el->getAttributeValue(i));
+            offset = space->restoreXmlAttributes(el, size);
             return;
-        } else if (el->getAttributeName(i)=="name") {
+        } else if (el->getAttributeName(i) == "name") {
             const Translate *trans = manage->getDefaultCodeSpace()->getTrans();
             const VarnodeData &point(trans->getRegister(el->getAttributeValue(i)));
             *this = point;
@@ -49,6 +49,6 @@ bool VarnodeData::contains(const VarnodeData &op2) const
 {
     if (space != op2.space) return false;
     if (op2.offset < offset) return false;
-    if ((offset + (size-1)) < (op2.offset + (op2.size-1))) return false;
+    if ((offset + (size - 1)) < (op2.offset + (op2.size - 1))) return false;
     return true;
 }

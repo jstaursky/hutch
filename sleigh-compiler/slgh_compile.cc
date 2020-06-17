@@ -25,7 +25,7 @@ extern FILE *yyin;		// Global pointer to file for lexer
 extern int yyparse(void);
 extern int yylex_destroy(void);
 
-static VarnodeTpl *find_size(const ConstTpl &offset,const ConstructTpl *ct)
+static VarnodeTpl *find_size(const ConstTpl &offset, const ConstructTpl *ct)
 
 {
     // Find a defining instance of the local variable
@@ -34,16 +34,16 @@ static VarnodeTpl *find_size(const ConstTpl &offset,const ConstructTpl *ct)
     VarnodeTpl *vn;
     OpTpl *op;
 
-    for(int4 i=0; i<ops.size(); ++i) {
+    for(int4 i = 0; i < ops.size(); ++i) {
         op = ops[i];
         vn = op->getOut();
-        if ((vn!=(VarnodeTpl *)0)&&(vn->isLocalTemp())) {
+        if ((vn != (VarnodeTpl *)0) && (vn->isLocalTemp())) {
             if (vn->getOffset() == offset)
                 return vn;
         }
-        for(int4 j=0; j<op->numInput(); ++j) {
+        for(int4 j = 0; j < op->numInput(); ++j) {
             vn = op->getIn(j);
-            if (vn->isLocalTemp()&&(vn->getOffset()==offset))
+            if (vn->isLocalTemp() && (vn->getOffset() == offset))
                 return vn;
         }
     }
@@ -59,19 +59,19 @@ static bool force_exportsize(ConstructTpl *ct)
 
     VarnodeTpl *vt;
 
-    if (result->getPtrSpace().isUniqueSpace()&&result->getPtrSize().isZero()) {
-        vt = find_size(result->getPtrOffset(),ct);
+    if (result->getPtrSpace().isUniqueSpace() && result->getPtrSize().isZero()) {
+        vt = find_size(result->getPtrOffset(), ct);
         if (vt == (VarnodeTpl *)0) return false;
         result->setPtrSize(vt->getSize());
-    } else if (result->getSpace().isUniqueSpace()&&result->getSize().isZero()) {
-        vt = find_size(result->getPtrOffset(),ct);
+    } else if (result->getSpace().isUniqueSpace() && result->getSize().isZero()) {
+        vt = find_size(result->getPtrOffset(), ct);
         if (vt == (VarnodeTpl *)0) return false;
         result->setSize(vt->getSize());
     }
     return true;
 }
 
-SectionVector::SectionVector(ConstructTpl *rtl,SymbolScope *scope)
+SectionVector::SectionVector(ConstructTpl *rtl, SymbolScope *scope)
 
 {
     nextindex = -1;
@@ -79,12 +79,12 @@ SectionVector::SectionVector(ConstructTpl *rtl,SymbolScope *scope)
     main.scope = scope;
 }
 
-void SectionVector::append(ConstructTpl *rtl,SymbolScope *scope)
+void SectionVector::append(ConstructTpl *rtl, SymbolScope *scope)
 
 {
     while(named.size() <= nextindex)
         named.push_back(RtlPair());
-    named[ nextindex ] = RtlPair(rtl,scope);
+    named[ nextindex ] = RtlPair(rtl, scope);
 }
 
 SpaceQuality::SpaceQuality(const string &nm)
@@ -98,7 +98,7 @@ SpaceQuality::SpaceQuality(const string &nm)
     isdefault = false;
 }
 
-FieldQuality::FieldQuality(string *nm,uintb *l,uintb *h)
+FieldQuality::FieldQuality(string *nm, uintb *l, uintb *h)
 
 {
     name = *nm;
@@ -120,7 +120,7 @@ void WithBlock::set(SubtableSymbol *s, PatternEquation *pq, vector<ContextChange
     if (pateq != (PatternEquation *)0)
         pateq->layClaim();
     if (cvec != (vector<ContextChange *> *)0) {
-        for(int4 i=0; i<cvec->size(); ++i)
+        for(int4 i = 0; i < cvec->size(); ++i)
             contvec.push_back((*cvec)[i]);	// Lay claim to -cvec-s pointers, we don't clone
         delete cvec;
     }
@@ -131,7 +131,7 @@ WithBlock::~WithBlock(void)
 {
     if (pateq != (PatternEquation *)0)
         PatternEquation::release(pateq);
-    for(int4 i=0; i<contvec.size(); ++i) {
+    for(int4 i = 0; i < contvec.size(); ++i) {
         delete contvec[i];
     }
 }
@@ -140,7 +140,7 @@ PatternEquation *WithBlock::collectAndPrependPattern(const list<WithBlock> &stac
 
 {
     list<WithBlock>::const_iterator iter;
-    for(iter=stack.begin(); iter!=stack.end(); ++iter) {
+    for(iter = stack.begin(); iter != stack.end(); ++iter) {
         PatternEquation *witheq = (*iter).pateq;
         if (witheq != (PatternEquation *)0)
             pateq = new EquationAnd(witheq, pateq);
@@ -154,12 +154,12 @@ vector<ContextChange *> *WithBlock::collectAndPrependContext(const list<WithBloc
     // Make new list of ContextChanges, prepending everything from stack to -contvec-, delete old contvec
     vector<ContextChange *> *res = (vector<ContextChange *> *)0;
     list<WithBlock>::const_iterator iter;
-    for(iter=stack.begin(); iter!=stack.end(); ++iter) {
+    for(iter = stack.begin(); iter != stack.end(); ++iter) {
         const vector<ContextChange *> &changelist( (*iter).contvec );
         if (changelist.size() == 0) continue;
         if (res == (vector<ContextChange *> *)0)
             res = new vector<ContextChange *>();
-        for(int4 i=0; i<changelist.size(); ++i) {
+        for(int4 i = 0; i < changelist.size(); ++i) {
             res->push_back(changelist[i]->clone());
         }
     }
@@ -167,7 +167,7 @@ vector<ContextChange *> *WithBlock::collectAndPrependContext(const list<WithBloc
         if (contvec->size() != 0) {
             if (res == (vector<ContextChange *> *)0)
                 res = new vector<ContextChange *>();
-            for(int4 i=0; i<contvec->size(); ++i)
+            for(int4 i = 0; i < contvec->size(); ++i)
                 res->push_back((*contvec)[i]);		// lay claim to contvecs pointer
         }
         delete contvec;
@@ -179,14 +179,14 @@ SubtableSymbol *WithBlock::getCurrentSubtable(const list<WithBlock> &stack)
 
 {
     list<WithBlock>::const_iterator iter;
-    for(iter=stack.begin(); iter!=stack.end(); ++iter) {
+    for(iter = stack.begin(); iter != stack.end(); ++iter) {
         if ((*iter).ss != (SubtableSymbol *)0)
             return (*iter).ss;
     }
     return (SubtableSymbol *)0;
 }
 
-ConsistencyChecker::ConsistencyChecker(SleighCompile *sleigh,SubtableSymbol *rt,bool un,bool warndead)
+ConsistencyChecker::ConsistencyChecker(SleighCompile *sleigh, SubtableSymbol *rt, bool un, bool warndead)
 
 {
     compiler = sleigh;
@@ -198,13 +198,13 @@ ConsistencyChecker::ConsistencyChecker(SleighCompile *sleigh,SubtableSymbol *rt,
     printdeadwarning = warndead;
 }
 
-int4 ConsistencyChecker::recoverSize(const ConstTpl &sizeconst,Constructor *ct)
+int4 ConsistencyChecker::recoverSize(const ConstTpl &sizeconst, Constructor *ct)
 
 {
-    int4 size,handindex;
+    int4 size, handindex;
     OperandSymbol *opsym;
     SubtableSymbol *tabsym;
-    map<SubtableSymbol *,int4>::const_iterator iter;
+    map<SubtableSymbol *, int4>::const_iterator iter;
 
     switch(sizeconst.getType()) {
     case ConstTpl::real:
@@ -230,7 +230,7 @@ int4 ConsistencyChecker::recoverSize(const ConstTpl &sizeconst,Constructor *ct)
     return size;
 }
 
-void ConsistencyChecker::dealWithUnnecessaryExt(OpTpl *op,Constructor *ct)
+void ConsistencyChecker::dealWithUnnecessaryExt(OpTpl *op, Constructor *ct)
 
 {
     // Deal with detected extension (SEXT or ZEXT) where the
@@ -238,20 +238,20 @@ void ConsistencyChecker::dealWithUnnecessaryExt(OpTpl *op,Constructor *ct)
     if (printextwarning) {
         ostringstream msg;
         msg << "Unnecessary ";
-        printOpName(msg,op);
+        printOpName(msg, op);
         compiler->reportWarning(compiler->getLocation(ct), msg.str());
     }
     op->setOpcode(CPUI_COPY);	// Equivalent to copy
     unnecessarypcode += 1;
 }
 
-void ConsistencyChecker::dealWithUnnecessaryTrunc(OpTpl *op,Constructor *ct)
+void ConsistencyChecker::dealWithUnnecessaryTrunc(OpTpl *op, Constructor *ct)
 
 {
     if (printextwarning) {
         ostringstream msg;
         msg << "Unnecessary ";
-        printOpName(msg,op);
+        printOpName(msg, op);
         compiler->reportWarning(compiler->getLocation(ct), msg.str());
     }
     op->setOpcode(CPUI_COPY);	// Equivalent to copy
@@ -259,7 +259,7 @@ void ConsistencyChecker::dealWithUnnecessaryTrunc(OpTpl *op,Constructor *ct)
     unnecessarypcode += 1;
 }
 
-bool ConsistencyChecker::checkOpMisuse(OpTpl *op,Constructor *ct)
+bool ConsistencyChecker::checkOpMisuse(OpTpl *op, Constructor *ct)
 
 {
     switch(op->getOpcode()) {
@@ -276,12 +276,12 @@ bool ConsistencyChecker::checkOpMisuse(OpTpl *op,Constructor *ct)
     return true;
 }
 
-bool ConsistencyChecker::sizeRestriction(OpTpl *op,Constructor *ct)
+bool ConsistencyChecker::sizeRestriction(OpTpl *op, Constructor *ct)
 
 {
     // Make sure op template meets size restrictions
     // Return false and any info about mismatched sizes
-    int4 vnout,vn0,vn1;
+    int4 vnout, vn0, vn1;
     AddrSpace *spc;
 
     switch(op->getOpcode()) {
@@ -294,19 +294,19 @@ bool ConsistencyChecker::sizeRestriction(OpTpl *op,Constructor *ct)
     case CPUI_FLOAT_CEIL:
     case CPUI_FLOAT_FLOOR:
     case CPUI_FLOAT_ROUND:
-        vnout = recoverSize(op->getOut()->getSize(),ct);
+        vnout = recoverSize(op->getOut()->getSize(), ct);
         if (vnout == -1) {
-            printOpError(op,ct,-1,-1,"Using subtable with exports in expression");
+            printOpError(op, ct, -1, -1, "Using subtable with exports in expression");
             return false;
         }
-        vn0 = recoverSize(op->getIn(0)->getSize(),ct);
+        vn0 = recoverSize(op->getIn(0)->getSize(), ct);
         if (vn0 == -1) {
-            printOpError(op,ct,0,0,"Using subtable with exports in expression");
+            printOpError(op, ct, 0, 0, "Using subtable with exports in expression");
             return false;
         }
         if (vnout == vn0) return true;
-        if ((vnout==0)||(vn0==0)) return true;
-        printOpError(op,ct,-1,0,"Input and output sizes must match");
+        if ((vnout == 0) || (vn0 == 0)) return true;
+        printOpError(op, ct, -1, 0, "Input and output sizes must match");
         return false;
     case CPUI_INT_ADD:
     case CPUI_INT_SUB:
@@ -322,42 +322,42 @@ bool ConsistencyChecker::sizeRestriction(OpTpl *op,Constructor *ct)
     case CPUI_FLOAT_DIV:
     case CPUI_FLOAT_MULT:
     case CPUI_FLOAT_SUB:
-        vnout = recoverSize(op->getOut()->getSize(),ct);
+        vnout = recoverSize(op->getOut()->getSize(), ct);
         if (vnout == -1) {
-            printOpError(op,ct,-1,-1,"Using subtable with exports in expression");
+            printOpError(op, ct, -1, -1, "Using subtable with exports in expression");
             return false;
         }
-        vn0 = recoverSize(op->getIn(0)->getSize(),ct);
+        vn0 = recoverSize(op->getIn(0)->getSize(), ct);
         if (vn0 == -1) {
-            printOpError(op,ct,0,0,"Using subtable with exports in expression");
+            printOpError(op, ct, 0, 0, "Using subtable with exports in expression");
             return false;
         }
-        vn1 = recoverSize(op->getIn(1)->getSize(),ct);
+        vn1 = recoverSize(op->getIn(1)->getSize(), ct);
         if (vn1 == -1) {
-            printOpError(op,ct,1,1,"Using subtable with exports in expression");
+            printOpError(op, ct, 1, 1, "Using subtable with exports in expression");
             return false;
         }
-        if ((vnout!=0)&&(vn0!=0)&&(vnout!=vn0)) {
-            printOpError(op,ct,-1,0,"The output and all input sizes must match");
+        if ((vnout != 0) && (vn0 != 0) && (vnout != vn0)) {
+            printOpError(op, ct, -1, 0, "The output and all input sizes must match");
             return false;
         }
-        if ((vnout!=0)&&(vn1!=0)&&(vnout!=vn1)) {
-            printOpError(op,ct,-1,1,"The output and all input sizes must match");
+        if ((vnout != 0) && (vn1 != 0) && (vnout != vn1)) {
+            printOpError(op, ct, -1, 1, "The output and all input sizes must match");
             return false;
         }
-        if ((vn0!=0)&&(vn1!=0)&&(vn0!=vn1)) {
-            printOpError(op,ct,0,1,"The output and all input sizes must match");
+        if ((vn0 != 0) && (vn1 != 0) && (vn0 != vn1)) {
+            printOpError(op, ct, 0, 1, "The output and all input sizes must match");
             return false;
         }
         return true;
     case CPUI_FLOAT_NAN:
-        vnout = recoverSize(op->getOut()->getSize(),ct);
+        vnout = recoverSize(op->getOut()->getSize(), ct);
         if (vnout == -1) {
-            printOpError(op,ct,-1,-1,"Using subtable with exports in expression");
+            printOpError(op, ct, -1, -1, "Using subtable with exports in expression");
             return false;
         }
         if (vnout != 1) {
-            printOpError(op,ct,-1,-1,"Output must be a boolean (size 1)");
+            printOpError(op, ct, -1, -1, "Output must be a boolean (size 1)");
             return false;
         }
         break;
@@ -374,70 +374,70 @@ bool ConsistencyChecker::sizeRestriction(OpTpl *op,Constructor *ct)
     case CPUI_FLOAT_NOTEQUAL:
     case CPUI_FLOAT_LESS:
     case CPUI_FLOAT_LESSEQUAL:
-        vnout = recoverSize(op->getOut()->getSize(),ct);
+        vnout = recoverSize(op->getOut()->getSize(), ct);
         if (vnout == -1) {
-            printOpError(op,ct,-1,-1,"Using subtable with exports in expression");
+            printOpError(op, ct, -1, -1, "Using subtable with exports in expression");
             return false;
         }
         if (vnout != 1) {
-            printOpError(op,ct,-1,-1,"Output must be a boolean (size 1)");
+            printOpError(op, ct, -1, -1, "Output must be a boolean (size 1)");
             return false;
         }
-        vn0 = recoverSize(op->getIn(0)->getSize(),ct);
+        vn0 = recoverSize(op->getIn(0)->getSize(), ct);
         if (vn0 == -1) {
-            printOpError(op,ct,0,0,"Using subtable with exports in expression");
+            printOpError(op, ct, 0, 0, "Using subtable with exports in expression");
             return false;
         }
-        vn1 = recoverSize(op->getIn(1)->getSize(),ct);
+        vn1 = recoverSize(op->getIn(1)->getSize(), ct);
         if (vn1 == -1) {
-            printOpError(op,ct,1,1,"Using subtable with exports in expression");
+            printOpError(op, ct, 1, 1, "Using subtable with exports in expression");
             return false;
         }
-        if ((vn0==0)||(vn1==0)) return true;
+        if ((vn0 == 0) || (vn1 == 0)) return true;
         if (vn0 != vn1) {
-            printOpError(op,ct,0,1,"Inputs must be the same size");
+            printOpError(op, ct, 0, 1, "Inputs must be the same size");
             return false;
         }
         return true;
     case CPUI_BOOL_XOR:
     case CPUI_BOOL_AND:
     case CPUI_BOOL_OR:
-        vnout = recoverSize(op->getOut()->getSize(),ct);
+        vnout = recoverSize(op->getOut()->getSize(), ct);
         if (vnout == -1) {
-            printOpError(op,ct,-1,-1,"Using subtable with exports in expression");
+            printOpError(op, ct, -1, -1, "Using subtable with exports in expression");
             return false;
         }
         if (vnout != 1) {
-            printOpError(op,ct,-1,-1,"Output must be a boolean (size 1)");
+            printOpError(op, ct, -1, -1, "Output must be a boolean (size 1)");
             return false;
         }
-        vn0 = recoverSize(op->getIn(0)->getSize(),ct);
+        vn0 = recoverSize(op->getIn(0)->getSize(), ct);
         if (vn0 == -1) {
-            printOpError(op,ct,0,0,"Using subtable with exports in expression");
+            printOpError(op, ct, 0, 0, "Using subtable with exports in expression");
             return false;
         }
         if (vn0 != 1) {
-            printOpError(op,ct,0,0,"Input must be a boolean (size 1)");
+            printOpError(op, ct, 0, 0, "Input must be a boolean (size 1)");
             return false;
         }
         return true;
     case CPUI_BOOL_NEGATE:
-        vnout = recoverSize(op->getOut()->getSize(),ct);
+        vnout = recoverSize(op->getOut()->getSize(), ct);
         if (vnout == -1) {
-            printOpError(op,ct,-1,-1,"Using subtable with exports in expression");
+            printOpError(op, ct, -1, -1, "Using subtable with exports in expression");
             return false;
         }
         if (vnout != 1) {
-            printOpError(op,ct,-1,-1,"Output must be a boolean (size 1)");
+            printOpError(op, ct, -1, -1, "Output must be a boolean (size 1)");
             return false;
         }
-        vn0 = recoverSize(op->getIn(0)->getSize(),ct);
+        vn0 = recoverSize(op->getIn(0)->getSize(), ct);
         if (vn0 == -1) {
-            printOpError(op,ct,0,0,"Using subtable with exports in expression");
+            printOpError(op, ct, 0, 0, "Using subtable with exports in expression");
             return false;
         }
         if (vn0 != 1) {
-            printOpError(op,ct,0,0,"Input must be a boolean (size 1)");
+            printOpError(op, ct, 0, 0, "Input must be a boolean (size 1)");
             return false;
         }
         return true;
@@ -446,51 +446,51 @@ bool ConsistencyChecker::sizeRestriction(OpTpl *op,Constructor *ct)
     case CPUI_INT_LEFT:
     case CPUI_INT_RIGHT:
     case CPUI_INT_SRIGHT:
-        vnout = recoverSize(op->getOut()->getSize(),ct);
+        vnout = recoverSize(op->getOut()->getSize(), ct);
         if (vnout == -1) {
-            printOpError(op,ct,-1,-1,"Using subtable with exports in expression");
+            printOpError(op, ct, -1, -1, "Using subtable with exports in expression");
             return false;
         }
-        vn0 = recoverSize(op->getIn(0)->getSize(),ct);
+        vn0 = recoverSize(op->getIn(0)->getSize(), ct);
         if (vn0 == -1) {
-            printOpError(op,ct,0,0,"Using subtable with exports in expression");
+            printOpError(op, ct, 0, 0, "Using subtable with exports in expression");
             return false;
         }
-        if ((vnout==0)||(vn0==0)) return true;
+        if ((vnout == 0) || (vn0 == 0)) return true;
         if (vnout != vn0) {
-            printOpError(op,ct,-1,0,"Output and first input must be the same size");
+            printOpError(op, ct, -1, 0, "Output and first input must be the same size");
             return false;
         }
         return true;
     case CPUI_INT_ZEXT:
     case CPUI_INT_SEXT:
-        vnout = recoverSize(op->getOut()->getSize(),ct);
+        vnout = recoverSize(op->getOut()->getSize(), ct);
         if (vnout == -1) {
-            printOpError(op,ct,-1,-1,"Using subtable with exports in expression");
+            printOpError(op, ct, -1, -1, "Using subtable with exports in expression");
             return false;
         }
-        vn0 = recoverSize(op->getIn(0)->getSize(),ct);
+        vn0 = recoverSize(op->getIn(0)->getSize(), ct);
         if (vn0 == -1) {
-            printOpError(op,ct,0,0,"Using subtable with exports in expression");
+            printOpError(op, ct, 0, 0, "Using subtable with exports in expression");
             return false;
         }
-        if ((vnout==0)||(vn0==0)) return true;
+        if ((vnout == 0) || (vn0 == 0)) return true;
         if (vnout == vn0) {
-            dealWithUnnecessaryExt(op,ct);
+            dealWithUnnecessaryExt(op, ct);
             return true;
         } else if (vnout < vn0) {
-            printOpError(op,ct,-1,0,"Output size must be strictly bigger than input size");
+            printOpError(op, ct, -1, 0, "Output size must be strictly bigger than input size");
             return false;
         }
         return true;
     case CPUI_CBRANCH:
-        vn1 = recoverSize(op->getIn(1)->getSize(),ct);
+        vn1 = recoverSize(op->getIn(1)->getSize(), ct);
         if (vn1 == -1) {
-            printOpError(op,ct,1,1,"Using subtable with exports in expression");
+            printOpError(op, ct, 1, 1, "Using subtable with exports in expression");
             return false;
         }
         if (vn1 != 1) {
-            printOpError(op,ct,1,1,"Input must be a boolean (size 1)");
+            printOpError(op, ct, 1, 1, "Input must be a boolean (size 1)");
             return false;
         }
         return true;
@@ -499,38 +499,38 @@ bool ConsistencyChecker::sizeRestriction(OpTpl *op,Constructor *ct)
         if (op->getIn(0)->getOffset().getType() != ConstTpl::spaceid)
             return true;
         spc = op->getIn(0)->getOffset().getSpace();
-        vn1 = recoverSize(op->getIn(1)->getSize(),ct);
+        vn1 = recoverSize(op->getIn(1)->getSize(), ct);
         if (vn1 == -1) {
-            printOpError(op,ct,1,1,"Using subtable with exports in expression");
+            printOpError(op, ct, 1, 1, "Using subtable with exports in expression");
             return false;
         }
-        if ((vn1!=0)&&(vn1 != spc->getAddrSize())) {
-            printOpError(op,ct,1,1,"Pointer size must match size of space");
+        if ((vn1 != 0) && (vn1 != spc->getAddrSize())) {
+            printOpError(op, ct, 1, 1, "Pointer size must match size of space");
             return false;
         }
         return true;
     case CPUI_SUBPIECE:
-        vnout = recoverSize(op->getOut()->getSize(),ct);
+        vnout = recoverSize(op->getOut()->getSize(), ct);
         if (vnout == -1) {
-            printOpError(op,ct,-1,-1,"Using subtable with exports in expression");
+            printOpError(op, ct, -1, -1, "Using subtable with exports in expression");
             return false;
         }
-        vn0 = recoverSize(op->getIn(0)->getSize(),ct);
+        vn0 = recoverSize(op->getIn(0)->getSize(), ct);
         if (vn0 == -1) {
-            printOpError(op,ct,0,0,"Using subtable with exports in expression");
+            printOpError(op, ct, 0, 0, "Using subtable with exports in expression");
             return false;
         }
         vn1 = op->getIn(1)->getOffset().getReal();
-        if ((vnout==0)||(vn0==0)) return true;
-        if ((vnout==vn0)&&(vn1==0)) { // No actual truncation is occuring
-            dealWithUnnecessaryTrunc(op,ct);
+        if ((vnout == 0) || (vn0 == 0)) return true;
+        if ((vnout == vn0) && (vn1 == 0)) { // No actual truncation is occuring
+            dealWithUnnecessaryTrunc(op, ct);
             return true;
-        } else if (vnout>=vn0) {
-            printOpError(op,ct,-1,0,"Output must be strictly smaller than input");
+        } else if (vnout >= vn0) {
+            printOpError(op, ct, -1, 0, "Output must be strictly smaller than input");
             return false;
         }
-        if (vnout>vn0-vn1) {
-            printOpError(op,ct,-1,0,"Too much truncation");
+        if (vnout > vn0 - vn1) {
+            printOpError(op, ct, -1, 0, "Too much truncation");
             return false;
         }
         return true;
@@ -540,7 +540,7 @@ bool ConsistencyChecker::sizeRestriction(OpTpl *op,Constructor *ct)
     return true;
 }
 
-void ConsistencyChecker::printOpName(ostream &s,OpTpl *op)
+void ConsistencyChecker::printOpName(ostream &s, OpTpl *op)
 
 {
     switch(op->getOpcode()) {
@@ -744,7 +744,7 @@ void ConsistencyChecker::printOpName(ostream &s,OpTpl *op)
     }
 }
 
-OperandSymbol *ConsistencyChecker::getOperandSymbol(int4 slot,OpTpl *op,Constructor *ct)
+OperandSymbol *ConsistencyChecker::getOperandSymbol(int4 slot, OpTpl *op, Constructor *ct)
 
 {
     VarnodeTpl *vn;
@@ -768,22 +768,22 @@ OperandSymbol *ConsistencyChecker::getOperandSymbol(int4 slot,OpTpl *op,Construc
     return opsym;
 }
 
-void ConsistencyChecker::printOpError(OpTpl *op,Constructor *ct,int4 err1,int4 err2,const string &msg)
+void ConsistencyChecker::printOpError(OpTpl *op, Constructor *ct, int4 err1, int4 err2, const string &msg)
 
 {
     SubtableSymbol *sym = ct->getParent();
-    OperandSymbol *op1,*op2;
+    OperandSymbol *op1, *op2;
 
-    op1 = getOperandSymbol(err1,op,ct);
+    op1 = getOperandSymbol(err1, op, ct);
     if (err2 != err1)
-        op2 = getOperandSymbol(err2,op,ct);
+        op2 = getOperandSymbol(err2, op, ct);
     else
         op2 = (OperandSymbol *)0;
 
     ostringstream msgBuilder;
 
     msgBuilder << "Size restriction error in table '" << sym->getName() << "'" << endl;
-    if ((op1 != (OperandSymbol *)0)&&(op2 != (OperandSymbol *)0))
+    if ((op1 != (OperandSymbol *)0) && (op2 != (OperandSymbol *)0))
         msgBuilder << "  Problem with operands '" << op1->getName() << "' and '" << op2->getName() << "'";
     else if (op1 != (OperandSymbol *)0)
         msgBuilder << "  Problem with operand 1 '" << op1->getName() << "'";
@@ -792,13 +792,13 @@ void ConsistencyChecker::printOpError(OpTpl *op,Constructor *ct,int4 err1,int4 e
     else
         msgBuilder << "  Problem";
     msgBuilder << " in ";
-    printOpName(msgBuilder,op);
+    printOpName(msgBuilder, op);
     msgBuilder << " operator" << endl << "  " << msg;
 
     compiler->reportError(compiler->getLocation(ct), msgBuilder.str());
 }
 
-bool ConsistencyChecker::checkConstructorSection(Constructor *ct,ConstructTpl *cttpl)
+bool ConsistencyChecker::checkConstructorSection(Constructor *ct, ConstructTpl *cttpl)
 
 {
     // Check all the OpTpl s within the given section for consistency, return true if all tests pass
@@ -808,40 +808,40 @@ bool ConsistencyChecker::checkConstructorSection(Constructor *ct,ConstructTpl *c
     const vector<OpTpl *> &ops(cttpl->getOpvec());
     bool testresult = true;
 
-    for(iter=ops.begin(); iter!=ops.end(); ++iter) {
-        if (!sizeRestriction(*iter,ct))
+    for(iter = ops.begin(); iter != ops.end(); ++iter) {
+        if (!sizeRestriction(*iter, ct))
             testresult = false;
-        if (!checkOpMisuse(*iter,ct))
+        if (!checkOpMisuse(*iter, ct))
             testresult = false;
     }
     return testresult;
 }
 
-bool ConsistencyChecker::checkVarnodeTruncation(Constructor *ct,int4 slot,
-        OpTpl *op,VarnodeTpl *vn,bool isbigendian)
+bool ConsistencyChecker::checkVarnodeTruncation(Constructor *ct, int4 slot,
+        OpTpl *op, VarnodeTpl *vn, bool isbigendian)
 {
     const ConstTpl &off( vn->getOffset() );
     if (off.getType() != ConstTpl::handle) return true;
     if (off.getSelect() != ConstTpl::v_offset_plus) return true;
     ConstTpl::const_type sztype = vn->getSize().getType();
-    if ((sztype != ConstTpl::real)&&(sztype != ConstTpl::handle)) {
-        printOpError(op,ct,slot,slot,"Bad truncation expression");
+    if ((sztype != ConstTpl::real) && (sztype != ConstTpl::handle)) {
+        printOpError(op, ct, slot, slot, "Bad truncation expression");
         return false;
     }
-    int4 sz = recoverSize(off,ct); // Recover the size of the original operand
+    int4 sz = recoverSize(off, ct); // Recover the size of the original operand
     if (sz <= 0) {
-        printOpError(op,ct,slot,slot,"Could not recover size");
+        printOpError(op, ct, slot, slot, "Could not recover size");
         return false;
     }
-    bool res = vn->adjustTruncation(sz,isbigendian);
+    bool res = vn->adjustTruncation(sz, isbigendian);
     if (!res) {
-        printOpError(op,ct,slot,slot,"Truncation operator out of bounds");
+        printOpError(op, ct, slot, slot, "Truncation operator out of bounds");
         return false;
     }
     return true;
 }
 
-bool ConsistencyChecker::checkSectionTruncations(Constructor *ct,ConstructTpl *cttpl,bool isbigendian)
+bool ConsistencyChecker::checkSectionTruncations(Constructor *ct, ConstructTpl *cttpl, bool isbigendian)
 
 {
     // Check all the varnodes that have an offset_plus template
@@ -851,15 +851,15 @@ bool ConsistencyChecker::checkSectionTruncations(Constructor *ct,ConstructTpl *c
     const vector<OpTpl *> &ops(cttpl->getOpvec());
     bool testresult = true;
 
-    for(iter=ops.begin(); iter!=ops.end(); ++iter) {
+    for(iter = ops.begin(); iter != ops.end(); ++iter) {
         OpTpl *op = *iter;
         VarnodeTpl *outvn = op->getOut();
         if (outvn != (VarnodeTpl *)0) {
-            if (!checkVarnodeTruncation(ct,-1,op,outvn,isbigendian))
+            if (!checkVarnodeTruncation(ct, -1, op, outvn, isbigendian))
                 testresult = false;
         }
-        for(int4 i=0; i<op->numInput(); ++i) {
-            if (!checkVarnodeTruncation(ct,i,op,op->getIn(i),isbigendian))
+        for(int4 i = 0; i < op->numInput(); ++i) {
+            if (!checkVarnodeTruncation(ct, i, op, op->getIn(i), isbigendian))
                 testresult = false;
         }
     }
@@ -876,13 +876,13 @@ bool ConsistencyChecker::checkSubtable(SubtableSymbol *sym)
     bool seenemptyexport = false;
     bool seennonemptyexport = false;
 
-    for(int4 i=0; i<numconstruct; ++i) {
+    for(int4 i = 0; i < numconstruct; ++i) {
         ct = sym->getConstructor(i);
-        if (!checkConstructorSection(ct,ct->getTempl()))
+        if (!checkConstructorSection(ct, ct->getTempl()))
             testresult = false;
         int4 numsection = ct->getNumSections();
-        for(int4 j=0; j<numsection; ++j) {
-            if (!checkConstructorSection(ct,ct->getNamedTempl(j)))
+        for(int4 j = 0; j < numsection; ++j) {
+            if (!checkConstructorSection(ct, ct->getNamedTempl(j)))
                 testresult = false;
         }
 
@@ -897,10 +897,10 @@ bool ConsistencyChecker::checkSubtable(SubtableSymbol *sym)
                 testresult = false;
             }
             seennonemptyexport = true;
-            int4 exsize = recoverSize(exportres->getSize(),ct);
+            int4 exsize = recoverSize(exportres->getSize(), ct);
             if (tablesize == 0)
                 tablesize = exsize;
-            if ((exsize!=0)&&(exsize != tablesize)) {
+            if ((exsize != 0) && (exsize != tablesize)) {
                 ostringstream msg;
                 msg << "Table '" << sym->getName() << "' has inconsistent export size; ";
                 msg << "Constructor starting at line " << dec << ct->getLineno() << " is first conflict";
@@ -967,7 +967,7 @@ void ConsistencyChecker::setPostOrder(SubtableSymbol *root)
                 OperandSymbol *opsym = ct->getOperand(oper);
                 SubtableSymbol *subsym = dynamic_cast<SubtableSymbol *>(opsym->getDefiningSymbol());
                 if (subsym != (SubtableSymbol *)0) {
-                    map<SubtableSymbol *,int4>::const_iterator iter;
+                    map<SubtableSymbol *, int4>::const_iterator iter;
                     iter = sizemap.find(subsym);
                     if (iter == sizemap.end()) { // Not traversed yet
                         sizemap[subsym] = -1; // Mark table as traversed
@@ -981,7 +981,7 @@ void ConsistencyChecker::setPostOrder(SubtableSymbol *root)
     }
 }
 
-bool ConsistencyChecker::possibleIntersection(const VarnodeTpl *vn1,const VarnodeTpl *vn2)
+bool ConsistencyChecker::possibleIntersection(const VarnodeTpl *vn1, const VarnodeTpl *vn2)
 
 {
     // Conservatively test whether vn1 and vn2 can intersect
@@ -1009,12 +1009,12 @@ bool ConsistencyChecker::possibleIntersection(const VarnodeTpl *vn1,const Varnod
     uintb size = vn1->getSize().getReal();
 
     uintb off = vn2->getOffset().getReal();
-    if (off+vn2->getSize().getReal()-1 < offset) return false;
-    if (off > (offset+size-1)) return false;
+    if (off + vn2->getSize().getReal() - 1 < offset) return false;
+    if (off > (offset + size - 1)) return false;
     return true;
 }
 
-bool ConsistencyChecker::readWriteInterference(const VarnodeTpl *vn,const OpTpl *op,bool checkread) const
+bool ConsistencyChecker::readWriteInterference(const VarnodeTpl *vn, const OpTpl *op, bool checkread) const
 
 {
     // Does op potentially read vn
@@ -1043,31 +1043,31 @@ bool ConsistencyChecker::readWriteInterference(const VarnodeTpl *vn,const OpTpl 
 
     if (checkread) {
         int4 numinputs = op->numInput();
-        for(int4 i=0; i<numinputs; ++i)
-            if (possibleIntersection(vn,op->getIn(i)))
+        for(int4 i = 0; i < numinputs; ++i)
+            if (possibleIntersection(vn, op->getIn(i)))
                 return true;
     }
 
     // We always check for writes to -vn-
     const VarnodeTpl *vn2 = op->getOut();
     if (vn2 != (const VarnodeTpl *)0) {
-        if (possibleIntersection(vn,vn2))
+        if (possibleIntersection(vn, vn2))
             return true;
     }
     return false;
 }
 
-void ConsistencyChecker::examineVn(map<uintb,OptimizeRecord> &recs,
-                                   const VarnodeTpl *vn,uint4 i,int4 inslot,int4 secnum)
+void ConsistencyChecker::examineVn(map<uintb, OptimizeRecord> &recs,
+                                   const VarnodeTpl *vn, uint4 i, int4 inslot, int4 secnum)
 {
     // If varnode is a temporary,  count whether it is read or written
     if (vn == (const VarnodeTpl *)0) return;
     if (!vn->getSpace().isUniqueSpace()) return;
     if (vn->getOffset().getType() != ConstTpl::real) return;
 
-    map<uintb,OptimizeRecord>::iterator iter;
-    iter = recs.insert( pair<uint4,OptimizeRecord>(vn->getOffset().getReal(),OptimizeRecord())).first;
-    if (inslot>=0) {
+    map<uintb, OptimizeRecord>::iterator iter;
+    iter = recs.insert( pair<uint4, OptimizeRecord>(vn->getOffset().getReal(), OptimizeRecord())).first;
+    if (inslot >= 0) {
         (*iter).second.readop = i;
         (*iter).second.readcount += 1;
         (*iter).second.inslot = inslot;
@@ -1079,7 +1079,7 @@ void ConsistencyChecker::examineVn(map<uintb,OptimizeRecord> &recs,
     }
 }
 
-void ConsistencyChecker::optimizeGather1(Constructor *ct,map<uintb,OptimizeRecord> &recs,int4 secnum) const
+void ConsistencyChecker::optimizeGather1(Constructor *ct, map<uintb, OptimizeRecord> &recs, int4 secnum) const
 
 {
     // Look for reads and writes to temporaries, count how many times each temporary is read or written
@@ -1091,18 +1091,18 @@ void ConsistencyChecker::optimizeGather1(Constructor *ct,map<uintb,OptimizeRecor
     if (tpl == (ConstructTpl *)0)
         return;
     const vector<OpTpl *> &ops( tpl->getOpvec() );
-    for(uint4 i=0; i<ops.size(); ++i) {
+    for(uint4 i = 0; i < ops.size(); ++i) {
         const OpTpl *op = ops[i];
-        for(uint4 j=0; j<op->numInput(); ++j) {
+        for(uint4 j = 0; j < op->numInput(); ++j) {
             const VarnodeTpl *vnin = op->getIn(j);
-            examineVn(recs,vnin,i,j,secnum);
+            examineVn(recs, vnin, i, j, secnum);
         }
         const VarnodeTpl *vn = op->getOut();
-        examineVn(recs,vn,i,-1,secnum);
+        examineVn(recs, vn, i, -1, secnum);
     }
 }
 
-void ConsistencyChecker::optimizeGather2(Constructor *ct,map<uintb,OptimizeRecord> &recs,int4 secnum) const
+void ConsistencyChecker::optimizeGather2(Constructor *ct, map<uintb, OptimizeRecord> &recs, int4 secnum) const
 
 {
     // Make sure any temp used by the export is not optimized away
@@ -1117,9 +1117,9 @@ void ConsistencyChecker::optimizeGather2(Constructor *ct,map<uintb,OptimizeRecor
     if (hand == (HandleTpl *)0) return;
     if (hand->getPtrSpace().isUniqueSpace()) {
         if (hand->getPtrOffset().getType() == ConstTpl::real) {
-            pair<map<uintb,OptimizeRecord>::iterator,bool> res;
+            pair<map<uintb, OptimizeRecord>::iterator, bool> res;
             uintb offset = hand->getPtrOffset().getReal();
-            res = recs.insert( pair<uintb,OptimizeRecord>(offset,OptimizeRecord()));
+            res = recs.insert( pair<uintb, OptimizeRecord>(offset, OptimizeRecord()));
             (*res.first).second.writeop = 0;
             (*res.first).second.readop = 0;
             (*res.first).second.writecount = 2;
@@ -1129,11 +1129,11 @@ void ConsistencyChecker::optimizeGather2(Constructor *ct,map<uintb,OptimizeRecor
         }
     }
     if (hand->getSpace().isUniqueSpace()) {
-        if ((hand->getPtrSpace().getType() == ConstTpl::real)&&
+        if ((hand->getPtrSpace().getType() == ConstTpl::real) &&
                 (hand->getPtrOffset().getType() == ConstTpl::real)) {
-            pair<map<uintb,OptimizeRecord>::iterator,bool> res;
+            pair<map<uintb, OptimizeRecord>::iterator, bool> res;
             uintb offset = hand->getPtrOffset().getReal();
-            res = recs.insert( pair<uintb,OptimizeRecord>(offset,OptimizeRecord()));
+            res = recs.insert( pair<uintb, OptimizeRecord>(offset, OptimizeRecord()));
             (*res.first).second.writeop = 0;
             (*res.first).second.readop = 0;
             (*res.first).second.writecount = 2;
@@ -1144,15 +1144,15 @@ void ConsistencyChecker::optimizeGather2(Constructor *ct,map<uintb,OptimizeRecor
     }
 }
 
-ConsistencyChecker::OptimizeRecord *ConsistencyChecker::findValidRule(Constructor *ct,map<uintb,OptimizeRecord> &recs) const
+ConsistencyChecker::OptimizeRecord *ConsistencyChecker::findValidRule(Constructor *ct, map<uintb, OptimizeRecord> &recs) const
 
 {
-    map<uintb,OptimizeRecord>::iterator iter;
+    map<uintb, OptimizeRecord>::iterator iter;
     iter = recs.begin();
     while(iter != recs.end()) {
         OptimizeRecord &currec( (*iter).second );
         ++iter;
-        if ((currec.writecount==1)&&(currec.readcount==1)&&(currec.readsection==currec.writesection)) {
+        if ((currec.writecount == 1) && (currec.readcount == 1) && (currec.readsection == currec.writesection)) {
             // Temporary must be read and written exactly once
             ConstructTpl *tpl;
             if (currec.readsection < 0)
@@ -1167,8 +1167,8 @@ ConsistencyChecker::OptimizeRecord *ConsistencyChecker::findValidRule(Constructo
                 bool saverecord = true;
                 currec.opttype = 0;	// Read op is a COPY
                 const VarnodeTpl *vn = op->getOut();
-                for(int4 i=currec.writeop+1; i<currec.readop; ++i) { // Check for interference between write and read
-                    if (readWriteInterference(vn,ops[i],true)) {
+                for(int4 i = currec.writeop + 1; i < currec.readop; ++i) { // Check for interference between write and read
+                    if (readWriteInterference(vn, ops[i], true)) {
                         saverecord = false;
                         break;
                     }
@@ -1181,8 +1181,8 @@ ConsistencyChecker::OptimizeRecord *ConsistencyChecker::findValidRule(Constructo
                 bool saverecord = true;
                 currec.opttype = 1;	// Write op is a COPY
                 const VarnodeTpl *vn = op->getIn(0);
-                for(int4 i=currec.writeop+1; i<currec.readop; ++i) { // Check for interference between write and read
-                    if (readWriteInterference(vn,ops[i],false)) {
+                for(int4 i = currec.writeop + 1; i < currec.readop; ++i) { // Check for interference between write and read
+                    if (readWriteInterference(vn, ops[i], false)) {
                         saverecord = false;
                         break;
                     }
@@ -1195,7 +1195,7 @@ ConsistencyChecker::OptimizeRecord *ConsistencyChecker::findValidRule(Constructo
     return (OptimizeRecord *)0;
 }
 
-void ConsistencyChecker::applyOptimization(Constructor *ct,const OptimizeRecord &rec)
+void ConsistencyChecker::applyOptimization(Constructor *ct, const OptimizeRecord &rec)
 
 {
     vector<int4> deleteops;
@@ -1209,22 +1209,22 @@ void ConsistencyChecker::applyOptimization(Constructor *ct,const OptimizeRecord 
         int4 readop = rec.readop;
         OpTpl *op = ctempl->getOpvec()[ readop ];
         VarnodeTpl *vnout = new VarnodeTpl(*op->getOut()); // Make COPY output
-        ctempl->setOutput(vnout,rec.writeop); // become write output
+        ctempl->setOutput(vnout, rec.writeop); // become write output
         deleteops.push_back(readop); // and then delete the read (COPY)
     } else if (rec.opttype == 1) { // If write op is COPY
         int4 writeop = rec.writeop;
         OpTpl *op = ctempl->getOpvec()[ writeop ];
         VarnodeTpl *vnin = new VarnodeTpl(*op->getIn(0));	// Make COPY input
-        ctempl->setInput(vnin,rec.readop,rec.inslot); // become read input
+        ctempl->setInput(vnin, rec.readop, rec.inslot); // become read input
         deleteops.push_back(writeop); // and then delete the write (COPY)
     }
     ctempl->deleteOps(deleteops);
 }
 
-void ConsistencyChecker::checkUnusedTemps(Constructor *ct,const map<uintb,OptimizeRecord> &recs)
+void ConsistencyChecker::checkUnusedTemps(Constructor *ct, const map<uintb, OptimizeRecord> &recs)
 
 {
-    map<uintb,OptimizeRecord>::const_iterator iter;
+    map<uintb, OptimizeRecord>::const_iterator iter;
     iter = recs.begin();
     while(iter != recs.end()) {
         const OptimizeRecord &currec( (*iter).second );
@@ -1244,19 +1244,19 @@ void ConsistencyChecker::optimize(Constructor *ct)
 
 {
     OptimizeRecord *currec;
-    map<uintb,OptimizeRecord> recs;
+    map<uintb, OptimizeRecord> recs;
     int4 numsections = ct->getNumSections();
     do {
         recs.clear();
-        for(int4 i=-1; i<numsections; ++i) {
-            optimizeGather1(ct,recs,i);
-            optimizeGather2(ct,recs,i);
+        for(int4 i = -1; i < numsections; ++i) {
+            optimizeGather1(ct, recs, i);
+            optimizeGather2(ct, recs, i);
         }
-        currec = findValidRule(ct,recs);
+        currec = findValidRule(ct, recs);
         if (currec != (OptimizeRecord *)0)
-            applyOptimization(ct,*currec);
+            applyOptimization(ct, *currec);
     } while(currec != (OptimizeRecord *)0);
-    checkUnusedTemps(ct,recs);
+    checkUnusedTemps(ct, recs);
 }
 
 bool ConsistencyChecker::test(void)
@@ -1266,7 +1266,7 @@ bool ConsistencyChecker::test(void)
     setPostOrder(root_symbol);
     bool testresult = true;
 
-    for(int4 i=0; i<postorder.size(); ++i) {
+    for(int4 i = 0; i < postorder.size(); ++i) {
         SubtableSymbol *sym = postorder[i];
         if (!checkSubtable(sym))
             testresult = false;
@@ -1279,15 +1279,15 @@ bool ConsistencyChecker::testTruncations(bool isbigendian)
 {
     // Now that the sizemap is calculated, we can check/adjust the offset_plus templates
     bool testresult = true;
-    for(int4 i=0; i<postorder.size(); ++i) {
+    for(int4 i = 0; i < postorder.size(); ++i) {
         SubtableSymbol *sym = postorder[i];
         int4 numconstruct = sym->getNumConstructors();
         Constructor *ct;
-        for(int4 j=0; j<numconstruct; ++j) {
+        for(int4 j = 0; j < numconstruct; ++j) {
             ct = sym->getConstructor(j);
 
             int4 numsections = ct->getNumSections();
-            for(int4 k=-1; k<numsections; ++k) {
+            for(int4 k = -1; k < numsections; ++k) {
                 ConstructTpl *tpl;
                 if (k < 0)
                     tpl = ct->getTempl();
@@ -1295,7 +1295,7 @@ bool ConsistencyChecker::testTruncations(bool isbigendian)
                     tpl = ct->getNamedTempl(k);
                 if (tpl == (ConstructTpl *)0)
                     continue;
-                if (!checkSectionTruncations(ct,tpl,isbigendian))
+                if (!checkSectionTruncations(ct, tpl, isbigendian))
                     testresult = false;
             }
         }
@@ -1306,11 +1306,11 @@ bool ConsistencyChecker::testTruncations(bool isbigendian)
 void ConsistencyChecker::optimizeAll(void)
 
 {
-    for(int4 i=0; i<postorder.size(); ++i) {
+    for(int4 i = 0; i < postorder.size(); ++i) {
         SubtableSymbol *sym = postorder[i];
         int4 numconstruct = sym->getNumConstructors();
         Constructor *ct;
-        for(int4 i=0; i<numconstruct; ++i) {
+        for(int4 i = 0; i < numconstruct; ++i) {
             ct = sym->getConstructor(i);
             optimize(ct);
         }
@@ -1330,7 +1330,7 @@ void MacroBuilder::free(void)
 {
     vector<HandleTpl *>::iterator iter;
 
-    for(iter=params.begin(); iter!=params.end(); ++iter)
+    for(iter = params.begin(); iter != params.end(); ++iter)
         delete *iter;
 
     params.clear();
@@ -1350,14 +1350,14 @@ void MacroBuilder::setMacroOp(OpTpl *macroop)
     VarnodeTpl *vn;
     HandleTpl *hand;
     free();
-    for(int4 i=1; i<macroop->numInput(); ++i) {
+    for(int4 i = 1; i < macroop->numInput(); ++i) {
         vn = macroop->getIn(i);
         hand = new HandleTpl(vn);
         params.push_back(hand);
     }
 }
 
-bool MacroBuilder::transferOp(OpTpl *op,vector<HandleTpl *> &params)
+bool MacroBuilder::transferOp(OpTpl *op, vector<HandleTpl *> &params)
 
 {
     // Fix handle details of a macro generated OpTpl relative to its specific invocation
@@ -1375,7 +1375,7 @@ bool MacroBuilder::transferOp(OpTpl *op,vector<HandleTpl *> &params)
             return false;
         }
     }
-    for(int4 i=0; i<op->numInput(); ++i) {
+    for(int4 i = 0; i < op->numInput(); ++i) {
         VarnodeTpl *vn = op->getIn(i);
         if (vn->getOffset().getType() == ConstTpl::handle) {
             handleIndex = vn->getOffset().getHandleIndex();
@@ -1392,13 +1392,13 @@ bool MacroBuilder::transferOp(OpTpl *op,vector<HandleTpl *> &params)
 
             // Generate a SUBPIECE op that implements the offset_plus
             OpTpl *subpieceop = new OpTpl(CPUI_SUBPIECE);
-            VarnodeTpl *newvn = new VarnodeTpl(ConstTpl(slgh->getUniqueSpace()),ConstTpl(ConstTpl::real,newtemp),
-                                               ConstTpl(ConstTpl::real,realsize));
+            VarnodeTpl *newvn = new VarnodeTpl(ConstTpl(slgh->getUniqueSpace()), ConstTpl(ConstTpl::real, newtemp),
+                                               ConstTpl(ConstTpl::real, realsize));
             subpieceop->setOutput(newvn);
             HandleTpl *hand = params[handleIndex];
             VarnodeTpl *origvn = new VarnodeTpl( hand->getSpace(), hand->getPtrOffset(), hand->getSize() );
             subpieceop->addInput(origvn);
-            VarnodeTpl *plusvn = new VarnodeTpl( ConstTpl(slgh->getConstantSpace()), ConstTpl(ConstTpl::real,plus),
+            VarnodeTpl *plusvn = new VarnodeTpl( ConstTpl(slgh->getConstantSpace()), ConstTpl(ConstTpl::real, plus),
                                                  ConstTpl(ConstTpl::real, 4) );
             subpieceop->addInput(plusvn);
             outvec.push_back(subpieceop);
@@ -1415,7 +1415,7 @@ void MacroBuilder::dump(OpTpl *op)
 
 {
     OpTpl *clone;
-    VarnodeTpl *v_clone,*vn;
+    VarnodeTpl *v_clone, *vn;
 
     clone = new OpTpl(op->getOpcode());
     vn = op->getOut();
@@ -1423,7 +1423,7 @@ void MacroBuilder::dump(OpTpl *op)
         v_clone = new VarnodeTpl(*vn);
         clone->setOutput(v_clone);
     }
-    for(int4 i=0; i<op->numInput(); ++i) {
+    for(int4 i = 0; i < op->numInput(); ++i) {
         vn = op->getIn(i);
         v_clone = new VarnodeTpl(*vn);
         if (v_clone->isRelative()) {
@@ -1433,7 +1433,7 @@ void MacroBuilder::dump(OpTpl *op)
         }
         clone->addInput(v_clone);
     }
-    if (!transferOp(clone,params))
+    if (!transferOp(clone, params))
         delete clone;
 }
 
@@ -1511,50 +1511,50 @@ void SleighCompile::predefinedSymbols(void)
     // Some predefined symbols
     root = new SubtableSymbol("instruction"); // Base constructors
     symtab.addSymbol(root);
-    insertSpace(new ConstantSpace(this,this,"const",AddrSpace::constant_space_index));
+    insertSpace(new ConstantSpace(this, this, "const", AddrSpace::constant_space_index));
     SpaceSymbol *spacesym = new SpaceSymbol(getConstantSpace()); // Constant space
     symtab.addSymbol(spacesym);
-    OtherSpace *otherSpace = new OtherSpace(this,this,"OTHER",AddrSpace::other_space_index);
+    OtherSpace *otherSpace = new OtherSpace(this, this, "OTHER", AddrSpace::other_space_index);
     insertSpace(otherSpace);
     spacesym = new SpaceSymbol(otherSpace);
     symtab.addSymbol(spacesym);
-    insertSpace(new UniqueSpace(this,this,"unique",numSpaces(),0));
+    insertSpace(new UniqueSpace(this, this, "unique", numSpaces(), 0));
     spacesym = new SpaceSymbol(getUniqueSpace()); // Temporary register space
     symtab.addSymbol(spacesym);
-    StartSymbol *startsym = new StartSymbol("inst_start",getConstantSpace());
+    StartSymbol *startsym = new StartSymbol("inst_start", getConstantSpace());
     symtab.addSymbol(startsym);
-    EndSymbol *endsym = new EndSymbol("inst_next",getConstantSpace());
+    EndSymbol *endsym = new EndSymbol("inst_next", getConstantSpace());
     symtab.addSymbol(endsym);
-    EpsilonSymbol *epsilon = new EpsilonSymbol("epsilon",getConstantSpace());
+    EpsilonSymbol *epsilon = new EpsilonSymbol("epsilon", getConstantSpace());
     symtab.addSymbol(epsilon);
     pcode.setConstantSpace(getConstantSpace());
     pcode.setUniqueSpace(getUniqueSpace());
 }
 
-int4 SleighCompile::calcContextVarLayout(int4 start,int4 sz,int4 numbits)
+int4 SleighCompile::calcContextVarLayout(int4 start, int4 sz, int4 numbits)
 
 {
     VarnodeSymbol *sym = contexttable[start].sym;
     FieldQuality *qual;
-    int4 i,j;
+    int4 i, j;
     int4 maxbits;
 
     if ((sym->getSize()) % 4 != 0)
-        reportError(getCurrentLocation(), "Invalid size of context register '"+sym->getName()+"': must be a multiple of 4 bytes");
-    maxbits = sym->getSize() * 8 -1;
+        reportError(getCurrentLocation(), "Invalid size of context register '" + sym->getName() + "': must be a multiple of 4 bytes");
+    maxbits = sym->getSize() * 8 - 1;
     i = 0;
-    while(i<sz) {
+    while(i < sz) {
 
         qual = contexttable[i].qual;
         int4 min = qual->low;
         int4 max = qual->high;
-        if ((max - min) > (8*sizeof(uintm)))
+        if ((max - min) > (8 * sizeof(uintm)))
             reportError(getCurrentLocation(), "Size of bitfield '" + qual->name + "' larger than 32 bits");
         if (max > maxbits)
             reportError(getCurrentLocation(), "Scope of bitfield '" + qual->name + "' extends beyond the size of context register");
-        j = i+1;
+        j = i + 1;
         // Find union of fields overlapping with first field
-        while(j<sz) {
+        while(j < sz) {
             qual = contexttable[j].qual;
             if (qual->low <= max) {	// We have overlap of context variables
                 if (qual->high > max)
@@ -1562,24 +1562,24 @@ int4 SleighCompile::calcContextVarLayout(int4 start,int4 sz,int4 numbits)
                 // reportWarning("Local context variables overlap in "+sym->getName(),false);
             } else
                 break;
-            j = j+1;
+            j = j + 1;
         }
 
-        int4 alloc = max-min+1;
-        int4 startword = numbits / (8*sizeof(uintm));
-        int4 endword = (numbits+alloc-1) / (8*sizeof(uintm));
+        int4 alloc = max - min + 1;
+        int4 startword = numbits / (8 * sizeof(uintm));
+        int4 endword = (numbits + alloc - 1) / (8 * sizeof(uintm));
         if (startword != endword)
-            numbits = endword * (8*sizeof(uintm)); // Bump up to next word
+            numbits = endword * (8 * sizeof(uintm)); // Bump up to next word
 
         uint4 low = numbits;
         numbits += alloc;
 
-        for(; i<j; ++i) {
+        for(; i < j; ++i) {
             qual = contexttable[i].qual;
             uint4 l = qual->low - min + low;
-            uint4 h = numbits-1-(max-qual->high);
-            ContextField *field = new ContextField(qual->signext,l,h);
-            addSymbol(new ContextSymbol(qual->name,field,sym,qual->low,qual->high,qual->flow));
+            uint4 h = numbits - 1 - (max - qual->high);
+            ContextField *field = new ContextField(qual->signext, l, h);
+            addSymbol(new ContextSymbol(qual->name, field, sym, qual->low, qual->high, qual->flow));
         }
 
     }
@@ -1593,13 +1593,13 @@ void SleighCompile::buildDecisionTrees(void)
     DecisionProperties props;
     root->buildDecisionTree(props);
 
-    for(int4 i=0; i<tables.size(); ++i)
+    for(int4 i = 0; i < tables.size(); ++i)
         tables[i]->buildDecisionTree(props);
 
     const vector<pair<Constructor*, Constructor*> > &ierrors( props.getIdentErrors() );
     if (ierrors.size() != 0) {
         string identMsg = "Constructor has identical pattern to constructor at ";
-        for(int4 i=0; i<ierrors.size(); ++i) {
+        for(int4 i = 0; i < ierrors.size(); ++i) {
             errors += 1;
             const Location* locA = getLocation(ierrors[i].first);
             const Location* locB = getLocation(ierrors[i].second);
@@ -1611,7 +1611,7 @@ void SleighCompile::buildDecisionTrees(void)
     const vector<pair<Constructor *, Constructor*> > &cerrors( props.getConflictErrors() );
     if (!lenientconflicterrors && cerrors.size() != 0) {
         string conflictMsg = "Constructor pattern cannot be distinguished from constructor at ";
-        for(int4 i=0; i<cerrors.size(); ++i) {
+        for(int4 i = 0; i < cerrors.size(); ++i) {
             errors += 1;
             const Location* locA = getLocation(cerrors[i].first);
             const Location* locB = getLocation(cerrors[i].second);
@@ -1634,11 +1634,11 @@ void SleighCompile::buildPatterns(void)
         reportError(getLocation(root), msg.str());
         errors += 1;
     }
-    for(int4 i=0; i<tables.size(); ++i) {
+    for(int4 i = 0; i < tables.size(); ++i) {
         if (tables[i]->isError())
             errors += 1;
         if (tables[i]->getPattern() == (TokenPattern *)0) {
-            reportWarning(getLocation(tables[i]), "Unreferenced table '"+tables[i]->getName() + "'");
+            reportWarning(getLocation(tables[i]), "Unreferenced table '" + tables[i]->getName() + "'");
         }
     }
 }
@@ -1646,7 +1646,7 @@ void SleighCompile::buildPatterns(void)
 void SleighCompile::checkConsistency(void)
 
 {
-    ConsistencyChecker checker(this, root,warnunnecessarypcode,warndeadtemps);
+    ConsistencyChecker checker(this, root, warnunnecessarypcode, warndeadtemps);
 
     if (!checker.test()) {
         errors += 1;
@@ -1656,7 +1656,7 @@ void SleighCompile::checkConsistency(void)
         errors += 1;
         return;
     }
-    if ((!warnunnecessarypcode)&&(checker.getNumUnnecessaryPcode() > 0)) {
+    if ((!warnunnecessarypcode) && (checker.getNumUnnecessaryPcode() > 0)) {
         ostringstream msg;
         msg << dec << checker.getNumUnnecessaryPcode();
         msg << " unnecessary extensions/truncations were converted to copies" << endl;
@@ -1668,7 +1668,7 @@ void SleighCompile::checkConsistency(void)
         errors += 1;
         return;
     }
-    if ((!warndeadtemps)&&(checker.getNumWriteNoRead() > 0)) {
+    if ((!warndeadtemps) && (checker.getNumWriteNoRead() > 0)) {
         ostringstream msg;
         msg << dec << checker.getNumWriteNoRead();
         msg << " operations wrote to temporaries that were not read" << endl;
@@ -1677,12 +1677,12 @@ void SleighCompile::checkConsistency(void)
     }
 }
 
-int4 SleighCompile::findCollision(map<uintb,int4> &local2Operand,const vector<uintb> &locals,int operand)
+int4 SleighCompile::findCollision(map<uintb, int4> &local2Operand, const vector<uintb> &locals, int operand)
 
 {
-    for(int4 i=0; i<locals.size(); ++i) {
-        pair<map<uintb,int4>::iterator,bool> res;
-        res = local2Operand.insert(pair<uintb,int4>(locals[i],operand));
+    for(int4 i = 0; i < locals.size(); ++i) {
+        pair<map<uintb, int4>::iterator, bool> res;
+        res = local2Operand.insert(pair<uintb, int4>(locals[i], operand));
         if (!res.second) {
             int4 oldIndex = (*res.first).second;
             if (oldIndex != operand)
@@ -1702,8 +1702,8 @@ bool SleighCompile::checkLocalExports(Constructor *ct)
     if (ct->getNumOperands() < 2)
         return true;		// Collision can only happen with multiple operands
     bool noCollisions = true;
-    map<uintb,int4> collect;
-    for(int4 i=0; i<ct->getNumOperands(); ++i) {
+    map<uintb, int4> collect;
+    for(int4 i = 0; i < ct->getNumOperands(); ++i) {
         vector<uintb> newCollect;
         ct->getOperand(i)->collectLocalValues(newCollect);
         if (newCollect.empty()) continue;
@@ -1730,12 +1730,12 @@ void SleighCompile::checkLocalCollisions(void)
     int4 i = -1;
     for(;;) {
         int4 numconst = sym->getNumConstructors();
-        for(int4 j=0; j<numconst; ++j) {
+        for(int4 j = 0; j < numconst; ++j) {
             if (!checkLocalExports(sym->getConstructor(j)))
                 collisionCount += 1;
         }
-        i+=1;
-        if (i>=tables.size()) break;
+        i += 1;
+        if (i >= tables.size()) break;
         sym = tables[i];
     }
     if (collisionCount > 0) {
@@ -1752,7 +1752,7 @@ void SleighCompile::checkNops(void)
 {
     if (noplist.size() > 0) {
         if (warnallnops) {
-            for(int4 i=0; i<noplist.size(); ++i)
+            for(int4 i = 0; i < noplist.size(); ++i)
                 reportWarning(noplist[i]);
         }
         ostringstream msg;
@@ -1769,7 +1769,7 @@ string SleighCompile::checkSymbols(SymbolScope *scope)
     // Make sure label symbols are used properly
     ostringstream msg;
     SymbolTree::const_iterator iter;
-    for(iter=scope->begin(); iter!=scope->end(); ++iter) {
+    for(iter = scope->begin(); iter != scope->end(); ++iter) {
         LabelSymbol *sym = (LabelSymbol *)*iter;
         if (sym->getType() != SleighSymbol::label_symbol) continue;
         if (sym->getRefCount() == 0)
@@ -1875,22 +1875,22 @@ void SleighCompile::process(void)
     checkNops();
     if (getDefaultCodeSpace() == (AddrSpace *)0)
         reportError("No default space specified");
-    if (errors>0) return;
+    if (errors > 0) return;
     checkConsistency();
-    if (errors>0) return;
+    if (errors > 0) return;
     checkLocalCollisions();
-    if (errors>0) return;
+    if (errors > 0) return;
     buildPatterns();
-    if (errors>0) return;
+    if (errors > 0) return;
     buildDecisionTrees();
-    if (errors>0) return;
+    if (errors > 0) return;
     vector<string> errorPairs;
     buildXrefs(errorPairs);		// Make sure we can build crossrefs properly
     if (!errorPairs.empty()) {
-        for(int4 i=0; i<errorPairs.size(); i+=2) {
+        for(int4 i = 0; i < errorPairs.size(); i += 2) {
             ostringstream s;
             s << "Duplicate (offset,size) pair for registers: ";
-            s << errorPairs[i] << " and " << errorPairs[i+1] << endl;
+            s << errorPairs[i] << " and " << errorPairs[i + 1] << endl;
             reportError(s.str());
         }
         return;
@@ -1908,21 +1908,21 @@ void SleighCompile::calcContextLayout(void)
     contextlock = true;
 
     int4 context_offset = 0;
-    int4 begin,sz;
-    stable_sort(contexttable.begin(),contexttable.end());
+    int4 begin, sz;
+    stable_sort(contexttable.begin(), contexttable.end());
     begin = 0;
     while(begin < contexttable.size()) { // Define the context variables
         sz = 1;
-        while ((begin+sz < contexttable.size())&&(contexttable[begin+sz].sym==contexttable[begin].sym))
+        while ((begin + sz < contexttable.size()) && (contexttable[begin + sz].sym == contexttable[begin].sym))
             sz += 1;
-        context_offset = calcContextVarLayout(begin,sz,context_offset);
+        context_offset = calcContextVarLayout(begin, sz, context_offset);
         begin += sz;
     }
 
     //  context_size = (context_offset+8*sizeof(uintm)-1)/(8*sizeof(uintm));
 
     // Delete the quals
-    for(int4 i=0; i<contexttable.size(); ++i) {
+    for(int4 i = 0; i < contexttable.size(); ++i) {
         FieldQuality *qual = contexttable[i].qual;
         delete qual;
     }
@@ -1941,8 +1941,8 @@ string SleighCompile::grabCurrentFilePath(void) const
 void SleighCompile::parseFromNewFile(const string &fname)
 
 {
-    string base,path;
-    FileManage::splitPath(fname,path,base);
+    string base, path;
+    FileManage::splitPath(fname, path, base);
     filename.push_back(base);
     if (relpath.empty() || FileManage::isAbsolutePath(path))
         relpath.push_back(path);
@@ -1957,7 +1957,7 @@ void SleighCompile::parseFromNewFile(const string &fname)
 void SleighCompile::parsePreprocMacro(void)
 
 {
-    filename.push_back(filename.back()+":macro");
+    filename.push_back(filename.back() + ":macro");
     relpath.push_back(relpath.back());
     lineno.push_back(lineno.back());
 }
@@ -1970,16 +1970,16 @@ void SleighCompile::parseFileFinished(void)
     lineno.pop_back();
 }
 
-bool SleighCompile::getPreprocValue(const string &nm,string &res) const
+bool SleighCompile::getPreprocValue(const string &nm, string &res) const
 
 {
-    map<string,string>::const_iterator iter = preproc_defines.find(nm);
+    map<string, string>::const_iterator iter = preproc_defines.find(nm);
     if (iter == preproc_defines.end()) return false;
     res = (*iter).second;
     return true;
 }
 
-void SleighCompile::setPreprocValue(const string &nm,const string &value)
+void SleighCompile::setPreprocValue(const string &nm, const string &value)
 
 {
     preproc_defines[nm] = value;
@@ -1988,25 +1988,25 @@ void SleighCompile::setPreprocValue(const string &nm,const string &value)
 bool SleighCompile::undefinePreprocValue(const string &nm)
 
 {
-    map<string,string>::iterator iter = preproc_defines.find(nm);
-    if (iter==preproc_defines.end()) return false;
+    map<string, string>::iterator iter = preproc_defines.find(nm);
+    if (iter == preproc_defines.end()) return false;
     preproc_defines.erase(iter);
     return true;
 }
 
 // Functions needed by the parser
 
-TokenSymbol *SleighCompile::defineToken(string *name,uintb *sz)
+TokenSymbol *SleighCompile::defineToken(string *name, uintb *sz)
 
 {
     uint4 size = *sz;
     delete sz;
-    if ((size&7)!=0) {
+    if ((size & 7) != 0) {
         reportError(getCurrentLocation(), "'" + *name + "': token size must be multiple of 8");
-        size = (size/8)+1;
+        size = (size / 8) + 1;
     } else
-        size = size/8;
-    Token *newtoken = new Token(*name,size,isBigEndian(),tokentable.size());
+        size = size / 8;
+    Token *newtoken = new Token(*name, size, isBigEndian(), tokentable.size());
     tokentable.push_back(newtoken);
     delete name;
     TokenSymbol *res = new TokenSymbol(newtoken);
@@ -2014,21 +2014,21 @@ TokenSymbol *SleighCompile::defineToken(string *name,uintb *sz)
     return res;
 }
 
-void SleighCompile::addTokenField(TokenSymbol *sym,FieldQuality *qual)
+void SleighCompile::addTokenField(TokenSymbol *sym, FieldQuality *qual)
 
 {
-    TokenField *field = new TokenField(sym->getToken(),qual->signext,qual->low,qual->high);
-    addSymbol(new ValueSymbol(qual->name,field));
+    TokenField *field = new TokenField(sym->getToken(), qual->signext, qual->low, qual->high);
+    addSymbol(new ValueSymbol(qual->name, field));
     delete qual;
 }
 
-bool SleighCompile::addContextField(VarnodeSymbol *sym,FieldQuality *qual)
+bool SleighCompile::addContextField(VarnodeSymbol *sym, FieldQuality *qual)
 
 {
     if (contextlock)
         return false;		// Context layout has already been satisfied
 
-    contexttable.push_back(FieldContext(sym,qual));
+    contexttable.push_back(FieldContext(sym, qual));
     return true;
 }
 
@@ -2042,7 +2042,7 @@ void SleighCompile::newSpace(SpaceQuality *qual)
     }
 
     int4 delay = (qual->type == SpaceQuality::registertype) ? 0 : 1;
-    AddrSpace *spc = new AddrSpace(this,this,IPTR_PROCESSOR,qual->name,qual->size,qual->wordsize,numSpaces(),AddrSpace::hasphysical,delay);
+    AddrSpace *spc = new AddrSpace(this, this, IPTR_PROCESSOR, qual->name, qual->size, qual->wordsize, numSpaces(), AddrSpace::hasphysical, delay);
     insertSpace(spc);
     if (qual->isdefault) {
         if (getDefaultCodeSpace() != (AddrSpace *)0)
@@ -2059,7 +2059,7 @@ void SleighCompile::newSpace(SpaceQuality *qual)
 SectionSymbol *SleighCompile::newSectionSymbol(const string &nm)
 
 {
-    SectionSymbol *sym = new SectionSymbol(nm,sections.size());
+    SectionSymbol *sym = new SectionSymbol(nm, sections.size());
     try {
         symtab.addGlobalSymbol(sym);
     } catch(SleighError &err) {
@@ -2079,14 +2079,14 @@ void SleighCompile::setEndian(int4 end)
     predefinedSymbols();		// Set up symbols now that we know endianess
 }
 
-void SleighCompile::defineVarnodes(SpaceSymbol *spacesym,uintb *off,uintb *size,vector<string> *names)
+void SleighCompile::defineVarnodes(SpaceSymbol *spacesym, uintb *off, uintb *size, vector<string> *names)
 
 {
     AddrSpace *spc = spacesym->getSpace();
     uintb myoff = *off;
-    for(int4 i=0; i<names->size(); ++i) {
+    for(int4 i = 0; i < names->size(); ++i) {
         if ((*names)[i] != "_")
-            addSymbol( new VarnodeSymbol((*names)[i],spc,myoff,*size) );
+            addSymbol( new VarnodeSymbol((*names)[i], spc, myoff, *size) );
         myoff += *size;
     }
     delete names;
@@ -2094,7 +2094,7 @@ void SleighCompile::defineVarnodes(SpaceSymbol *spacesym,uintb *off,uintb *size,
     delete size;
 }
 
-void SleighCompile::defineBitrange(string *name,VarnodeSymbol *sym,uint4 bitoffset,uint4 numb)
+void SleighCompile::defineBitrange(string *name, VarnodeSymbol *sym, uint4 bitoffset, uint4 numb)
 
 {
     // Define a new symbol as a subrange of bits within another symbol
@@ -2103,33 +2103,33 @@ void SleighCompile::defineBitrange(string *name,VarnodeSymbol *sym,uint4 bitoffs
     // a special symbol which is a place holder for the bitrange operator
     string namecopy = *name;
     delete name;
-    uint4 size = 8*sym->getSize(); // Number of bits
+    uint4 size = 8 * sym->getSize(); // Number of bits
     if (numb == 0) {
         reportError(getCurrentLocation(), "'" + namecopy + "': size of bitrange is zero");
         return;
     }
-    if ((bitoffset >= size)||((bitoffset+numb)>size)) {
+    if ((bitoffset >= size) || ((bitoffset + numb) > size)) {
         reportError(getCurrentLocation(), "'" + namecopy + "': bad bitrange");
         return;
     }
-    if ((bitoffset%8 == 0)&&(numb%8 == 0)) {
+    if ((bitoffset % 8 == 0) && (numb % 8 == 0)) {
         // This can be reduced to an ordinary varnode definition
         AddrSpace *newspace = sym->getFixedVarnode().space;
         uintb newoffset = sym->getFixedVarnode().offset;
-        int4 newsize = numb/8;
+        int4 newsize = numb / 8;
         if (isBigEndian())
-            newoffset += (size-bitoffset-numb)/8;
+            newoffset += (size - bitoffset - numb) / 8;
         else
-            newoffset += bitoffset/8;
-        addSymbol( new VarnodeSymbol(namecopy,newspace,newoffset,newsize) );
+            newoffset += bitoffset / 8;
+        addSymbol( new VarnodeSymbol(namecopy, newspace, newoffset, newsize) );
     } else				// Otherwise define the special symbol
-        addSymbol( new BitrangeSymbol(namecopy,sym,bitoffset,numb) );
+        addSymbol( new BitrangeSymbol(namecopy, sym, bitoffset, numb) );
 }
 
 void SleighCompile::addUserOp(vector<string> *names)
 
 {
-    for(int4 i=0; i<names->size(); ++i) {
+    for(int4 i = 0; i < names->size(); ++i) {
         UserOpSymbol *sym = new UserOpSymbol((*names)[i]);
         sym->setIndex(userop_count++);
         addSymbol( sym );
@@ -2142,10 +2142,10 @@ SleighSymbol *SleighCompile::dedupSymbolList(vector<SleighSymbol *> *symlist)
 {
     // Find duplicates in -symlist-, null out all but first
     SleighSymbol *res = (SleighSymbol *)0;
-    for(int4 i=0; i<symlist->size(); ++i) {
+    for(int4 i = 0; i < symlist->size(); ++i) {
         SleighSymbol *sym = (*symlist)[i];
         if (sym == (SleighSymbol *)0) continue;
-        for(int4 j=i+1; j<symlist->size(); ++j) {
+        for(int4 j = i + 1; j < symlist->size(); ++j) {
             if ((*symlist)[j] == sym) { // Found a duplicate
                 res = sym;		// Return example duplicate for error reporting
                 (*symlist)[j] = (SleighSymbol *)0; // Null out the duplicate
@@ -2155,51 +2155,51 @@ SleighSymbol *SleighCompile::dedupSymbolList(vector<SleighSymbol *> *symlist)
     return res;
 }
 
-void SleighCompile::attachValues(vector<SleighSymbol *> *symlist,vector<intb> *numlist)
+void SleighCompile::attachValues(vector<SleighSymbol *> *symlist, vector<intb> *numlist)
 
 {
     SleighSymbol *dupsym = dedupSymbolList(symlist);
     if (dupsym != (SleighSymbol *)0)
-        reportWarning(getCurrentLocation(), "'attach values' list contains duplicate entries: "+dupsym->getName());
-    for(int4 i=0; i<symlist->size(); ++i) {
+        reportWarning(getCurrentLocation(), "'attach values' list contains duplicate entries: " + dupsym->getName());
+    for(int4 i = 0; i < symlist->size(); ++i) {
         ValueSymbol *sym = (ValueSymbol *)(*symlist)[i];
         if (sym == (ValueSymbol *)0) continue;
         PatternValue *patval = sym->getPatternValue();
         if (patval->maxValue() + 1 != numlist->size()) {
             reportError(getCurrentLocation(), "Attach value '" + sym->getName() + "' is wrong size for list");
         }
-        symtab.replaceSymbol(sym, new ValueMapSymbol(sym->getName(),patval,*numlist));
+        symtab.replaceSymbol(sym, new ValueMapSymbol(sym->getName(), patval, *numlist));
     }
     delete numlist;
     delete symlist;
 }
 
-void SleighCompile::attachNames(vector<SleighSymbol *> *symlist,vector<string> *names)
+void SleighCompile::attachNames(vector<SleighSymbol *> *symlist, vector<string> *names)
 
 {
     SleighSymbol *dupsym = dedupSymbolList(symlist);
     if (dupsym != (SleighSymbol *)0)
-        reportWarning(getCurrentLocation(), "'attach names' list contains duplicate entries: "+dupsym->getName());
-    for(int4 i=0; i<symlist->size(); ++i) {
+        reportWarning(getCurrentLocation(), "'attach names' list contains duplicate entries: " + dupsym->getName());
+    for(int4 i = 0; i < symlist->size(); ++i) {
         ValueSymbol *sym = (ValueSymbol *)(*symlist)[i];
         if (sym == (ValueSymbol *)0) continue;
         PatternValue *patval = sym->getPatternValue();
         if (patval->maxValue() + 1 != names->size()) {
             reportError(getCurrentLocation(), "Attach name '" + sym->getName() + "' is wrong size for list");
         }
-        symtab.replaceSymbol(sym,new NameSymbol(sym->getName(),patval,*names));
+        symtab.replaceSymbol(sym, new NameSymbol(sym->getName(), patval, *names));
     }
     delete names;
     delete symlist;
 }
 
-void SleighCompile::attachVarnodes(vector<SleighSymbol *> *symlist,vector<SleighSymbol *> *varlist)
+void SleighCompile::attachVarnodes(vector<SleighSymbol *> *symlist, vector<SleighSymbol *> *varlist)
 
 {
     SleighSymbol *dupsym = dedupSymbolList(symlist);
     if (dupsym != (SleighSymbol *)0)
-        reportWarning(getCurrentLocation(), "'attach variables' list contains duplicate entries: "+dupsym->getName());
-    for(int4 i=0; i<symlist->size(); ++i) {
+        reportWarning(getCurrentLocation(), "'attach variables' list contains duplicate entries: " + dupsym->getName());
+    for(int4 i = 0; i < symlist->size(); ++i) {
         ValueSymbol *sym = (ValueSymbol *)(*symlist)[i];
         if (sym == (ValueSymbol *)0) continue;
         PatternValue *patval = sym->getPatternValue();
@@ -2207,7 +2207,7 @@ void SleighCompile::attachVarnodes(vector<SleighSymbol *> *symlist,vector<Sleigh
             reportError(getCurrentLocation(), "Attach varnode '" + sym->getName() + "' is wrong size for list");
         }
         int4 sz = 0;
-        for(int4 j=0; j<varlist->size(); ++j) {
+        for(int4 j = 0; j < varlist->size(); ++j) {
             VarnodeSymbol *vsym = (VarnodeSymbol *)(*varlist)[j];
             if (vsym != (VarnodeSymbol *)0) {
                 if (sz == 0)
@@ -2220,7 +2220,7 @@ void SleighCompile::attachVarnodes(vector<SleighSymbol *> *symlist,vector<Sleigh
                 }
             }
         }
-        symtab.replaceSymbol(sym,new VarnodeListSymbol(sym->getName(),patval,*varlist));
+        symtab.replaceSymbol(sym, new VarnodeListSymbol(sym->getName(), patval, *varlist));
     }
     delete varlist;
     delete symlist;
@@ -2236,17 +2236,17 @@ SubtableSymbol *SleighCompile::newTable(string *nm)
     return sym;
 }
 
-void SleighCompile::newOperand(Constructor *ct,string *nm)
+void SleighCompile::newOperand(Constructor *ct, string *nm)
 
 {
     int4 index = ct->getNumOperands();
-    OperandSymbol *sym = new OperandSymbol(*nm,index,ct);
+    OperandSymbol *sym = new OperandSymbol(*nm, index, ct);
     addSymbol(sym);
     ct->addOperand(sym);
     delete nm;
 }
 
-PatternEquation *SleighCompile::constrainOperand(OperandSymbol *sym,PatternExpression *patexp)
+PatternEquation *SleighCompile::constrainOperand(OperandSymbol *sym, PatternExpression *patexp)
 
 {
     // Create constraint on operand
@@ -2254,7 +2254,7 @@ PatternEquation *SleighCompile::constrainOperand(OperandSymbol *sym,PatternExpre
     FamilySymbol *famsym = dynamic_cast<FamilySymbol *>(sym->getDefiningSymbol());
     if (famsym != (FamilySymbol *)0) { // Operand already defined as family symbol
         // This equation must be a constraint
-        res = new EqualEquation(famsym->getPatternValue(),patexp);
+        res = new EqualEquation(famsym->getPatternValue(), patexp);
     } else {			// Operand is currently undefined, so we can't constrain
         PatternExpression::release(patexp);
         res = (PatternEquation *)0;
@@ -2262,7 +2262,7 @@ PatternEquation *SleighCompile::constrainOperand(OperandSymbol *sym,PatternExpre
     return res;
 }
 
-void SleighCompile::defineOperand(OperandSymbol *sym,PatternExpression *patexp)
+void SleighCompile::defineOperand(OperandSymbol *sym, PatternExpression *patexp)
 
 {
     // Define operand in terms of PatternExpression
@@ -2281,13 +2281,13 @@ PatternEquation *SleighCompile::defineInvisibleOperand(TripleSymbol *sym)
 
 {
     int4 index = curct->getNumOperands();
-    OperandSymbol *opsym = new OperandSymbol(sym->getName(),index,curct);
+    OperandSymbol *opsym = new OperandSymbol(sym->getName(), index, curct);
     addSymbol(opsym);
     curct->addInvisibleOperand(opsym);
     PatternEquation *res = new OperandEquation(opsym->getIndex());
     SleighSymbol::symbol_type tp = sym->getType();
     try {
-        if ((tp==SleighSymbol::value_symbol)||(tp==SleighSymbol::context_symbol)) {
+        if ((tp == SleighSymbol::value_symbol) || (tp == SleighSymbol::context_symbol)) {
             opsym->defineOperand(sym->getPatternExpression());
         } else {
             opsym->defineOperand(sym);
@@ -2303,14 +2303,14 @@ void SleighCompile::selfDefine(OperandSymbol *sym)
 
 {
     // Define operand as global symbol of same name
-    TripleSymbol *glob = dynamic_cast<TripleSymbol *>(symtab.findSymbol(sym->getName(),1));
+    TripleSymbol *glob = dynamic_cast<TripleSymbol *>(symtab.findSymbol(sym->getName(), 1));
     if (glob == (TripleSymbol *)0) {
         reportError(getCurrentLocation(), "No matching global symbol '" + sym->getName() + "'");
         return;
     }
     SleighSymbol::symbol_type tp = glob->getType();
     try {
-        if ((tp==SleighSymbol::value_symbol)||(tp==SleighSymbol::context_symbol)) {
+        if ((tp == SleighSymbol::value_symbol) || (tp == SleighSymbol::context_symbol)) {
             sym->defineOperand(glob->getPatternExpression());
         } else
             sym->defineOperand(glob);
@@ -2319,7 +2319,7 @@ void SleighCompile::selfDefine(OperandSymbol *sym)
     }
 }
 
-ConstructTpl *SleighCompile::setResultVarnode(ConstructTpl *ct,VarnodeTpl *vn)
+ConstructTpl *SleighCompile::setResultVarnode(ConstructTpl *ct, VarnodeTpl *vn)
 
 {
     // Set constructors handle to indicate given varnode
@@ -2329,20 +2329,20 @@ ConstructTpl *SleighCompile::setResultVarnode(ConstructTpl *ct,VarnodeTpl *vn)
     return ct;
 }
 
-ConstructTpl *SleighCompile::setResultStarVarnode(ConstructTpl *ct,StarQuality *star,VarnodeTpl *vn)
+ConstructTpl *SleighCompile::setResultStarVarnode(ConstructTpl *ct, StarQuality *star, VarnodeTpl *vn)
 
 {
     // Set constructors handle to be the value pointed
     // at by -vn-
-    HandleTpl *res = new HandleTpl(star->id,ConstTpl(ConstTpl::real,star->size),vn,
-                                   getUniqueSpace(),getUniqueAddr());
+    HandleTpl *res = new HandleTpl(star->id, ConstTpl(ConstTpl::real, star->size), vn,
+                                   getUniqueSpace(), getUniqueAddr());
     delete star;
     delete vn;
     ct->setResult(res);
     return ct;
 }
 
-bool SleighCompile::contextMod(vector<ContextChange *> *vec,ContextSymbol *sym,PatternExpression *pe)
+bool SleighCompile::contextMod(vector<ContextChange *> *vec, ContextSymbol *sym, PatternExpression *pe)
 
 {
     // A temporary change to a context variable (within the parsing of a single instruction)
@@ -2350,17 +2350,17 @@ bool SleighCompile::contextMod(vector<ContextChange *> *vec,ContextSymbol *sym,P
     // So we check to make sure the value expression doesn't use this symbol
     vector<const PatternValue *> vallist;
     pe->listValues(vallist);
-    for(uint4 i=0; i<vallist.size(); ++i)
+    for(uint4 i = 0; i < vallist.size(); ++i)
         if (dynamic_cast<const EndInstructionValue *>(vallist[i]) != (const EndInstructionValue *)0)
             return false;
     // Otherwise we generate a "temporary" change to context instruction  (ContextOp)
     ContextField *field = (ContextField *)sym->getPatternValue();
-    ContextOp *op = new ContextOp(field->getStartBit(),field->getEndBit(),pe);
+    ContextOp *op = new ContextOp(field->getStartBit(), field->getEndBit(), pe);
     vec->push_back(op);
     return true;
 }
 
-void SleighCompile::contextSet(vector<ContextChange *> *vec,TripleSymbol *sym,
+void SleighCompile::contextSet(vector<ContextChange *> *vec, TripleSymbol *sym,
                                ContextSymbol *cvar)
 
 {
@@ -2368,22 +2368,22 @@ void SleighCompile::contextSet(vector<ContextChange *> *vec,TripleSymbol *sym,
     // is put off until the full instruction has been parsed.  The existing value in the context
     // field is set permanently to that value starting at the address given by the address expression
     ContextField *field = (ContextField *)cvar->getPatternValue();
-    ContextCommit *op = new ContextCommit(sym,field->getStartBit(),field->getEndBit(),cvar->getFlow());
+    ContextCommit *op = new ContextCommit(sym, field->getStartBit(), field->getEndBit(), cvar->getFlow());
     vec->push_back(op);
 }
 
-MacroSymbol *SleighCompile::createMacro(string *name,vector<string> *params)
+MacroSymbol *SleighCompile::createMacro(string *name, vector<string> *params)
 
 {
     // create a macro symbol (with parameter names)
     curct = (Constructor *)0;	// Not currently defining a Constructor
-    curmacro = new MacroSymbol(*name,macrotable.size());
+    curmacro = new MacroSymbol(*name, macrotable.size());
     delete name;
     addSymbol(curmacro);
     symtab.addScope();		// New scope for the body of the macro definition
     pcode.resetLabelCount();	// Macros have their own labels
-    for(int4 i=0; i<params->size(); ++i) {
-        OperandSymbol *oper = new OperandSymbol((*params)[i],i,(Constructor *)0);
+    for(int4 i = 0; i < params->size(); ++i) {
+        OperandSymbol *oper = new OperandSymbol((*params)[i], i, (Constructor *)0);
         addSymbol(oper);
         curmacro->addOperand(oper);
     }
@@ -2391,12 +2391,12 @@ MacroSymbol *SleighCompile::createMacro(string *name,vector<string> *params)
     return curmacro;
 }
 
-void SleighCompile::compareMacroParams(MacroSymbol *sym,const vector<ExprTree *> &param)
+void SleighCompile::compareMacroParams(MacroSymbol *sym, const vector<ExprTree *> &param)
 
 {
     // Match up any qualities of the macro's OperandSymbols with
     // any OperandSymbol passed into the macro
-    for(uint4 i=0; i<param.size(); ++i) {
+    for(uint4 i = 0; i < param.size(); ++i) {
         VarnodeTpl *outvn = param[i]->getOut();
         if (outvn == (VarnodeTpl *)0) continue;
         // Check if an OperandSymbol was passed into this macro
@@ -2417,7 +2417,7 @@ void SleighCompile::compareMacroParams(MacroSymbol *sym,const vector<ExprTree *>
     }
 }
 
-vector<OpTpl *> *SleighCompile::createMacroUse(MacroSymbol *sym,vector<ExprTree *> *param)
+vector<OpTpl *> *SleighCompile::createMacroUse(MacroSymbol *sym, vector<ExprTree *> *param)
 
 {
     // Create macro build directive, given symbol and parameters
@@ -2427,24 +2427,24 @@ vector<OpTpl *> *SleighCompile::createMacroUse(MacroSymbol *sym,vector<ExprTree 
         reportError(getCurrentLocation(), errmsg);
         return new vector<OpTpl *>;
     }
-    compareMacroParams(sym,*param);
+    compareMacroParams(sym, *param);
     OpTpl *op = new OpTpl(MACROBUILD);
     VarnodeTpl *idvn = new VarnodeTpl(ConstTpl(getConstantSpace()),
-                                      ConstTpl(ConstTpl::real,sym->getIndex()),
-                                      ConstTpl(ConstTpl::real,4));
+                                      ConstTpl(ConstTpl::real, sym->getIndex()),
+                                      ConstTpl(ConstTpl::real, 4));
     op->addInput(idvn);
-    return ExprTree::appendParams(op,param);
+    return ExprTree::appendParams(op, param);
 }
 
 SectionVector *SleighCompile::standaloneSection(ConstructTpl *main)
 
 {
     // Create SectionVector for just the main rtl section with no named sections
-    SectionVector *res = new SectionVector(main,symtab.getCurrentScope());
+    SectionVector *res = new SectionVector(main, symtab.getCurrentScope());
     return res;
 }
 
-SectionVector *SleighCompile::firstNamedSection(ConstructTpl *main,SectionSymbol *sym)
+SectionVector *SleighCompile::firstNamedSection(ConstructTpl *main, SectionSymbol *sym)
 
 {
     // Start the first named p-code section after the main p-code section
@@ -2454,12 +2454,12 @@ SectionVector *SleighCompile::firstNamedSection(ConstructTpl *main,SectionSymbol
     if (parscope != symtab.getGlobalScope())
         throw LowlevelError("firstNamedSection called when not in Constructor scope"); // Unrecoverable error
     symtab.addScope();		// Add new scope under the Constructor scope
-    SectionVector *res = new SectionVector(main,curscope);
+    SectionVector *res = new SectionVector(main, curscope);
     res->setNextIndex(sym->getTemplateId());
     return res;
 }
 
-SectionVector *SleighCompile::nextNamedSection(SectionVector *vec,ConstructTpl *section,SectionSymbol *sym)
+SectionVector *SleighCompile::nextNamedSection(SectionVector *vec, ConstructTpl *section, SectionSymbol *sym)
 
 {
     // Add additional named p-code sections
@@ -2470,29 +2470,29 @@ SectionVector *SleighCompile::nextNamedSection(SectionVector *vec,ConstructTpl *
     if (parscope != symtab.getGlobalScope())
         throw LowlevelError("nextNamedSection called when not in section scope"); // Unrecoverable
     symtab.addScope();		// Add new scope under the Constructor scope (not the last section scope)
-    vec->append(section,curscope); // Associate finished section
+    vec->append(section, curscope); // Associate finished section
     vec->setNextIndex(sym->getTemplateId()); // Set index for the NEXT section (not been fully parsed yet)
     return vec;
 }
 
-SectionVector *SleighCompile::finalNamedSection(SectionVector *vec,ConstructTpl *section)
+SectionVector *SleighCompile::finalNamedSection(SectionVector *vec, ConstructTpl *section)
 
 {
     // Fill-in final named section to match the previous SectionSymbol
-    vec->append(section,symtab.getCurrentScope());
+    vec->append(section, symtab.getCurrentScope());
     symtab.popScope();		// Pop the section scope
     return vec;
 }
 
-vector<OpTpl *> *SleighCompile::createCrossBuild(VarnodeTpl *addr,SectionSymbol *sym)
+vector<OpTpl *> *SleighCompile::createCrossBuild(VarnodeTpl *addr, SectionSymbol *sym)
 
 {
     // Create the crossbuild directive as a pcode template
     unique_allocatemask = 1;
     vector<OpTpl *> *res = new vector<OpTpl *>();
     VarnodeTpl *sectionid = new VarnodeTpl(ConstTpl(getConstantSpace()),
-                                           ConstTpl(ConstTpl::real,sym->getTemplateId()),
-                                           ConstTpl(ConstTpl::real,4));
+                                           ConstTpl(ConstTpl::real, sym->getTemplateId()),
+                                           ConstTpl(ConstTpl::real, 4));
     // This is simply a single pcodeop (template), where the opcode indicates the crossbuild directive
     OpTpl *op = new OpTpl( CROSSBUILD );
     op->addInput(addr);		// The first input is the VarnodeTpl representing the address
@@ -2526,23 +2526,23 @@ void SleighCompile::resetConstructors(void)
     symtab.setCurrentScope(symtab.getGlobalScope()); // Purge any dangling local scopes
 }
 
-bool SleighCompile::expandMacros(ConstructTpl *ctpl,const vector<ConstructTpl *> &macrotable)
+bool SleighCompile::expandMacros(ConstructTpl *ctpl, const vector<ConstructTpl *> &macrotable)
 
 {
     vector<OpTpl *> newvec;
     vector<OpTpl *>::const_iterator iter;
     OpTpl *op;
 
-    for(iter=ctpl->getOpvec().begin(); iter!=ctpl->getOpvec().end(); ++iter) {
+    for(iter = ctpl->getOpvec().begin(); iter != ctpl->getOpvec().end(); ++iter) {
         op = *iter;
         if (op->getOpcode() == MACROBUILD) {
-            MacroBuilder builder(this,newvec,ctpl->numLabels());
+            MacroBuilder builder(this, newvec, ctpl->numLabels());
             int4 index = op->getIn(0)->getOffset().getReal();
             if (index >= macrotable.size())
                 return false;
             builder.setMacroOp(op);
             ConstructTpl *macro_tpl = macrotable[index];
-            builder.build(macro_tpl,-1);
+            builder.build(macro_tpl, -1);
             ctpl->setNumLabels( ctpl->numLabels() + macro_tpl->numLabels() );
             delete op;		// Throw away the place holder op
             if (builder.hasError())
@@ -2554,28 +2554,28 @@ bool SleighCompile::expandMacros(ConstructTpl *ctpl,const vector<ConstructTpl *>
     return true;
 }
 
-bool SleighCompile::finalizeSections(Constructor *big,SectionVector *vec)
+bool SleighCompile::finalizeSections(Constructor *big, SectionVector *vec)
 
 {
     // Do all final checks, expansions, and linking for p-code sections
     vector<string> errors;
 
     RtlPair cur = vec->getMainPair();
-    int4 i=-1;
+    int4 i = -1;
     string sectionstring = "   Main section: ";
     int4 max = vec->getMaxId();
     for(;;) {
         string errstring;
 
         errstring = checkSymbols(cur.scope); // Check labels in the section's scope
-        if (errstring.size()!=0) {
+        if (errstring.size() != 0) {
             errors.push_back(sectionstring + errstring);
         } else {
-            if (!expandMacros(cur.section,macrotable))
+            if (!expandMacros(cur.section, macrotable))
                 errors.push_back(sectionstring + "Could not expand macros");
             vector<int4> check;
             big->markSubtableOperands(check);
-            int4 res = cur.section->fillinBuild(check,getConstantSpace());
+            int4 res = cur.section->fillinBuild(check, getConstantSpace());
             if (res == 1)
                 errors.push_back(sectionstring + "Duplicate BUILD statements");
             if (res == 2)
@@ -2586,7 +2586,7 @@ bool SleighCompile::finalizeSections(Constructor *big,SectionVector *vec)
         }
         if (i < 0) {		// These potential errors only apply to main section
             if (cur.section->getResult() != (HandleTpl *)0) {	// If there is an export statement
-                if (big->getParent()==root)
+                if (big->getParent() == root)
                     errors.push_back("   Cannot have export statement in root constructor");
                 else if (!force_exportsize(cur.section))
                     errors.push_back("   Size of export is unknown");
@@ -2618,14 +2618,14 @@ bool SleighCompile::finalizeSections(Constructor *big,SectionVector *vec)
         s << "in ";
         big->printInfo(s);
         reportError(getLocation(big), s.str());
-        for(int4 j=0; j<errors.size(); ++j)
+        for(int4 j = 0; j < errors.size(); ++j)
             reportError(getLocation(big), errors[j]);
         return false;
     }
     return true;
 }
 
-void SleighCompile::shiftUniqueVn(VarnodeTpl *vn,int4 sa)
+void SleighCompile::shiftUniqueVn(VarnodeTpl *vn, int4 sa)
 
 {
     // If the varnode is in the unique space, shift its offset up by -sa- bits
@@ -2636,18 +2636,18 @@ void SleighCompile::shiftUniqueVn(VarnodeTpl *vn,int4 sa)
     }
 }
 
-void SleighCompile::shiftUniqueOp(OpTpl *op,int4 sa)
+void SleighCompile::shiftUniqueOp(OpTpl *op, int4 sa)
 
 {
     // Shift the offset up by -sa- bits for any varnode used by this -op- in the unique space
     VarnodeTpl *outvn = op->getOut();
     if (outvn != (VarnodeTpl *)0)
-        shiftUniqueVn(outvn,sa);
-    for(int4 i=0; i<op->numInput(); ++i)
-        shiftUniqueVn(op->getIn(i),sa);
+        shiftUniqueVn(outvn, sa);
+    for(int4 i = 0; i < op->numInput(); ++i)
+        shiftUniqueVn(op->getIn(i), sa);
 }
 
-void SleighCompile::shiftUniqueHandle(HandleTpl *hand,int4 sa)
+void SleighCompile::shiftUniqueHandle(HandleTpl *hand, int4 sa)
 
 {
     // Shift the offset up by -sa- bits, for either the dynamic or static varnode aspects that are in the unique space
@@ -2669,16 +2669,16 @@ void SleighCompile::shiftUniqueHandle(HandleTpl *hand,int4 sa)
     }
 }
 
-void SleighCompile::shiftUniqueConstruct(ConstructTpl *tpl,int4 sa)
+void SleighCompile::shiftUniqueConstruct(ConstructTpl *tpl, int4 sa)
 
 {
     // Shift the offset up by -sa- bits, for any varnode in the unique space associated with this template
     HandleTpl *result = tpl->getResult();
     if (result != (HandleTpl *)0)
-        shiftUniqueHandle(result,sa);
+        shiftUniqueHandle(result, sa);
     const vector<OpTpl *> &vec( tpl->getOpvec() );
-    for(int4 i=0; i<vec.size(); ++i)
-        shiftUniqueOp(vec[i],sa);
+    for(int4 i = 0; i < vec.size(); ++i)
+        shiftUniqueOp(vec[i], sa);
 }
 
 void SleighCompile::checkUniqueAllocation(void)
@@ -2696,19 +2696,19 @@ void SleighCompile::checkUniqueAllocation(void)
     int4 i = -1;
     for(;;) {
         int4 numconst = sym->getNumConstructors();
-        for(int4 j=0; j<numconst; ++j) {
+        for(int4 j = 0; j < numconst; ++j) {
             Constructor *ct = sym->getConstructor(j);
             ConstructTpl *tpl = ct->getTempl();
             if (tpl != (ConstructTpl *)0)
-                shiftUniqueConstruct(tpl,sa);
-            for(int4 k=0; k<secsize; ++k) {
+                shiftUniqueConstruct(tpl, sa);
+            for(int4 k = 0; k < secsize; ++k) {
                 ConstructTpl *namedtpl = ct->getNamedTempl(k);
                 if (namedtpl != (ConstructTpl *)0)
-                    shiftUniqueConstruct(namedtpl,sa);
+                    shiftUniqueConstruct(namedtpl, sa);
             }
         }
-        i+=1;
-        if (i>=tables.size()) break;
+        i += 1;
+        if (i >= tables.size()) break;
         sym = tables[i];
     }
     uintm ubase = getUniqueBase(); // We have to adjust the unique base
@@ -2716,11 +2716,11 @@ void SleighCompile::checkUniqueAllocation(void)
     setUniqueBase(ubase);
 }
 
-void SleighCompile::pushWith(SubtableSymbol *ss,PatternEquation *pateq,vector<ContextChange *> *contvec)
+void SleighCompile::pushWith(SubtableSymbol *ss, PatternEquation *pateq, vector<ContextChange *> *contvec)
 
 {
     withstack.push_back(WithBlock());
-    withstack.back().set(ss,pateq,contvec);
+    withstack.back().set(ss, pateq, contvec);
 }
 
 void SleighCompile::popWith(void)
@@ -2729,20 +2729,20 @@ void SleighCompile::popWith(void)
     withstack.pop_back();
 }
 
-void SleighCompile::buildConstructor(Constructor *big,PatternEquation *pateq,vector<ContextChange *> *contvec,SectionVector *vec)
+void SleighCompile::buildConstructor(Constructor *big, PatternEquation *pateq, vector<ContextChange *> *contvec, SectionVector *vec)
 
 {
     // Take all the different parse pieces for a Constructor and build the Constructor object
     bool noerrors = true;
     if (vec != (SectionVector *)0) { // If the sections were implemented
-        noerrors = finalizeSections(big,vec);
+        noerrors = finalizeSections(big, vec);
         if (noerrors) {		// Attach the sections to the Constructor
             big->setMainSection(vec->getMainSection());
             int4 max = vec->getMaxId();
-            for(int4 i=0; i<max; ++i) {
+            for(int4 i = 0; i < max; ++i) {
                 ConstructTpl *section = vec->getNamedSection(i);
                 if (section != (ConstructTpl *)0)
-                    big->setNamedSection(section,i);
+                    big->setNamedSection(section, i);
             }
         }
         delete vec;
@@ -2760,15 +2760,15 @@ void SleighCompile::buildConstructor(Constructor *big,PatternEquation *pateq,vec
     symtab.popScope();		// In all cases pop scope
 }
 
-void SleighCompile::buildMacro(MacroSymbol *sym,ConstructTpl *rtl)
+void SleighCompile::buildMacro(MacroSymbol *sym, ConstructTpl *rtl)
 
 {
     string errstring = checkSymbols(symtab.getCurrentScope());
     if (errstring.size() != 0) {
-        reportError(getCurrentLocation(), "In definition of macro '"+sym->getName() + "': " + errstring);
+        reportError(getCurrentLocation(), "In definition of macro '" + sym->getName() + "': " + errstring);
         return;
     }
-    if (!expandMacros(rtl,macrotable)) {
+    if (!expandMacros(rtl, macrotable)) {
         reportError(getCurrentLocation(), "Could not expand submacro in definition of macro '" + sym->getName() + "'");
         return;
     }
@@ -2786,12 +2786,12 @@ void SleighCompile::recordNop(void)
     noplist.push_back(msg);
 }
 
-static int4 run_compilation(const char *filein,const char *fileout,SleighCompile &compiler)
+static int4 run_compilation(const char *filein, const char *fileout, SleighCompile &compiler)
 
 {
     compiler.parseFromNewFile(filein);
     slgh = &compiler;		// Set global pointer up for parser
-    yyin = fopen(filein,"r");	// Open the file for the lexer
+    yyin = fopen(filein, "r");	// Open the file for the lexer
     if (yyin == (FILE *)0) {
         cerr << "Unable to open specfile: " << filein << endl;
         return 2;
@@ -2800,9 +2800,9 @@ static int4 run_compilation(const char *filein,const char *fileout,SleighCompile
     try {
         int4 parseres = yyparse();	// Try to parse
         fclose(yyin);
-        if (parseres==0)
+        if (parseres == 0)
             compiler.process();	// Do all the post-processing
-        if ((parseres==0)&&(compiler.numErrors()==0)) { // If no errors
+        if ((parseres == 0) && (compiler.numErrors() == 0)) { // If no errors
             ofstream s(fileout);
             if (!s) {
                 ostringstream errs;
@@ -2812,7 +2812,7 @@ static int4 run_compilation(const char *filein,const char *fileout,SleighCompile
             compiler.saveXml(s);	// Dump output xml
             s.close();
         } else {
-            cerr << "No output produced" <<endl;
+            cerr << "No output produced" << endl;
             return 2;
         }
         yylex_destroy();		// Make sure lexer is reset so we can parse multiple files
@@ -2823,7 +2823,7 @@ static int4 run_compilation(const char *filein,const char *fileout,SleighCompile
     return 0;
 }
 
-static int4 run_xml(const char *filein,SleighCompile &compiler)
+static int4 run_xml(const char *filein, SleighCompile &compiler)
 
 {
     ifstream s(filein);
@@ -2843,16 +2843,16 @@ static int4 run_xml(const char *filein,SleighCompile &compiler)
     for(;;) {
         const List &list(el->getChildren());
         List::const_iterator iter;
-        for(iter=list.begin(); iter!=list.end(); ++iter) {
+        for(iter = list.begin(); iter != list.end(); ++iter) {
             el = *iter;
             if (el->getName() == "processorfile") {
                 specfileout = el->getContent();
                 int4 num = el->getNumAttributes();
-                for(int4 i=0; i<num; ++i) {
-                    if (el->getAttributeName(i)=="slaspec")
+                for(int4 i = 0; i < num; ++i) {
+                    if (el->getAttributeName(i) == "slaspec")
                         specfilein = el->getAttributeValue(i);
                     else {
-                        compiler.setPreprocValue(el->getAttributeName(i),el->getAttributeValue(i));
+                        compiler.setPreprocValue(el->getAttributeName(i), el->getAttributeValue(i));
                     }
                 }
             } else if (el->getName() == "language_spec")
@@ -2860,7 +2860,7 @@ static int4 run_xml(const char *filein,SleighCompile &compiler)
             else if (el->getName() == "language_description")
                 break;
         }
-        if (iter==list.end()) break;
+        if (iter == list.end()) break;
     }
     delete doc;
 
@@ -2872,7 +2872,7 @@ static int4 run_xml(const char *filein,SleighCompile &compiler)
         cerr << "Output sla file was not specified in " << filein << endl;
         exit(1);
     }
-    return run_compilation(specfilein.c_str(),specfileout.c_str(),compiler);
+    return run_compilation(specfilein.c_str(), specfileout.c_str(), compiler);
 }
 
 static void findSlaSpecs(vector<string> &res, const string &dir, const string &suffix)
@@ -2883,18 +2883,18 @@ static void findSlaSpecs(vector<string> &res, const string &dir, const string &s
     vector<string> dirs;
     FileManage::directoryList(dirs, dir);
     vector<string>::const_iterator iter;
-    for(iter = dirs.begin(); iter!=dirs.end(); ++iter) {
+    for(iter = dirs.begin(); iter != dirs.end(); ++iter) {
         const string &nextdir( *iter );
-        findSlaSpecs(res, nextdir,suffix);
+        findSlaSpecs(res, nextdir, suffix);
     }
 }
 
-static void initCompiler(SleighCompile &compiler, map<string,string> &defines, bool enableUnnecessaryPcodeWarning,
+static void initCompiler(SleighCompile &compiler, map<string, string> &defines, bool enableUnnecessaryPcodeWarning,
                          bool disableLenientConflict, bool enableAllCollisionWarning,
-                         bool enableAllNopWarning,bool enableDeadTempWarning,bool enforceLocalKeyWord)
+                         bool enableAllNopWarning, bool enableDeadTempWarning, bool enforceLocalKeyWord)
 
 {
-    map<string,string>::iterator iter = defines.begin();
+    map<string, string>::iterator iter = defines.begin();
     for (iter = defines.begin(); iter != defines.end(); iter++) {
         compiler.setPreprocValue((*iter).first, (*iter).second);
     }
@@ -2917,7 +2917,7 @@ static void segvHandler(int sig)
     exit(1);			// Just die - prevents OS from popping-up a dialog
 }
 
-int main(int argc,char **argv)
+int main(int argc, char **argv)
 
 {
     int4 retval = 0;
@@ -2944,7 +2944,7 @@ int main(int argc,char **argv)
 
     const string SLAEXT(".sla");	// Default sla extension
     const string SLASPECEXT(".slaspec");
-    map<string,string> defines;
+    map<string, string> defines;
     bool enableUnnecessaryPcodeWarning = false;
     bool disableLenientConflict = false;
     bool enableAllCollisionWarning = false;
@@ -2955,19 +2955,19 @@ int main(int argc,char **argv)
     bool compileAll = false;
 
     int4 i;
-    for(i=1; i<argc; ++i) {
+    for(i = 1; i < argc; ++i) {
         if (argv[i][0] != '-') break;
         if (argv[i][1] == 'a')
             compileAll = true;
         else if (argv[i][1] == 'D') {
-            string preproc(argv[i]+2);
+            string preproc(argv[i] + 2);
             string::size_type pos = preproc.find('=');
             if (pos == string::npos) {
-                cerr << "Bad sleigh option: "<< argv[i] << endl;
+                cerr << "Bad sleigh option: " << argv[i] << endl;
                 exit(1);
             }
-            string name = preproc.substr(0,pos);
-            string value = preproc.substr(pos+1);
+            string name = preproc.substr(0, pos);
+            string value = preproc.substr(pos + 1);
             defines[name] = value;
         } else if (argv[i][1] == 'u')
             enableUnnecessaryPcodeWarning = true;
@@ -2993,7 +2993,7 @@ int main(int argc,char **argv)
 
     if (compileAll) {
 
-        if (i< argc-1) {
+        if (i < argc - 1) {
             cerr << "Too many parameters" << endl;
             exit(1);
         }
@@ -3003,18 +3003,18 @@ int main(int argc,char **argv)
         string dirStr = ".";
         if (i != argc)
             dirStr = argv[i];
-        findSlaSpecs(slaspecs, dirStr,SLASPECEXT);
+        findSlaSpecs(slaspecs, dirStr, SLASPECEXT);
         cout << "Compiling " << dec << slaspecs.size() << " slaspec files in " << dirStr << endl;
-        for(int4 j=0; j<slaspecs.size(); ++j) {
+        for(int4 j = 0; j < slaspecs.size(); ++j) {
             string slaspec = slaspecs[j];
-            cout << "Compiling (" << dec << (j+1) << " of " << dec << slaspecs.size() << ") " << slaspec << endl;
+            cout << "Compiling (" << dec << (j + 1) << " of " << dec << slaspecs.size() << ") " << slaspec << endl;
             string sla = slaspec;
             sla.replace(slaspec.length() - slaspecExtLen, slaspecExtLen, SLAEXT);
             SleighCompile compiler;
             initCompiler(compiler, defines, enableUnnecessaryPcodeWarning,
                          disableLenientConflict, enableAllCollisionWarning, enableAllNopWarning,
                          enableDeadTempWarning, enforceLocalKeyWord);
-            retval = run_compilation(slaspec.c_str(),sla.c_str(),compiler);
+            retval = run_compilation(slaspec.c_str(), sla.c_str(), compiler);
             if (retval != 0) {
                 return retval; // stop on first error
             }
@@ -3022,7 +3022,7 @@ int main(int argc,char **argv)
 
     } else { // compile single specification
 
-        if (i==argc) {
+        if (i == argc) {
             cerr << "Missing input file name" << endl;
             exit(1);
         }
@@ -3038,11 +3038,11 @@ int main(int argc,char **argv)
             fileinExamine.append(SLASPECEXT);
             autoExtInSet = true;
         } else {
-            fileinPreExt = fileinExamine.substr(0,extInPos);
+            fileinPreExt = fileinExamine.substr(0, extInPos);
             extIsSLASPECEXT = true;
         }
 
-        if (i< argc-2) {
+        if (i < argc - 2) {
             cerr << "Too many parameters" << endl;
             exit(1);
         }
@@ -3053,20 +3053,20 @@ int main(int argc,char **argv)
                      enableDeadTempWarning, enforceLocalKeyWord);
 
         if (i < argc - 1) {
-            string fileoutExamine(argv[i+1]);
+            string fileoutExamine(argv[i + 1]);
             string::size_type extOutPos = fileoutExamine.find(SLAEXT);
             if (extOutPos == string::npos) { // No Extension Given...
                 fileoutExamine.append(SLAEXT);
             }
-            retval = run_compilation(fileinExamine.c_str(),fileoutExamine.c_str(),compiler);
+            retval = run_compilation(fileinExamine.c_str(), fileoutExamine.c_str(), compiler);
         } else {
             //First determine whether or not to use Run_XML...
             if (autoExtInSet || extIsSLASPECEXT) { //Assumed format of at least "sleigh file" -> "sleigh file.slaspec file.sla"
                 string fileoutSTR = fileinPreExt;
                 fileoutSTR.append(SLAEXT);
-                retval = run_compilation(fileinExamine.c_str(),fileoutSTR.c_str(),compiler);
+                retval = run_compilation(fileinExamine.c_str(), fileoutSTR.c_str(), compiler);
             } else {
-                retval = run_xml(fileinExamine.c_str(),compiler);
+                retval = run_xml(fileinExamine.c_str(), compiler);
             }
 
         }

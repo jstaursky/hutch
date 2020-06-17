@@ -48,10 +48,10 @@ VarnodeData *PcodeCacher::expandPool(uint4 size)
     uint4 newsize = curmax + increase;
 
     VarnodeData *newpool = new VarnodeData[newsize];
-    for(uint4 i=0; i<cursize; ++i)
+    for(uint4 i = 0; i < cursize; ++i)
         newpool[i] = poolstart[i];	// Copy old data
     // Update references to the old pool
-    for(uint4 i=0; i<issued.size(); ++i) {
+    for(uint4 i = 0; i < issued.size(); ++i) {
         VarnodeData *outvar = issued[i].outvar;
         if (outvar != (VarnodeData *)0) {
             outvar = newpool + (outvar - poolstart);
@@ -64,7 +64,7 @@ VarnodeData *PcodeCacher::expandPool(uint4 size)
         }
     }
     list<RelativeRecord>::iterator iter;
-    for(iter=label_refs.begin(); iter!=label_refs.end(); ++iter) {
+    for(iter = label_refs.begin(); iter != label_refs.end(); ++iter) {
         VarnodeData *ref = (*iter).dataptr;
         (*iter).dataptr = newpool + (ref - poolstart);
     }
@@ -111,10 +111,10 @@ void PcodeCacher::resolveRelatives(void)
     // instruction, go resolve any relative offsets and back
     // patch their value(s) into the PcodeData
     list<RelativeRecord>::const_iterator iter;
-    for(iter=label_refs.begin(); iter!=label_refs.end(); ++iter) {
+    for(iter = label_refs.begin(); iter != label_refs.end(); ++iter) {
         VarnodeData *ptr = (*iter).dataptr;
         uint4 id = ptr->offset;
-        if ((id >= labels.size())||(labels[id] == 0xbadbeef))
+        if ((id >= labels.size()) || (labels[id] == 0xbadbeef))
             throw LowlevelError("Reference to non-existant sleigh label");
         // Calculate the relative index given the two absolute indices
         uintb res = labels[id] - (*iter).calling_index;
@@ -123,17 +123,17 @@ void PcodeCacher::resolveRelatives(void)
     }
 }
 
-void PcodeCacher::emit(const Address &addr,PcodeEmit *emt) const
+void PcodeCacher::emit(const Address &addr, PcodeEmit *emt) const
 
 {
     // Emit any cached pcode
     vector<PcodeData>::const_iterator iter;
 
-    for(iter=issued.begin(); iter!=issued.end(); ++iter)
-        emt->dump(addr,(*iter).opc,(*iter).outvar,(*iter).invar,(*iter).isize);
+    for(iter = issued.begin(); iter != issued.end(); ++iter)
+        emt->dump(addr, (*iter).opc, (*iter).outvar, (*iter).invar, (*iter).isize);
 }
 
-void SleighBuilder::generateLocation(const VarnodeTpl *vntpl,VarnodeData &vn)
+void SleighBuilder::generateLocation(const VarnodeTpl *vntpl, VarnodeData &vn)
 
 {
     // Generate a concrete varnode -vn- from the template -vntpl-
@@ -148,7 +148,7 @@ void SleighBuilder::generateLocation(const VarnodeTpl *vntpl,VarnodeData &vn)
         vn.offset = vn.space->wrapOffset(vntpl->getOffset().fix(*walker));
 }
 
-AddrSpace *SleighBuilder::generatePointer(const VarnodeTpl *vntpl,VarnodeData &vn)
+AddrSpace *SleighBuilder::generatePointer(const VarnodeTpl *vntpl, VarnodeData &vn)
 
 {
     // Generate the pointer varnode -vn- from a dynamic template -vntpl-
@@ -173,27 +173,27 @@ void SleighBuilder::dump(OpTpl *op)
     VarnodeData *invars;
     VarnodeData *loadvars;
     VarnodeData *storevars;
-    VarnodeTpl *vn,*outvn;
+    VarnodeTpl *vn, *outvn;
     int4 isize = op->numInput();
     // First build all the inputs
     invars = cache->allocateVarnodes(isize);
-    for(int4 i=0; i<isize; ++i) {
+    for(int4 i = 0; i < isize; ++i) {
         vn = op->getIn(i);
         if (vn->isDynamic(*walker)) {
-            generateLocation(vn,invars[i]); // Input of -op- is really temporary storage
+            generateLocation(vn, invars[i]); // Input of -op- is really temporary storage
             PcodeData *load_op = cache->allocateInstruction();
             load_op->opc = CPUI_LOAD;
             load_op->outvar = invars + i;
             load_op->isize = 2;
             loadvars = load_op->invar = cache->allocateVarnodes(2);
-            AddrSpace *spc = generatePointer(vn,loadvars[1]);
+            AddrSpace *spc = generatePointer(vn, loadvars[1]);
             loadvars[0].space = const_space;
             loadvars[0].offset = (uintb)(uintp)spc;
             loadvars[0].size = sizeof(spc);
         } else
-            generateLocation(vn,invars[i]);
+            generateLocation(vn, invars[i]);
     }
-    if ((isize>0)&&(op->getIn(0)->isRelative())) {
+    if ((isize > 0) && (op->getIn(0)->isRelative())) {
         invars->offset += getLabelBase();
         cache->addLabelRef(invars);
     }
@@ -205,31 +205,31 @@ void SleighBuilder::dump(OpTpl *op)
     if (outvn != (VarnodeTpl *)0) {
         if (outvn->isDynamic(*walker)) {
             storevars = cache->allocateVarnodes(3);
-            generateLocation(outvn,storevars[2]); // Output of -op- is really temporary storage
-            thisop->outvar = storevars+2;
+            generateLocation(outvn, storevars[2]); // Output of -op- is really temporary storage
+            thisop->outvar = storevars + 2;
             PcodeData *store_op = cache->allocateInstruction();
             store_op->opc = CPUI_STORE;
             store_op->isize = 3;
             // store_op->outvar = (VarnodeData *)0;
             store_op->invar = storevars;
-            AddrSpace *spc = generatePointer(outvn,storevars[1]); // pointer
+            AddrSpace *spc = generatePointer(outvn, storevars[1]); // pointer
             storevars[0].space = const_space;
             storevars[0].offset = (uintb)(uintp)spc; // space in which to store
             storevars[0].size = sizeof(spc);
         } else {
             thisop->outvar = cache->allocateVarnodes(1);
-            generateLocation(outvn,*thisop->outvar);
+            generateLocation(outvn, *thisop->outvar);
         }
     }
 }
 
-void SleighBuilder::buildEmpty(Constructor *ct,int4 secnum)
+void SleighBuilder::buildEmpty(Constructor *ct, int4 secnum)
 
 {
     // Build a named p-code section of a constructor that contains only implied BUILD directives
     int4 numops = ct->getNumOperands();
 
-    for(int4 i=0; i<numops; ++i) {
+    for(int4 i = 0; i < numops; ++i) {
         SubtableSymbol *sym = (SubtableSymbol *)ct->getOperand(i)->getDefiningSymbol();
         if (sym == (SubtableSymbol *)0) continue;
         if (sym->getType() != SleighSymbol::subtable_symbol) continue;
@@ -237,9 +237,9 @@ void SleighBuilder::buildEmpty(Constructor *ct,int4 secnum)
         walker->pushOperand(i);
         ConstructTpl *construct = walker->getConstructor()->getNamedTempl(secnum);
         if (construct == (ConstructTpl *)0)
-            buildEmpty(walker->getConstructor(),secnum);
+            buildEmpty(walker->getConstructor(), secnum);
         else
-            build(construct,secnum);
+            build(construct, secnum);
         walker->popOperand();
     }
 }
@@ -247,11 +247,11 @@ void SleighBuilder::buildEmpty(Constructor *ct,int4 secnum)
 void SleighBuilder::setUniqueOffset(const Address &addr)
 
 {
-    uniqueoffset = (addr.getOffset() & uniquemask)<<4;
+    uniqueoffset = (addr.getOffset() & uniquemask) << 4;
 }
 
-SleighBuilder::SleighBuilder(ParserWalker *w,DisassemblyCache *dcache,PcodeCacher *pc,AddrSpace *cspc,
-                             AddrSpace *uspc,uint4 umask)
+SleighBuilder::SleighBuilder(ParserWalker *w, DisassemblyCache *dcache, PcodeCacher *pc, AddrSpace *cspc,
+                             AddrSpace *uspc, uint4 umask)
     : PcodeBuilder(0)
 {
     walker = w;
@@ -260,29 +260,29 @@ SleighBuilder::SleighBuilder(ParserWalker *w,DisassemblyCache *dcache,PcodeCache
     const_space = cspc;
     uniq_space = uspc;
     uniquemask = umask;
-    uniqueoffset = (walker->getAddr().getOffset() & uniquemask)<<4;
+    uniqueoffset = (walker->getAddr().getOffset() & uniquemask) << 4;
 }
 
-void SleighBuilder::appendBuild(OpTpl *bld,int4 secnum)
+void SleighBuilder::appendBuild(OpTpl *bld, int4 secnum)
 
 {
     // Append pcode for a particular build statement
     int4 index = bld->getIn(0)->getOffset().getReal(); // Recover operand index from build statement
     // Check if operand is a subtable
     SubtableSymbol *sym = (SubtableSymbol *)walker->getConstructor()->getOperand(index)->getDefiningSymbol();
-    if ((sym==(SubtableSymbol *)0)||(sym->getType() != SleighSymbol::subtable_symbol)) return;
+    if ((sym == (SubtableSymbol *)0) || (sym->getType() != SleighSymbol::subtable_symbol)) return;
 
     walker->pushOperand(index);
     Constructor *ct = walker->getConstructor();
-    if (secnum >=0) {
+    if (secnum >= 0) {
         ConstructTpl *construct = ct->getNamedTempl(secnum);
         if (construct == (ConstructTpl *)0)
-            buildEmpty(ct,secnum);
+            buildEmpty(ct, secnum);
         else
-            build(construct,secnum);
+            build(construct, secnum);
     } else {
         ConstructTpl *construct = ct->getTempl();
-        build(construct,-1);
+        build(construct, -1);
     }
     walker->popOperand();
 }
@@ -310,7 +310,7 @@ void SleighBuilder::delaySlot(OpTpl *op)
         ParserWalker newwalker( pos );
         walker = &newwalker;
         walker->baseState();
-        build(walker->getConstructor()->getTempl(),-1); // Build the whole delay slot
+        build(walker->getConstructor()->getTempl(), -1); // Build the whole delay slot
         fallOffset += len;
         bytecount += len;
     } while(bytecount < delaySlotByteCnt);
@@ -321,16 +321,16 @@ void SleighBuilder::delaySlot(OpTpl *op)
 void SleighBuilder::setLabel(OpTpl *op)
 
 {
-    cache->addLabel( op->getIn(0)->getOffset().getReal()+getLabelBase() );
+    cache->addLabel( op->getIn(0)->getOffset().getReal() + getLabelBase() );
 }
 
-void SleighBuilder::appendCrossBuild(OpTpl *bld,int4 secnum)
+void SleighBuilder::appendCrossBuild(OpTpl *bld, int4 secnum)
 
 {
     // Weave in the p-code section from an instruction at another address
     // bld-param(0) contains the address of the instruction
     // bld-param(1) contains the section number
-    if (secnum>=0)
+    if (secnum >= 0)
         throw LowlevelError("CROSSBUILD directive within a named section");
     secnum = bld->getIn(1)->getOffset().getReal();
     VarnodeTpl *vn = bld->getIn(0);
@@ -340,7 +340,7 @@ void SleighBuilder::appendCrossBuild(OpTpl *bld,int4 secnum)
     ParserWalker *tmp = walker;
     uintb olduniqueoffset = uniqueoffset;
 
-    Address newaddr(spc,addr);
+    Address newaddr(spc, addr);
     setUniqueOffset(newaddr);
     const ParserContext *pos = discache->getParserContext( newaddr );
     if (pos->getParserState() != ParserContext::pcode)
@@ -353,49 +353,49 @@ void SleighBuilder::appendCrossBuild(OpTpl *bld,int4 secnum)
     Constructor *ct = walker->getConstructor();
     ConstructTpl *construct = ct->getNamedTempl(secnum);
     if (construct == (ConstructTpl *)0)
-        buildEmpty(ct,secnum);
+        buildEmpty(ct, secnum);
     else
-        build(construct,secnum);
+        build(construct, secnum);
     walker = tmp;
     uniqueoffset = olduniqueoffset;
 }
 
-void DisassemblyCache::initialize(int4 min,int4 hashsize)
+void DisassemblyCache::initialize(int4 min, int4 hashsize)
 
 {
     minimumreuse = min;
-    mask = hashsize-1;
+    mask = hashsize - 1;
     uintb masktest = coveringmask((uintb)mask);
     if (masktest != (uintb)mask)	// -hashsize- must be a power of 2
         throw LowlevelError("Bad windowsize for disassembly cache");
     list = new ParserContext *[minimumreuse];
     nextfree = 0;
     hashtable = new ParserContext *[hashsize];
-    for(int4 i=0; i<minimumreuse; ++i) {
+    for(int4 i = 0; i < minimumreuse; ++i) {
         ParserContext *pos = new ParserContext(contextcache);
-        pos->initialize(75,20,constspace);
+        pos->initialize(75, 20, constspace);
         list[i] = pos;
     }
     ParserContext *pos = list[0];
-    for(int4 i=0; i<hashsize; ++i)
+    for(int4 i = 0; i < hashsize; ++i)
         hashtable[i] = pos;		// Make sure all hashtable positions point to a real ParserContext
 }
 
 void DisassemblyCache::free(void)
 
 {
-    for(int4 i=0; i<minimumreuse; ++i)
+    for(int4 i = 0; i < minimumreuse; ++i)
         delete list[i];
     delete [] list;
     delete [] hashtable;
 }
 
-DisassemblyCache::DisassemblyCache(ContextCache *ccache,AddrSpace *cspace,int4 cachesize,int4 windowsize)
+DisassemblyCache::DisassemblyCache(ContextCache *ccache, AddrSpace *cspace, int4 cachesize, int4 windowsize)
 
 {
     contextcache = ccache;
     constspace = cspace;
-    initialize(cachesize,windowsize);		// Set default settings for the cache
+    initialize(cachesize, windowsize);		// Set default settings for the cache
 }
 
 ParserContext *DisassemblyCache::getParserContext(const Address &addr)
@@ -420,7 +420,7 @@ ParserContext *DisassemblyCache::getParserContext(const Address &addr)
     return res;
 }
 
-Sleigh::Sleigh(LoadImage *ld,ContextDatabase *c_db)
+Sleigh::Sleigh(LoadImage *ld, ContextDatabase *c_db)
     : SleighBase()
 
 {
@@ -444,7 +444,7 @@ Sleigh::~Sleigh(void)
     clearForDelete();
 }
 
-void Sleigh::reset(LoadImage *ld,ContextDatabase *c_db)
+void Sleigh::reset(LoadImage *ld, ContextDatabase *c_db)
 
 {
     // Completely clear everything except the base and reconstruct
@@ -469,14 +469,14 @@ void Sleigh::initialize(DocumentStorage &store)
         reregisterContext();
     uint4 parser_cachesize = 2;
     uint4 parser_windowsize = 32;
-    if ((maxdelayslotbytes > 1)||(unique_allocatemask != 0)) {
+    if ((maxdelayslotbytes > 1) || (unique_allocatemask != 0)) {
         parser_cachesize = 8;
         parser_windowsize = 256;
     }
-    discache = new DisassemblyCache(cache,getConstantSpace(),parser_cachesize,parser_windowsize);
+    discache = new DisassemblyCache(cache, getConstantSpace(), parser_cachesize, parser_windowsize);
 }
 
-ParserContext *Sleigh::obtainContext(const Address &addr,int4 state) const
+ParserContext *Sleigh::obtainContext(const Address &addr, int4 state) const
 
 {
     // Obtain a ParserContext for the instruction at the given -addr-.  This may be cached.
@@ -500,12 +500,12 @@ void Sleigh::resolve(ParserContext &pos) const
 {
     // Resolve ALL the constructors involved in the
     // instruction at this address
-    loader->loadFill(pos.getBuffer(),16,pos.getAddr());
+    loader->loadFill(pos.getBuffer(), 16, pos.getAddr());
     ParserWalkerChange walker(&pos);
     pos.deallocateState(walker);	// Clear the previous resolve and initialize the walker
-    Constructor *ct,*subct;
+    Constructor *ct, *subct;
     uint4 off;
-    int4 oper,numoper;
+    int4 oper, numoper;
 
     pos.setDelaySlot(0);
     walker.setOffset(0);		// Initial offset
@@ -521,7 +521,7 @@ void Sleigh::resolve(ParserContext &pos) const
         while(oper < numoper) {
             OperandSymbol *sym = ct->getOperand(oper);
             off = walker.getOffset(sym->getOffsetBase()) + sym->getRelativeOffset();
-            pos.allocateOperand(oper,walker); // Descend into new operand and reserve space
+            pos.allocateOperand(oper, walker); // Descend into new operand and reserve space
             walker.setOffset(off);
             TripleSymbol *tsym = sym->getDefiningSymbol();
             if (tsym != (TripleSymbol *)0) {
@@ -537,15 +537,15 @@ void Sleigh::resolve(ParserContext &pos) const
             oper += 1;
         }
         if (oper >= numoper) { // Finished processing constructor
-            walker.calcCurrentLength(ct->getMinimumLength(),numoper);
+            walker.calcCurrentLength(ct->getMinimumLength(), numoper);
             walker.popOperand();
             // Check for use of delayslot
             ConstructTpl *templ = ct->getTempl();
-            if ((templ != (ConstructTpl *)0)&&(templ->delaySlot() > 0))
+            if ((templ != (ConstructTpl *)0) && (templ->delaySlot() > 0))
                 pos.setDelaySlot(templ->delaySlot());
         }
     }
-    pos.setNaddr(pos.getAddr()+pos.getLength());	// Update Naddr to pointer after instruction
+    pos.setNaddr(pos.getAddr() + pos.getLength());	// Update Naddr to pointer after instruction
     pos.setParserState(ParserContext::disassembly);
 }
 
@@ -555,7 +555,7 @@ void Sleigh::resolveHandles(ParserContext &pos) const
     // Resolve handles (assuming Constructors already resolved)
     TripleSymbol *triple;
     Constructor *ct;
-    int4 oper,numoper;
+    int4 oper, numoper;
 
     ParserWalker walker(&pos);
     walker.baseState();
@@ -571,7 +571,7 @@ void Sleigh::resolveHandles(ParserContext &pos) const
                 if (triple->getType() == SleighSymbol::subtable_symbol)
                     break;
                 else			// Some other kind of symbol as an operand
-                    triple->getFixedHandle(walker.getParentHandle(),walker);
+                    triple->getFixedHandle(walker.getParentHandle(), walker);
             } else {			// Must be an expression
                 PatternExpression *patexp = sym->getDefiningExpression();
                 intb res = patexp->getValue(walker);
@@ -589,7 +589,7 @@ void Sleigh::resolveHandles(ParserContext &pos) const
             if (templ != (ConstructTpl *)0) {
                 HandleTpl *res = templ->getResult();
                 if (res != (HandleTpl *)0)	// Pop up handle to containing operand
-                    res->fix(walker.getParentHandle(),walker);
+                    res->fix(walker.getParentHandle(), walker);
                 // If we need an indicator that the constructor exports nothing try
                 // else
                 //   walker.getParentHandle().setInvalid();
@@ -603,65 +603,65 @@ void Sleigh::resolveHandles(ParserContext &pos) const
 int4 Sleigh::instructionLength(const Address &baseaddr) const
 
 {
-    ParserContext *pos = obtainContext(baseaddr,ParserContext::disassembly);
+    ParserContext *pos = obtainContext(baseaddr, ParserContext::disassembly);
     return pos->getLength();
 }
 
-int4 Sleigh::printAssembly(AssemblyEmit &emit,const Address &baseaddr) const
+int4 Sleigh::printAssembly(AssemblyEmit &emit, const Address &baseaddr) const
 
 {
     int4 sz;
 
-    ParserContext *pos = obtainContext(baseaddr,ParserContext::disassembly);
+    ParserContext *pos = obtainContext(baseaddr, ParserContext::disassembly);
     ParserWalker walker(pos);
     walker.baseState();
 
     Constructor *ct = walker.getConstructor();
     ostringstream mons;
-    ct->printMnemonic(mons,walker);
+    ct->printMnemonic(mons, walker);
     ostringstream body;
-    ct->printBody(body,walker);
-    emit.dump(baseaddr,mons.str(),body.str());
+    ct->printBody(body, walker);
+    emit.dump(baseaddr, mons.str(), body.str());
     sz = pos->getLength();
     return sz;
 }
 
-int4 Sleigh::oneInstruction(PcodeEmit &emit,const Address &baseaddr) const
+int4 Sleigh::oneInstruction(PcodeEmit &emit, const Address &baseaddr) const
 
 {
     int4 fallOffset;
     if (alignment != 1) {
-        if ((baseaddr.getOffset() % alignment)!=0) {
+        if ((baseaddr.getOffset() % alignment) != 0) {
             ostringstream s;
             s << "Instruction address not aligned: " << baseaddr;
-            throw UnimplError(s.str(),0);
+            throw UnimplError(s.str(), 0);
         }
     }
 
-    ParserContext *pos = obtainContext(baseaddr,ParserContext::pcode);
+    ParserContext *pos = obtainContext(baseaddr, ParserContext::pcode);
     pos->applyCommits();
     fallOffset = pos->getLength();
 
-    if (pos->getDelaySlot()>0) {
+    if (pos->getDelaySlot() > 0) {
         int4 bytecount = 0;
         do {
             // Do not pass pos->getNaddr() to obtainContext, as pos may have been previously cached and had naddr adjusted
-            ParserContext *delaypos = obtainContext(pos->getAddr() + fallOffset,ParserContext::pcode);
+            ParserContext *delaypos = obtainContext(pos->getAddr() + fallOffset, ParserContext::pcode);
             delaypos->applyCommits();
             int4 len = delaypos->getLength();
             fallOffset += len;
             bytecount += len;
         } while(bytecount < pos->getDelaySlot());
-        pos->setNaddr(pos->getAddr()+fallOffset);
+        pos->setNaddr(pos->getAddr() + fallOffset);
     }
     ParserWalker walker(pos);
     walker.baseState();
     pcode_cache.clear();
-    SleighBuilder builder(&walker,discache,&pcode_cache,getConstantSpace(),getUniqueSpace(),unique_allocatemask);
+    SleighBuilder builder(&walker, discache, &pcode_cache, getConstantSpace(), getUniqueSpace(), unique_allocatemask);
     try {
-        builder.build(walker.getConstructor()->getTempl(),-1);
+        builder.build(walker.getConstructor()->getTempl(), -1);
         pcode_cache.resolveRelatives();
-        pcode_cache.emit(baseaddr,&emit);
+        pcode_cache.emit(baseaddr, &emit);
     } catch(UnimplError &err) {
         ostringstream s;
         s << "Instruction not implemented in pcode:\n ";
@@ -670,9 +670,9 @@ int4 Sleigh::oneInstruction(PcodeEmit &emit,const Address &baseaddr) const
         Constructor *ct = cur->getConstructor();
         cur->getAddr().printRaw(s);
         s << ": ";
-        ct->printMnemonic(s,*cur);
+        ct->printMnemonic(s, *cur);
         s << "  ";
-        ct->printBody(s,*cur);
+        ct->printBody(s, *cur);
         err.explain = s.str();
         err.instruction_length = fallOffset;
         throw err;
@@ -680,17 +680,17 @@ int4 Sleigh::oneInstruction(PcodeEmit &emit,const Address &baseaddr) const
     return fallOffset;
 }
 
-void Sleigh::registerContext(const string &name,int4 sbit,int4 ebit)
+void Sleigh::registerContext(const string &name, int4 sbit, int4 ebit)
 
 {
     // Inform translator of existence of context variable
-    context_db->registerVariable(name,sbit,ebit);
+    context_db->registerVariable(name, sbit, ebit);
 }
 
-void Sleigh::setContextDefault(const string &name,uintm val)
+void Sleigh::setContextDefault(const string &name, uintm val)
 
 {
-    context_db->setVariableDefault(name,val);
+    context_db->setVariableDefault(name, val);
 }
 
 void Sleigh::allowContextSet(bool val) const

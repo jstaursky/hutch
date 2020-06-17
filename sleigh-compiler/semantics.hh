@@ -32,12 +32,13 @@ class ConstTpl
 {
 public:
     enum const_type
-    { real=0, handle=1, j_start=2, j_next=3, j_curspace=4,
-      j_curspace_size=5, spaceid=6, j_relative=7,
-      j_flowref=8, j_flowref_size=9, j_flowdest=10, j_flowdest_size=11
+    {
+        real = 0, handle = 1, j_start = 2, j_next = 3, j_curspace = 4,
+        j_curspace_size = 5, spaceid = 6, j_relative = 7,
+        j_flowref = 8, j_flowref_size = 9, j_flowdest = 10, j_flowdest_size = 11
     };
     enum v_field
-    { v_space=0, v_offset=1, v_size=2, v_offset_plus=3 };
+    { v_space = 0, v_offset = 1, v_size = 2, v_offset_plus = 3 };
 private:
     const_type type;
     union {
@@ -47,7 +48,7 @@ private:
     } value;
     uintb value_real;
     v_field select;		// Which part of handle to use as constant
-    static void printHandleSelector(ostream &s,v_field val);
+    static void printHandleSelector(ostream &s, v_field val);
     static v_field readHandleSelector(const string &name);
 public:
     ConstTpl(void)
@@ -57,16 +58,16 @@ public:
     }
     ConstTpl(const ConstTpl &op2)
     {
-        type=op2.type;
-        value=op2.value;
-        value_real=op2.value_real;
-        select=op2.select;
+        type = op2.type;
+        value = op2.value;
+        value_real = op2.value_real;
+        select = op2.select;
     }
-    ConstTpl(const_type tp,uintb val);
+    ConstTpl(const_type tp, uintb val);
     ConstTpl(const_type tp);
     ConstTpl(AddrSpace *sid);
-    ConstTpl(const_type tp,int4 ht,v_field vf);
-    ConstTpl(const_type tp,int4 ht,v_field vf,uintb plus);
+    ConstTpl(const_type tp, int4 ht, v_field vf);
+    ConstTpl(const_type tp, int4 ht, v_field vf, uintb plus);
     bool isConstSpace(void) const;
     bool isUniqueSpace(void) const;
     bool operator==(const ConstTpl &op2) const;
@@ -96,28 +97,28 @@ public:
     void transfer(const vector<HandleTpl *> &params);
     bool isZero(void) const
     {
-        return ((type==real)&&(value_real==0));
+        return ((type == real) && (value_real == 0));
     }
     void changeHandleIndex(const vector<int4> &handmap);
-    void fillinSpace(FixedHandle &hand,const ParserWalker &walker) const;
-    void fillinOffset(FixedHandle &hand,const ParserWalker &walker) const;
+    void fillinSpace(FixedHandle &hand, const ParserWalker &walker) const;
+    void fillinOffset(FixedHandle &hand, const ParserWalker &walker) const;
     void saveXml(ostream &s) const;
-    void restoreXml(const Element *el,const AddrSpaceManager *manage);
+    void restoreXml(const Element *el, const AddrSpaceManager *manage);
 };
 
 class VarnodeTpl
 {
     friend class OpTpl;
     friend class HandleTpl;
-    ConstTpl space,offset,size;
+    ConstTpl space, offset, size;
     bool unnamed_flag;
 public:
-    VarnodeTpl(int4 hand,bool zerosize);
+    VarnodeTpl(int4 hand, bool zerosize);
     VarnodeTpl(void) : space(), offset(), size()
     {
-        unnamed_flag=false;
+        unnamed_flag = false;
     }
-    VarnodeTpl(const ConstTpl &sp,const ConstTpl &off,const ConstTpl &sz);
+    VarnodeTpl(const ConstTpl &sp, const ConstTpl &off, const ConstTpl &sz);
     VarnodeTpl(const VarnodeTpl &vn);
     const ConstTpl &getSpace(void) const
     {
@@ -140,11 +141,11 @@ public:
     bool operator<(const VarnodeTpl &op2) const;
     void setOffset(uintb constVal)
     {
-        offset = ConstTpl(ConstTpl::real,constVal);
+        offset = ConstTpl(ConstTpl::real, constVal);
     }
     void setRelative(uintb constVal)
     {
-        offset = ConstTpl(ConstTpl::j_relative,constVal);
+        offset = ConstTpl(ConstTpl::j_relative, constVal);
     }
     void setSize(const ConstTpl &sz )
     {
@@ -164,9 +165,9 @@ public:
         return (offset.getType() == ConstTpl::j_relative);
     }
     void changeHandleIndex(const vector<int4> &handmap);
-    bool adjustTruncation(int4 sz,bool isbigendian);
+    bool adjustTruncation(int4 sz, bool isbigendian);
     void saveXml(ostream &s) const;
-    void restoreXml(const Element *el,const AddrSpaceManager *manage);
+    void restoreXml(const Element *el, const AddrSpaceManager *manage);
 };
 
 class HandleTpl
@@ -181,8 +182,8 @@ class HandleTpl
 public:
     HandleTpl(void) {}
     HandleTpl(const VarnodeTpl *vn);
-    HandleTpl(const ConstTpl &spc,const ConstTpl &sz,const VarnodeTpl *vn,
-              AddrSpace *t_space,uintb t_offset);
+    HandleTpl(const ConstTpl &spc, const ConstTpl &sz, const VarnodeTpl *vn,
+              AddrSpace *t_space, uintb t_offset);
     const ConstTpl &getSpace(void) const
     {
         return space;
@@ -217,20 +218,20 @@ public:
     }
     void setPtrSize(const ConstTpl &sz)
     {
-        ptrsize=sz;
+        ptrsize = sz;
     }
     void setPtrOffset(uintb val)
     {
-        ptroffset = ConstTpl(ConstTpl::real,val);
+        ptroffset = ConstTpl(ConstTpl::real, val);
     }
     void setTempOffset(uintb val)
     {
-        temp_offset = ConstTpl(ConstTpl::real,val);
+        temp_offset = ConstTpl(ConstTpl::real, val);
     }
-    void fix(FixedHandle &hand,const ParserWalker &walker) const;
+    void fix(FixedHandle &hand, const ParserWalker &walker) const;
     void changeHandleIndex(const vector<int4> &handmap);
     void saveXml(ostream &s) const;
-    void restoreXml(const Element *el,const AddrSpaceManager *manage);
+    void restoreXml(const Element *el, const AddrSpaceManager *manage);
 };
 
 class OpTpl
@@ -280,14 +281,14 @@ public:
     {
         input.push_back(vt);
     }
-    void setInput(VarnodeTpl *vt,int4 slot)
+    void setInput(VarnodeTpl *vt, int4 slot)
     {
         input[slot] = vt;
     }
     void removeInput(int4 index);
     void changeHandleIndex(const vector<int4> &handmap);
     void saveXml(ostream &s) const;
-    void restoreXml(const Element *el,const AddrSpaceManager *manage);
+    void restoreXml(const Element *el, const AddrSpaceManager *manage);
 };
 
 class ConstructTpl
@@ -309,8 +310,8 @@ protected:
 public:
     ConstructTpl(void)
     {
-        delayslot=0;
-        numlabels=0;
+        delayslot = 0;
+        numlabels = 0;
         result = (HandleTpl *)0;
     }
     ~ConstructTpl(void);
@@ -336,14 +337,14 @@ public:
     {
         result = t;
     }
-    int4 fillinBuild(vector<int4> &check,AddrSpace *const_space);
+    int4 fillinBuild(vector<int4> &check, AddrSpace *const_space);
     bool buildOnly(void) const;
     void changeHandleIndex(const vector<int4> &handmap);
-    void setInput(VarnodeTpl *vn,int4 index,int4 slot);
-    void setOutput(VarnodeTpl *vn,int4 index);
+    void setInput(VarnodeTpl *vn, int4 index, int4 slot);
+    void setOutput(VarnodeTpl *vn, int4 index);
     void deleteOps(const vector<int4> &indices);
-    void saveXml(ostream &s,int4 sectionid) const;
-    int4 restoreXml(const Element *el,const AddrSpaceManager *manage);
+    void saveXml(ostream &s, int4 sectionid) const;
+    int4 restoreXml(const Element *el, const AddrSpaceManager *manage);
 };
 
 class PcodeEmit;   // Forward declaration for emitter
@@ -354,11 +355,11 @@ class PcodeBuilder   // SLEIGH specific pcode generator
     uint4 labelcount;
 protected:
     ParserWalker *walker;
-    virtual void dump( OpTpl *op )=0;
+    virtual void dump( OpTpl *op ) = 0;
 public:
     PcodeBuilder(uint4 lbcnt)
     {
-        labelbase=labelcount=lbcnt;
+        labelbase = labelcount = lbcnt;
     }
     virtual ~PcodeBuilder(void) {}
 
@@ -370,11 +371,11 @@ public:
     {
         return walker;
     }
-    void build(ConstructTpl *construct,int4 secnum);
-    virtual void appendBuild(OpTpl *bld,int4 secnum)=0;
-    virtual void delaySlot(OpTpl *op)=0;
-    virtual void setLabel(OpTpl *op)=0;
-    virtual void appendCrossBuild(OpTpl *bld,int4 secnum)=0;
+    void build(ConstructTpl *construct, int4 secnum);
+    virtual void appendBuild(OpTpl *bld, int4 secnum) = 0;
+    virtual void delaySlot(OpTpl *op) = 0;
+    virtual void setLabel(OpTpl *op) = 0;
+    virtual void appendCrossBuild(OpTpl *bld, int4 secnum) = 0;
 };
 
 #endif

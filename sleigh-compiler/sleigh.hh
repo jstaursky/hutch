@@ -68,7 +68,7 @@ public:
     void addLabel(uint4 id);
     void clear(void);
     void resolveRelatives(void);
-    void emit(const Address &addr,PcodeEmit *emt) const;
+    void emit(const Address &addr, PcodeEmit *emt) const;
 };
 
 class DisassemblyCache
@@ -80,10 +80,10 @@ class DisassemblyCache
     ParserContext **list;		// (circular) array of currently cached ParserContext objects
     int4 nextfree;		// Current end/beginning of circular list
     ParserContext **hashtable;	// Hashtable for looking up ParserContext via Address
-    void initialize(int4 min,int4 hashsize);
+    void initialize(int4 min, int4 hashsize);
     void free(void);
 public:
-    DisassemblyCache(ContextCache *ccache,AddrSpace *cspace,int4 cachesize,int4 windowsize);
+    DisassemblyCache(ContextCache *ccache, AddrSpace *cspace, int4 cachesize, int4 windowsize);
     ~DisassemblyCache(void)
     {
         free();
@@ -100,16 +100,16 @@ class SleighBuilder : public PcodeBuilder
     uintb uniqueoffset;
     DisassemblyCache *discache;
     PcodeCacher *cache;
-    void buildEmpty(Constructor *ct,int4 secnum);
-    void generateLocation(const VarnodeTpl *vntpl,VarnodeData &vn);
-    AddrSpace *generatePointer(const VarnodeTpl *vntpl,VarnodeData &vn);
+    void buildEmpty(Constructor *ct, int4 secnum);
+    void generateLocation(const VarnodeTpl *vntpl, VarnodeData &vn);
+    AddrSpace *generatePointer(const VarnodeTpl *vntpl, VarnodeData &vn);
     void setUniqueOffset(const Address &addr);
 public:
-    SleighBuilder(ParserWalker *w,DisassemblyCache *dcache,PcodeCacher *pc,AddrSpace *cspc,AddrSpace *uspc,uint4 umask);
-    virtual void appendBuild(OpTpl *bld,int4 secnum);
+    SleighBuilder(ParserWalker *w, DisassemblyCache *dcache, PcodeCacher *pc, AddrSpace *cspc, AddrSpace *uspc, uint4 umask);
+    virtual void appendBuild(OpTpl *bld, int4 secnum);
     virtual void delaySlot(OpTpl *op);
     virtual void setLabel(OpTpl *op);
-    virtual void appendCrossBuild(OpTpl *bld,int4 secnum);
+    virtual void appendCrossBuild(OpTpl *bld, int4 secnum);
 };
 
 class Sleigh : public SleighBase
@@ -121,20 +121,20 @@ class Sleigh : public SleighBase
     mutable PcodeCacher pcode_cache;
     void clearForDelete(void);
 protected:
-    ParserContext *obtainContext(const Address &addr,int4 state) const;
+    ParserContext *obtainContext(const Address &addr, int4 state) const;
     void resolve(ParserContext &pos) const;
     void resolveHandles(ParserContext &pos) const;
 public:
-    Sleigh(LoadImage *ld,ContextDatabase *c_db);
+    Sleigh(LoadImage *ld, ContextDatabase *c_db);
     virtual ~Sleigh(void);
-    void reset(LoadImage *ld,ContextDatabase *c_db);
+    void reset(LoadImage *ld, ContextDatabase *c_db);
     virtual void initialize(DocumentStorage &store);
-    virtual void registerContext(const string &name,int4 sbit,int4 ebit);
-    virtual void setContextDefault(const string &nm,uintm val);
+    virtual void registerContext(const string &name, int4 sbit, int4 ebit);
+    virtual void setContextDefault(const string &nm, uintm val);
     virtual void allowContextSet(bool val) const;
     virtual int4 instructionLength(const Address &baseaddr) const;
-    virtual int4 oneInstruction(PcodeEmit &emit,const Address &baseaddr) const;
-    virtual int4 printAssembly(AssemblyEmit &emit,const Address &baseaddr) const;
+    virtual int4 oneInstruction(PcodeEmit &emit, const Address &baseaddr) const;
+    virtual int4 printAssembly(AssemblyEmit &emit, const Address &baseaddr) const;
 };
 
 /** \page sleigh SLEIGH

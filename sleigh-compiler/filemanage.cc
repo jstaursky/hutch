@@ -39,14 +39,14 @@ char FileManage::separator = '/';
 void FileManage::addDir2Path(const string &path)
 
 {
-    if (path.size()>0) {
+    if (path.size() > 0) {
         pathlist.push_back(path);
-        if (path[path.size()-1] != separator)
+        if (path[path.size() - 1] != separator)
             pathlist.back() += separator;
     }
 }
 
-void FileManage::findFile(string &res,const string &name) const
+void FileManage::findFile(string &res, const string &name) const
 
 {
     // Search through paths to find file with given name
@@ -60,7 +60,7 @@ void FileManage::findFile(string &res,const string &name) const
             return;
         }
     } else {
-        for(iter=pathlist.begin(); iter!=pathlist.end(); ++iter) {
+        for(iter = pathlist.begin(); iter != pathlist.end(); ++iter) {
             res = *iter + name;
             ifstream s(res.c_str());
             if (s) {
@@ -78,7 +78,7 @@ void FileManage::addCurrentDir(void)
 {
     char dirname[256];
 
-    if (0!=GetCurrentDirectoryA(256,dirname)) {
+    if (0 != GetCurrentDirectoryA(256, dirname)) {
         string filename(dirname);
         addDir2Path(filename);
     }
@@ -92,7 +92,7 @@ void FileManage::addCurrentDir(void)
     char dirname[256];
     char *buf;
 
-    buf = getcwd(dirname,256);
+    buf = getcwd(dirname, 256);
     if ((char *)0 == buf) return;
     string filename(buf);
     addDir2Path(filename);
@@ -105,7 +105,7 @@ bool FileManage::isDirectory(const string &path)
 {
     DWORD attribs = GetFileAttributes(path.c_str());
     if (attribs == INVALID_FILE_ATTRIBUTES) return false;
-    return ((attribs & FILE_ATTRIBUTE_DIRECTORY)!=0);
+    return ((attribs & FILE_ATTRIBUTE_DIRECTORY) != 0);
 }
 
 #else
@@ -113,7 +113,7 @@ bool FileManage::isDirectory(const string &path)
 
 {
     struct stat buf;
-    if (stat(path.c_str(),&buf) < 0) {
+    if (stat(path.c_str(), &buf) < 0) {
         return false;
     }
     return S_ISDIR(buf.st_mode);
@@ -122,7 +122,7 @@ bool FileManage::isDirectory(const string &path)
 #endif
 
 #ifdef _WINDOWS
-void FileManage::matchListDir(vector<string> &res,const string &match,bool isSuffix,const string &dirname,bool allowdot)
+void FileManage::matchListDir(vector<string> &res, const string &match, bool isSuffix, const string &dirname, bool allowdot)
 
 {
     WIN32_FIND_DATAA FindFileData;
@@ -130,38 +130,38 @@ void FileManage::matchListDir(vector<string> &res,const string &match,bool isSuf
     string dirfinal;
 
     dirfinal = dirname;
-    if (dirfinal[dirfinal.size()-1] != separator)
+    if (dirfinal[dirfinal.size() - 1] != separator)
         dirfinal += separator;
     string regex = dirfinal + '*';
 
-    hFind = FindFirstFileA(regex.c_str(),&FindFileData);
+    hFind = FindFirstFileA(regex.c_str(), &FindFileData);
     if (hFind == INVALID_HANDLE_VALUE) return;
     do {
         string fullname(FindFileData.cFileName);
         if (match.size() <= fullname.size()) {
-            if (allowdot||(fullname[0] != '.')) {
+            if (allowdot || (fullname[0] != '.')) {
                 if (isSuffix) {
-                    if (0==fullname.compare(fullname.size()-match.size(),match.size(),match))
+                    if (0 == fullname.compare(fullname.size() - match.size(), match.size(), match))
                         res.push_back(dirfinal + fullname);
                 } else {
-                    if (0==fullname.compare(0,match.size(),match))
+                    if (0 == fullname.compare(0, match.size(), match))
                         res.push_back(dirfinal + fullname);
                 }
             }
         }
-    } while(0!=FindNextFileA(hFind,&FindFileData));
+    } while(0 != FindNextFileA(hFind, &FindFileData));
     FindClose(hFind);
 }
 
 #else
-void FileManage::matchListDir(vector<string> &res,const string &match,bool isSuffix,const string &dirname,bool allowdot)
+void FileManage::matchListDir(vector<string> &res, const string &match, bool isSuffix, const string &dirname, bool allowdot)
 
 {
     // Look through files in a directory for those matching -match-
     DIR *dir;
     struct dirent *entry;
     string dirfinal = dirname;
-    if (dirfinal[dirfinal.size()-1] != separator)
+    if (dirfinal[dirfinal.size() - 1] != separator)
         dirfinal += separator;
 
     dir = opendir(dirfinal.c_str());
@@ -170,12 +170,12 @@ void FileManage::matchListDir(vector<string> &res,const string &match,bool isSuf
     while(entry != (struct dirent *)0) {
         string fullname(entry->d_name);
         if (match.size() <= fullname.size()) {
-            if (allowdot||(fullname[0] != '.')) {
+            if (allowdot || (fullname[0] != '.')) {
                 if (isSuffix) {
-                    if (0==fullname.compare( fullname.size()-match.size(),match.size(),match))
+                    if (0 == fullname.compare( fullname.size() - match.size(), match.size(), match))
                         res.push_back( dirfinal + fullname );
                 } else {
-                    if (0==fullname.compare(0,match.size(),match))
+                    if (0 == fullname.compare(0, match.size(), match))
                         res.push_back(dirfinal + fullname);
                 }
             }
@@ -186,30 +186,30 @@ void FileManage::matchListDir(vector<string> &res,const string &match,bool isSuf
 }
 #endif
 
-void FileManage::matchList(vector<string> &res,const string &match,bool isSuffix) const
+void FileManage::matchList(vector<string> &res, const string &match, bool isSuffix) const
 
 {
     vector<string>::const_iterator iter;
 
-    for(iter=pathlist.begin(); iter!=pathlist.end(); ++iter)
-        matchListDir(res,match,isSuffix,*iter,false);
+    for(iter = pathlist.begin(); iter != pathlist.end(); ++iter)
+        matchListDir(res, match, isSuffix, *iter, false);
 }
 
 #ifdef _WINDOWS
 
-void FileManage::directoryList(vector<string> &res,const string &dirname,bool allowdot)
+void FileManage::directoryList(vector<string> &res, const string &dirname, bool allowdot)
 
 {
     WIN32_FIND_DATAA FindFileData;
     HANDLE hFind;
     string dirfinal = dirname;
-    if (dirfinal[dirfinal.size()-1] != separator)
+    if (dirfinal[dirfinal.size() - 1] != separator)
         dirfinal += separator;
     string regex = dirfinal + "*";
     const char *s = regex.c_str();
 
 
-    hFind = FindFirstFileA(s,&FindFileData);
+    hFind = FindFirstFileA(s, &FindFileData);
     if (hFind == INVALID_HANDLE_VALUE) return;
     do {
         if ( (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY ) {
@@ -217,12 +217,12 @@ void FileManage::directoryList(vector<string> &res,const string &dirname,bool al
             if (allowdot || (fullname[0] != '.'))
                 res.push_back(dirfinal + fullname);
         }
-    } while(0!=FindNextFileA(hFind,&FindFileData));
+    } while(0 != FindNextFileA(hFind, &FindFileData));
     FindClose(hFind);
 }
 
 #else
-void FileManage::directoryList(vector<string> &res,const string &dirname,bool allowdot)
+void FileManage::directoryList(vector<string> &res, const string &dirname, bool allowdot)
 
 {
     // List full pathnames of all directories under the directory -dir-
@@ -231,7 +231,7 @@ void FileManage::directoryList(vector<string> &res,const string &dirname,bool al
     string dirfinal;
 
     dirfinal = dirname;
-    if (dirfinal[dirfinal.size()-1] != separator)
+    if (dirfinal[dirfinal.size() - 1] != separator)
         dirfinal += separator;
 
     dir = opendir(dirfinal.c_str());
@@ -240,7 +240,7 @@ void FileManage::directoryList(vector<string> &res,const string &dirname,bool al
     while(entry != (struct dirent *)0) {
         if (entry->d_type == DT_DIR) {
             string fullname(entry->d_name);
-            if ((fullname!=".")&&(fullname!="..")) {
+            if ((fullname != ".") && (fullname != "..")) {
                 if (allowdot || (fullname[0] != '.'))
                     res.push_back( dirfinal + fullname );
             }
@@ -252,91 +252,91 @@ void FileManage::directoryList(vector<string> &res,const string &dirname,bool al
 
 #endif
 
-void FileManage::scanDirectoryRecursive(vector<string> &res,const string &matchname,const string &rootpath,int maxdepth)
+void FileManage::scanDirectoryRecursive(vector<string> &res, const string &matchname, const string &rootpath, int maxdepth)
 
 {
     if (maxdepth == 0) return;
     vector<string> subdir;
-    directoryList(subdir,rootpath);
+    directoryList(subdir, rootpath);
     vector<string>::const_iterator iter;
-    for(iter = subdir.begin(); iter!=subdir.end(); ++iter) {
+    for(iter = subdir.begin(); iter != subdir.end(); ++iter) {
         const string &curpath( *iter );
         string::size_type pos = curpath.rfind(separator);
         if (pos == string::npos)
             pos = 0;
         else
             pos = pos + 1;
-        if (curpath.compare(pos,string::npos,matchname)==0)
+        if (curpath.compare(pos, string::npos, matchname) == 0)
             res.push_back(curpath);
         else
-            scanDirectoryRecursive(res,matchname,curpath,maxdepth-1); // Recurse
+            scanDirectoryRecursive(res, matchname, curpath, maxdepth - 1); // Recurse
     }
 }
 
-void FileManage::splitPath(const string &full,string &path,string &base)
+void FileManage::splitPath(const string &full, string &path, string &base)
 
 {
     // Split path string -full- into its -base-name and -path- (relative or absolute)
     // If there is no path, i.e. only a basename in full, then -path- will return as an empty string
     // otherwise -path- will be non-empty and end in a separator character
-    string::size_type end = full.size()-1;
-    if (full[full.size()-1] == separator) // Take into account terminating separator
-        end = full.size()-2;
-    string::size_type pos = full.rfind(separator,end);
+    string::size_type end = full.size() - 1;
+    if (full[full.size() - 1] == separator) // Take into account terminating separator
+        end = full.size() - 2;
+    string::size_type pos = full.rfind(separator, end);
     if (pos == string::npos) {	// Didn't find any separator
         base = full;
         path.clear();
     } else {
         string::size_type sz = (end - pos);
-        base = full.substr(pos+1,sz);
-        path = full.substr(0,pos+1);
+        base = full.substr(pos + 1, sz);
+        path = full.substr(0, pos + 1);
     }
 }
 
-string FileManage::buildPath(const vector<string> &pathels,int level)
+string FileManage::buildPath(const vector<string> &pathels, int level)
 
 {
     // Build an absolute path using elements from -pathels-, in reverse order
     // Build up to and including pathels[level]
     ostringstream s;
 
-    for(int i=pathels.size()-1; i>=level; --i) {
+    for(int i = pathels.size() - 1; i >= level; --i) {
         s << separator;
         s << pathels[i];
     }
     return s.str();
 }
 
-bool FileManage::testDevelopmentPath(const vector<string> &pathels,int level,string &root)
+bool FileManage::testDevelopmentPath(const vector<string> &pathels, int level, string &root)
 
 {
     // Given pathels[level] is "Ghidra", determine if this is a Ghidra development layout
     if (level + 2 >= pathels.size()) return false;
     string parent = pathels[level + 1];
     if (parent.size() < 11) return false;
-    string piecestr = parent.substr(0,7);
+    string piecestr = parent.substr(0, 7);
     if (piecestr != "ghidra.") return false;
     piecestr = parent.substr(parent.size() - 4);
     if (piecestr != ".git") return false;
-    root = buildPath(pathels,level+2);
+    root = buildPath(pathels, level + 2);
     vector<string> testpaths1;
     vector<string> testpaths2;
-    scanDirectoryRecursive(testpaths1,"ghidra.git",root,1);
+    scanDirectoryRecursive(testpaths1, "ghidra.git", root, 1);
     if (testpaths1.size() != 1) return false;
-    scanDirectoryRecursive(testpaths2,"Ghidra",testpaths1[0],1);
+    scanDirectoryRecursive(testpaths2, "Ghidra", testpaths1[0], 1);
     return (testpaths2.size() == 1);
 }
 
-bool FileManage::testInstallPath(const vector<string> &pathels,int level,string &root)
+bool FileManage::testInstallPath(const vector<string> &pathels, int level, string &root)
 
 {
     if (level + 1 >= pathels.size()) return false;
-    root = buildPath(pathels,level+1);
+    root = buildPath(pathels, level + 1);
     vector<string> testpaths1;
     vector<string> testpaths2;
-    scanDirectoryRecursive(testpaths1,"server",root,1);
+    scanDirectoryRecursive(testpaths1, "server", root, 1);
     if (testpaths1.size() != 1) return false;
-    scanDirectoryRecursive(testpaths2,"server.conf",testpaths1[0],1);
+    scanDirectoryRecursive(testpaths2, "server.conf", testpaths1[0], 1);
     return (testpaths2.size() == 1);
 }
 
@@ -352,7 +352,7 @@ string FileManage::discoverGhidraRoot(const char *argv0)
 
     for(;;) {
         int sizebefore = cur.size();
-        splitPath(cur,cur,base);
+        splitPath(cur, cur, base);
         if (cur.size() == sizebefore) break;
         if (base == ".")
             skiplevel += 1;
@@ -369,18 +369,18 @@ string FileManage::discoverGhidraRoot(const char *argv0)
         cur = curdir.pathlist[0];
         for(;;) {
             int sizebefore = cur.size();
-            splitPath(cur,cur,base);
+            splitPath(cur, cur, base);
             if (cur.size() == sizebefore) break;
             pathels.push_back(base);
         }
     }
 
-    for(int i=0; i<pathels.size(); ++i) {
+    for(int i = 0; i < pathels.size(); ++i) {
         if (pathels[i] != "Ghidra") continue;
         string root;
-        if (testDevelopmentPath(pathels,i,root))
+        if (testDevelopmentPath(pathels, i, root))
             return root;
-        if (testInstallPath(pathels,i,root))
+        if (testInstallPath(pathels, i, root))
             return root;
     }
     return "";

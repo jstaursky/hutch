@@ -44,11 +44,11 @@
 /// in the linear space. At each split point, the associated value object is split
 /// into two objects.  At any point the value object describing some part of the linear space
 /// can be changed.
-template<typename _linetype,typename _valuetype>
+template<typename _linetype, typename _valuetype>
 class partmap
 {
 public:
-    typedef std::map<_linetype,_valuetype> maptype;		///< Defining the map from split points to value objects
+    typedef std::map<_linetype, _valuetype> maptype;		///< Defining the map from split points to value objects
     typedef typename maptype::iterator iterator;			///< A partmap iterator is an iterator into the map
     typedef typename maptype::const_iterator const_iterator;	///< A constant iterator
 private:
@@ -57,7 +57,7 @@ private:
 public:
     _valuetype &getValue(const _linetype &pnt);			///< Get the value object at a point
     const _valuetype &getValue(const _linetype &pnt) const;	///< Get the value object at a point
-    const _valuetype &bounds(const _linetype &pnt,_linetype &before,_linetype &after,int &valid) const;
+    const _valuetype &bounds(const _linetype &pnt, _linetype &before, _linetype &after, int &valid) const;
     _valuetype &split(const _linetype &pnt);			///< Introduce a new split point
     const _valuetype &defaultValue(void) const
     {
@@ -67,7 +67,7 @@ public:
     {
         return defaultvalue;    ///< Get the default value object
     }
-    _valuetype & clearRange(const _linetype &pnt1,const _linetype &pnt2);	///< Clear a range of split points
+    _valuetype & clearRange(const _linetype &pnt1, const _linetype &pnt2);	///< Clear a range of split points
     const_iterator begin(void) const
     {
         return database.begin();    ///< Beginning of split points
@@ -107,8 +107,8 @@ public:
 /// return the default value.
 /// \param pnt is the given point in the linear space
 /// \return the corresponding value object
-template<typename _linetype,typename _valuetype>
-_valuetype &partmap<_linetype,_valuetype>::
+template<typename _linetype, typename _valuetype>
+_valuetype &partmap<_linetype, _valuetype>::
 getValue(const _linetype &pnt)
 
 {
@@ -126,8 +126,8 @@ getValue(const _linetype &pnt)
 /// return the default value.
 /// \param pnt is the given point in the linear space
 /// \return the corresponding value object
-template<typename _linetype,typename _valuetype>
-const _valuetype &partmap<_linetype,_valuetype>::
+template<typename _linetype, typename _valuetype>
+const _valuetype &partmap<_linetype, _valuetype>::
 getValue(const _linetype &pnt) const
 
 {
@@ -143,8 +143,8 @@ getValue(const _linetype &pnt) const
 /// Add (if not already present) a point to the linear partition.
 /// \param pnt is the (new) point
 /// \return the (possibly) new value object for the range starting at the point
-template<typename _linetype,typename _valuetype>
-_valuetype &partmap<_linetype,_valuetype>::
+template<typename _linetype, typename _valuetype>
+_valuetype &partmap<_linetype, _valuetype>::
 split(const _linetype &pnt)
 
 {
@@ -170,9 +170,9 @@ split(const _linetype &pnt)
 /// \param pnt1 is the left-most boundary point of the range
 /// \param pnt2 is the right-most boundary point
 /// \return the value object assigned to the range
-template<typename _linetype,typename _valuetype>
-_valuetype &partmap<_linetype,_valuetype>::
-clearRange(const _linetype &pnt1,const _linetype &pnt2)
+template<typename _linetype, typename _valuetype>
+_valuetype &partmap<_linetype, _valuetype>::
+clearRange(const _linetype &pnt1, const _linetype &pnt2)
 {
     split(pnt1);
     split(pnt2);
@@ -181,7 +181,7 @@ clearRange(const _linetype &pnt1,const _linetype &pnt2)
 
     _valuetype &ref( (*beg).second );
     ++beg;
-    database.erase(beg,end);
+    database.erase(beg, end);
     return ref;
 }
 
@@ -198,15 +198,15 @@ clearRange(const _linetype &pnt1,const _linetype &pnt2)
 /// \param after is a reference to the passed back upper bound
 /// \param valid is a reference to the passed back validity code
 /// \return the corresponding value object
-template<typename _linetype,typename _valuetype>
-const _valuetype &partmap<_linetype,_valuetype>::
-bounds(const _linetype &pnt,_linetype &before,_linetype &after,int &valid) const
+template<typename _linetype, typename _valuetype>
+const _valuetype &partmap<_linetype, _valuetype>::
+bounds(const _linetype &pnt, _linetype &before, _linetype &after, int &valid) const
 {
     if (database.empty()) {
         valid = 3;
         return defaultvalue;
     }
-    const_iterator iter,enditer;
+    const_iterator iter, enditer;
 
     enditer = database.upper_bound(pnt);
     if (enditer != database.begin()) {
@@ -232,10 +232,10 @@ bounds(const _linetype &pnt,_linetype &before,_linetype &after,int &valid) const
 #include <iostream>
 using namespace std;
 
-int main(int argc,char **argv)
+int main(int argc, char **argv)
 
 {
-    partmap<int,unsigned int> data;
+    partmap<int, unsigned int> data;
 
     data.defaultValue() = 0;
     data.split(5) = 5;
@@ -248,10 +248,10 @@ int main(int argc,char **argv)
     cout << data.getValue(4) << endl;
     cout << data.getValue(1) << endl;
 
-    partmap<int,unsigned int>::const_iterator iter;
+    partmap<int, unsigned int>::const_iterator iter;
 
     iter = data.begin(3);
-    while(iter!=data.end()) {
+    while(iter != data.end()) {
         cout << (*iter).second << endl;
         ++iter;
     }

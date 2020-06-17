@@ -131,6 +131,6 @@ enum OpCode
 extern const char *get_opname(OpCode opc);		///< Convert an OpCode to the name as a string
 extern OpCode get_opcode(const string &nm);		///< Convert a name string to the matching OpCode
 
-extern OpCode get_booleanflip(OpCode opc,bool &reorder);	///< Get the complementary OpCode
+extern OpCode get_booleanflip(OpCode opc, bool &reorder);	///< Get the complementary OpCode
 
 #endif

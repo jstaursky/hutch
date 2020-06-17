@@ -67,11 +67,11 @@ OpCode get_opcode(const string &nm)
 
 {
     int4 min = 1;			// Don't include BLANK
-    int4 max = CPUI_MAX-1;
-    int4 cur,ind;
+    int4 max = CPUI_MAX - 1;
+    int4 cur, ind;
 
     while(min <= max) {		// Binary search
-        cur = (min + max)/2;
+        cur = (min + max) / 2;
         ind = opcode_indices[cur];	// Get opcode in cur's sort slot
         if (opcode_name[ind] < nm)
             min = cur + 1;		// Everything equal or below cur is less
@@ -89,7 +89,7 @@ OpCode get_opcode(const string &nm)
 /// \param opc is the OpCode to complement
 /// \param reorder is set to \b true if the inputs need to be reordered
 /// \return the complementary OpCode or CPUI_MAX if not given a comparison operation
-OpCode get_booleanflip(OpCode opc,bool &reorder)
+OpCode get_booleanflip(OpCode opc, bool &reorder)
 
 {
     switch(opc) {
