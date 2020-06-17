@@ -332,30 +332,12 @@ public:
 
 
     uintb getUniqueAddr(void);
-    void setUnnecessaryPcodeWarning(bool val)
-    {
-        warnunnecessarypcode = val;
-    }
-    void setDeadTempWarning(bool val)
-    {
-        warndeadtemps = val;
-    }
-    void setEnforceLocalKeyWord(bool val)
-    {
-        pcode.setEnforceLocalKey(val);
-    }
-    void setLenientConflict(bool val)
-    {
-        lenientconflicterrors = val;
-    }
-    void setLocalCollisionWarning(bool val)
-    {
-        warnalllocalcollisions = val;
-    }
-    void setAllNopWarning(bool val)
-    {
-        warnallnops = val;
-    }
+    void setUnnecessaryPcodeWarning(bool val) { warnunnecessarypcode = val; }
+    void setDeadTempWarning(bool val)         { warndeadtemps = val; }
+    void setEnforceLocalKeyWord(bool val)     { pcode.setEnforceLocalKey(val); }
+    void setLenientConflict(bool val)         { lenientconflicterrors = val; }
+    void setLocalCollisionWarning(bool val)   { warnalllocalcollisions = val; }
+    void setAllNopWarning(bool val)           { warnallnops = val; }
     void process(void);
 
     // Lexer functions
