@@ -62,6 +62,7 @@ clean:
 	rm -f xml.cc
 	rm -f slghscan.cc
 	rm -f slghparse.cc
+	rm -f slghparse.tab.hh
 	rm -f pcodeparse.cc
 	rm -rf bin
 
