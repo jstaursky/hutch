@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 
 project(sleigh_compile CXX)
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
@@ -10,30 +10,30 @@ find_package(FLEX REQUIRED)
 ADD_CUSTOM_TARGET(pcodeparse echo "Creating pcodeparse.cc" DEPENDS pcodeparse.cc)
 
 ADD_CUSTOM_COMMAND(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/pcodeparse.cc
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/pcodeparse.cc
   COMMAND ${BISON_EXECUTABLE}
-  ARGS -y ${CMAKE_CURRENT_SOURCE_DIR}/pcodeparse.y -p pcode -o ${CMAKE_CURRENT_SOURCE_DIR}/pcodeparse.cc
+  ARGS -y ${CMAKE_CURRENT_SOURCE_DIR}/pcodeparse.y -p pcode -o ${CMAKE_CURRENT_BINARY_DIR}/pcodeparse.cc
   )
 
 # Create target for xml
 ADD_CUSTOM_TARGET(xml echo "Creating xml.cc" DEPENDS xml.cc)
 
 ADD_CUSTOM_COMMAND(
-  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/xml.cc
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/xml.cc
   COMMAND ${BISON_EXECUTABLE}
-  ARGS -y ${CMAKE_CURRENT_SOURCE_DIR}/xml.y -p xml -o ${CMAKE_CURRENT_SOURCE_DIR}/xml.cc
+  ARGS -y ${CMAKE_CURRENT_SOURCE_DIR}/xml.y -p xml -o ${CMAKE_CURRENT_BINARY_DIR}/xml.cc
   )
 
 # configure build for generating slghparse.cc
 BISON_TARGET(slghparse
   slghparse.y
-  ${CMAKE_CURRENT_SOURCE_DIR}/slghparse.cc
-  DEFINES_FILE ${CMAKE_CURRENT_SOURCE_DIR}/slghparse.tab.hh
+  ${CMAKE_CURRENT_BINARY_DIR}/slghparse.cc
+  DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/slghparse.tab.hh
   )
 
 FLEX_TARGET(slghscan
   slghscan.l
-  ${CMAKE_CURRENT_SOURCE_DIR}/slghscan.cc
+  ${CMAKE_CURRENT_BINARY_DIR}/slghscan.cc
   )
 
 ADD_FLEX_BISON_DEPENDENCY(slghscan slghparse)
@@ -53,3 +53,5 @@ add_executable (sleighcompiler
   )
 
 add_dependencies(sleighcompiler pcodeparse xml)
+# So CMake can find pcodeparse.hh, etc.
+target_include_directories(sleighcompiler PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
