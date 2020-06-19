@@ -1,24 +1,55 @@
 cmake_minimum_required(VERSION 3.13)
 
-project(pcodecodeparse CXX)
+project(sleigh_compile CXX)
+
 
 find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
 
-# configure build for generating pcodeparse.cc
-BISON_TARGET(gen_pcodecodeparse
-  pcodeparse.y
+# Create target for pcodeparse
+ADD_CUSTOM_TARGET(pcodeparse echo "Creating pcodeparse.cc" DEPENDS pcodeparse.cc)
+
+ADD_CUSTOM_COMMAND(
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/pcodeparse.cc
+  COMMAND ${BISON_EXECUTABLE}
+  ARGS -y ${CMAKE_CURRENT_SOURCE_DIR}/pcodeparse.y -p pcode -o ${CMAKE_CURRENT_SOURCE_DIR}/pcodeparse.cc
+  )
+
+# Create target for xml
+ADD_CUSTOM_TARGET(xml echo "Creating xml.cc" DEPENDS xml.cc)
+
+ADD_CUSTOM_COMMAND(
+  OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/xml.cc
+  COMMAND ${BISON_EXECUTABLE}
+  ARGS -y ${CMAKE_CURRENT_SOURCE_DIR}/xml.y -p xml -o ${CMAKE_CURRENT_SOURCE_DIR}/xml.cc
+  )
+
+# configure build for generating slghparse.cc
+BISON_TARGET(slghparse
+  slghparse.y
+  ${CMAKE_CURRENT_SOURCE_DIR}/slghparse.cc
+  DEFINES_FILE ${CMAKE_CURRENT_SOURCE_DIR}/slghparse.tab.hh
+  )
+
+FLEX_TARGET(slghscan
+  slghscan.l
+  ${CMAKE_CURRENT_SOURCE_DIR}/slghscan.cc
+  )
+
+ADD_FLEX_BISON_DEPENDENCY(slghscan slghparse)
+
+
+file(GLOB SOURCES "*.cc")
+file(GLOB HEADERS "*.hh")
+
+
+add_executable (sleighcompiler
+  ${SOURCES}
   pcodeparse.cc
-  COMPILE_FLAGS "-p pcode -o ${BISON_gen_pcodecodeparse_OUTPUT_SOURCE}"
+  slghscan.cc
+  slghparse.cc
+  xml.cc
+  ${HEADERS}
   )
 
-# MIGHT BE NEEDED LATER
-#set_source_files_properties(${BISON_parser_OUTPUT_SOURCE} PROPERTIES GENERATED TRUE)
-
-
-add_custom_target(
-  pcodecodeparse
-  ALL echo "generate stuff"
-  DEPENDS ${BISON_generate_pcodecodeparse_OUTPUT_SOURCE}
-  )
-
-
+add_dependencies(sleighcompiler pcodeparse xml)
