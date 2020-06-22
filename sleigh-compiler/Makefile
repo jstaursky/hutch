@@ -32,9 +32,41 @@ translate \
 xml
 
 sleigh-compile: $(SLEIGH_COMPILE_OBJS:%=%.o)
-	$(CXX) $(CXXFLAGS) -I. *.o -o $(BIN_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I. $^ -o $(BIN_DIR)/$@
 
 $(SLEIGH_COMPILE_OBJS:%=%.o): | $(BIN_DIR)
+
+LIBSLA_OBJS := \
+address \
+context \
+emulate \
+filemanage \
+float \
+globalcontext \
+loadimage \
+memstate \
+opbehavior \
+opcodes \
+pcodecompile \
+pcoderaw \
+semantics \
+sleighbase \
+sleigh \
+slghpatexpress \
+slghpattern \
+slghsymbol \
+space \
+translate \
+xml
+
+
+libsla.a: $(LIBSLA_OBJS:%=%.o)
+	$(CXX) $(CXXFLAGS) -I. -c $^ -o $(BIN_DIR)/$@
+	ar -rsv $@ $^
+
+$(LIBSLA_OBJS:%=%.o): | $(BIN_DIR)
+
+
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
