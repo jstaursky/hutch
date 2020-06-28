@@ -4,4 +4,4 @@ compiler. `libsla` should follow afterwards fairly quickly. Starting this
 migration with as Bare-Bones a makefile possible.
 
 # FMTING
-formatting all files with `astyle --style=mozilla -p *.cc -A16` (See http://astyle.sourceforge.net)
+formatting all files with `astyle --style=mozilla -p -xd *.cc -A16` (See http://astyle.sourceforge.net)
