@@ -114,92 +114,38 @@ private:
     vector<ConstructState> state; // Current resolved instruction
     vector<ContextSet> contextcommit;
 public:
-    ParserContext(ContextCache *ccache);
-    ~ParserContext(void)
-    {
-        if (context != (uintm *)0) delete [] context;
-    }
-    uint1 *getBuffer(void)
-    {
-        return buf;
-    }
-    void initialize(int4 maxstate, int4 maxparam, AddrSpace *spc);
-    int4 getParserState(void) const
-    {
-        return parsestate;
-    }
-    void setParserState(int4 st)
-    {
-        parsestate = st;
-    }
-    void deallocateState(ParserWalkerChange &walker);
-    void allocateOperand(int4 i, ParserWalkerChange &walker);
-    void setAddr(const Address &ad)
-    {
-        addr = ad;
-    }
-    void setNaddr(const Address &ad)
-    {
-        naddr = ad;
-    }
-    void setCalladdr(const Address &ad)
-    {
-        calladdr = ad;
-    }
-    void addCommit(TripleSymbol *sym, int4 num, uintm mask, bool flow, ConstructState *point);
-    void clearCommits(void)
-    {
-        contextcommit.clear();
-    }
-    void applyCommits(void);
-    const Address &getAddr(void) const
-    {
-        return addr;
-    }
-    const Address &getNaddr(void) const
-    {
-        return naddr;
-    }
-    const Address &getDestAddr(void) const
-    {
-        return calladdr;
-    }
-    const Address &getRefAddr(void) const
-    {
-        return calladdr;
-    }
-    AddrSpace *getCurSpace(void) const
-    {
-        return addr.getSpace();
-    }
-    AddrSpace *getConstSpace(void) const
-    {
-        return const_space;
-    }
-    uintm getInstructionBytes(int4 byteoff, int4 numbytes, uint4 off) const;
-    uintm getContextBytes(int4 byteoff, int4 numbytes) const;
-    uintm getInstructionBits(int4 startbit, int4 size, uint4 off) const;
-    uintm getContextBits(int4 startbit, int4 size) const;
-    void setContextWord(int4 i, uintm val, uintm mask)
+    ParserContext (ContextCache* ccache);
+    ~ParserContext (void)            { if (context != (uintm*)0) delete [] context; }
+    int4 getParserState (void) const { return parsestate; }
+    uint1* getBuffer (void)          { return buf; }
+    void addCommit (TripleSymbol* sym, int4 num, uintm mask, bool flow, ConstructState* point);
+    void allocateOperand (int4 i, ParserWalkerChange& walker);
+    void applyCommits (void);
+    void clearCommits (void) { contextcommit.clear(); }
+    void deallocateState (ParserWalkerChange& walker);
+    void initialize (int4 maxstate, int4 maxparam, AddrSpace* spc);
+    void setAddr (const Address& ad)        { addr = ad; }
+    void setCalladdr (const Address& ad)    { calladdr = ad; }
+    void setNaddr (const Address& ad)       { naddr = ad; }
+    void setParserState (int4 st)           { parsestate = st; }
+    const Address& getAddr (void) const     { return addr; }
+    const Address& getDestAddr (void) const { return calladdr; }
+    const Address& getNaddr (void) const    { return naddr; }
+    const Address& getRefAddr (void) const  { return calladdr; }
+    AddrSpace* getConstSpace (void) const   { return const_space; }
+    AddrSpace* getCurSpace (void) const     { return addr.getSpace(); }
+    uintm getContextBits (int4 startbit, int4 size) const;
+    uintm getContextBytes (int4 byteoff, int4 numbytes) const;
+    uintm getInstructionBits (int4 startbit, int4 size, uint4 off) const;
+    uintm getInstructionBytes (int4 byteoff, int4 numbytes, uint4 off) const;
+    void setContextWord (int4 i, uintm val, uintm mask)
     {
         context[i] = (context[i] & (~mask)) | (mask & val);
     }
-    void loadContext(void)
-    {
-        contcache->getContext(addr, context);
-    }
-    int4 getLength(void) const
-    {
-        return base_state->length;
-    }
-    void setDelaySlot(int4 val)
-    {
-        delayslot = val;
-    }
-    int4 getDelaySlot(void) const
-    {
-        return delayslot;
-    }
+    int4 getDelaySlot (void) const { return delayslot; }
+    int4 getLength (void) const    { return base_state->length; }
+    void loadContext (void)        { contcache->getContext (addr, context); }
+    void setDelaySlot (int4 val)   { delayslot = val; }
 };
 
 class ParserWalker  		// A class for walking the ParserContext
