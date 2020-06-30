@@ -94,25 +94,25 @@ public:
     enum
     {
         // Possible states of the ParserContext
-        uninitialized = 0,		// Instruction has not been parsed at all
-        disassembly = 1,		// Instruction is parsed in preparation for disassembly
-        pcode = 2			// Instruction is parsed in preparation for generating p-code
+        uninitialized = 0, // Instruction has not been parsed at all
+        disassembly = 1,   // Instruction is parsed in preparation for disassembly
+        pcode = 2		   // Instruction is parsed in preparation for generating p-code
     };
 private:
+    Address addr;                 // Address of start of instruction
+    Address calladdr;             // For injections, this is the address of the call being overridden
+    Address naddr;                // Address of next instruction
+    AddrSpace* const_space;
+    ConstructState* base_state;
+    ContextCache* contcache;      // Interface for getting/setting context
+    int4 alloc;                   // Number of ConstructState's allocated
+    int4 contextsize;             // Number of entries in context array
+    int4 delayslot;               // delayslot depth
     int4 parsestate;
-    AddrSpace *const_space;
-    uint1 buf[16];		// Buffer of bytes in the instruction stream
-    uintm *context;		// Pointer to local context
-    int4 contextsize;		// Number of entries in context array
-    ContextCache *contcache;   // Interface for getting/setting context
-    vector<ContextSet> contextcommit;
-    Address addr;		// Address of start of instruction
-    Address naddr;		// Address of next instruction
-    Address calladdr;		// For injections, this is the address of the call being overridden
+    uint1 buf[16];                // Buffer of bytes in the instruction stream
+    uintm* context;               // Pointer to local context
     vector<ConstructState> state; // Current resolved instruction
-    ConstructState *base_state;
-    int4 alloc;			// Number of ConstructState's allocated
-    int4 delayslot;		// delayslot depth
+    vector<ContextSet> contextcommit;
 public:
     ParserContext(ContextCache *ccache);
     ~ParserContext(void)
