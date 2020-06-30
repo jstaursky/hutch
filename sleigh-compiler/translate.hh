@@ -253,38 +253,39 @@ struct JoinRecordCompare
 
 /// \brief A manager for different address spaces
 ///
-/// Allow creation, lookup by name, lookup by shortcut, lookup by name, and iteration
-/// over address spaces
+/// Allow creation, lookup by name, lookup by shortcut, lookup by name, and
+/// iteration over address spaces
 class AddrSpaceManager
 {
-    vector<AddrSpace *> baselist; ///< Every space we know about for this architecture
-    vector<AddressResolver *> resolvelist; ///< Special constant resolvers
-    map<string, AddrSpace *> name2Space;	///< Map from name -> space
-    map<int4, AddrSpace *> shortcut2Space;	///< Map from shortcut -> space
-    AddrSpace *constantspace;	///< Quick reference to constant space
-    AddrSpace *defaultcodespace;	///< Default space where code lives, generally main RAM
-    AddrSpace *defaultdataspace;	///< Default space where data lives
-    AddrSpace *iopspace;		///< Space for internal pcode op pointers
-    AddrSpace *fspecspace;	///< Space for internal callspec pointers
-    AddrSpace *joinspace;		///< Space for unifying split variables
-    AddrSpace *stackspace;	///< Stack space associated with processor
-    AddrSpace *uniqspace;		///< Temporary space associated with processor
-    uintb joinallocate;		///< Next offset to be allocated in join space
-    set<JoinRecord *, JoinRecordCompare> splitset;	///< Different splits that have been defined in join space
-    vector<JoinRecord *> splitlist; ///< JoinRecords indexed by join address
+    AddrSpace* constantspace;                     ///< Quick reference to constant space
+    AddrSpace* defaultcodespace;                  ///< Default space where code lives, generally main RAM
+    AddrSpace* defaultdataspace;                  ///< Default space where data lives
+    AddrSpace* fspecspace;                        ///< Space for internal callspec pointers
+    AddrSpace* iopspace;                          ///< Space for internal pcode op pointers
+    AddrSpace* joinspace;                         ///< Space for unifying split variables
+    AddrSpace* stackspace;                        ///< Stack space associated with processor
+    AddrSpace* uniqspace;                         ///< Temporary space associated with processor
+    map<int4, AddrSpace*> shortcut2Space;         ///< Map from shortcut -> space
+    map<string, AddrSpace*> name2Space;           ///< Map from name -> space
+    set<JoinRecord*, JoinRecordCompare> splitset; ///< Different splits that have been defined in join space
+    uintb joinallocate;                           ///< Next offset to be allocated in join space
+    vector<AddressResolver*> resolvelist;         ///< Special constant resolvers
+    vector<AddrSpace*> baselist;                  ///< Every space we know about for this architecture
+    vector<JoinRecord*> splitlist;                ///< JoinRecords indexed by join address
 protected:
-    AddrSpace *restoreXmlSpace(const Element *el, const Translate *trans); ///< Add a space to the model based an on XML tag
-    void restoreXmlSpaces(const Element *el, const Translate *trans); ///< Restore address spaces in the model from an XML tag
-    void setDefaultCodeSpace(int4 index); ///< Set the default address space (for code)
-    void setDefaultDataSpace(int4 index);	///< Set the default address space for data
-    void setReverseJustified(AddrSpace *spc); ///< Set reverse justified property on this space
-    void assignShortcut(AddrSpace *spc);	///< Select a shortcut character for a new space
-    void markNearPointers(AddrSpace *spc, int4 size);	///< Mark that given space can be accessed with near pointers
-    void insertSpace(AddrSpace *spc); ///< Add a new address space to the model
-    void copySpaces(const AddrSpaceManager *op2);	///< Copy spaces from another manager
-    void addSpacebasePointer(SpacebaseSpace *basespace, const VarnodeData &ptrdata, int4 truncSize, bool stackGrowth); ///< Set the base register of a spacebase space
-    void insertResolver(AddrSpace *spc, AddressResolver *rsolv); ///< Override the base resolver for a space
-    JoinRecord *findJoinInternal(uintb offset) const; ///< Find JoinRecord for \e offset in the join space
+    AddrSpace* restoreXmlSpace (const Element* el, const Translate* trans);  ///< Add a space to the model based an on XML tag
+    JoinRecord* findJoinInternal (uintb offset) const;                       ///< Find JoinRecord for \e offset in the join space
+    void addSpacebasePointer (SpacebaseSpace* basespace, const VarnodeData& ptrdata,
+                              int4 truncSize, bool stackGrowth);
+    void assignShortcut (AddrSpace* spc);                               ///< Select a shortcut character for a new space
+    void copySpaces (const AddrSpaceManager* op2);                      ///< Copy spaces from another manager
+    void insertResolver (AddrSpace* spc, AddressResolver* rsolv);       ///< Override the base resolver for a space
+    void insertSpace (AddrSpace* spc);                                  ///< Add a new address space to the model
+    void markNearPointers (AddrSpace* spc, int4 size);                  ///< Mark that given space can be accessed with near pointers
+    void restoreXmlSpaces (const Element* el, const Translate* trans);  ///< Restore address spaces in the model from an XML tag
+    void setDefaultCodeSpace (int4 index);                              ///< Set the default address space (for code)
+    void setDefaultDataSpace (int4 index);                              ///< Set the default address space for data
+    void setReverseJustified (AddrSpace* spc);                          ///< Set reverse justified property on this space
 public:
     AddrSpaceManager(void);	///< Construct an empty address space manager
     virtual ~AddrSpaceManager(void); ///< Destroy the manager

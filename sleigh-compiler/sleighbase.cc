@@ -172,22 +172,25 @@ void SleighBase::saveXml(ostream &s) const
     s << "</sleigh>\n";
 }
 
-/// This parses the main \<sleigh> tag (from a .sla file), which includes the description
-/// of address spaces and the symbol table, with its associated decoding tables
-/// \param el is the root XML element
+/// This parses the main \<sleigh> tag (from a .sla file), which includes the
+/// description of address spaces and the symbol table, with its associated
+/// decoding tables
+/// - el is the root XML element
 void SleighBase::restoreXml(const Element *el)
 
 {
-    maxdelayslotbytes = 0;
+    maxdelayslotbytes   = 0;
+    numSections         = 0;
     unique_allocatemask = 0;
-    numSections = 0;
     int4 version = 0;
     setBigEndian(xml_readbool(el->getAttributeValue("bigendian")));
+
     {
         istringstream s(el->getAttributeValue("align"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
         s >> alignment;
     }
+
     {
         istringstream s(el->getAttributeValue("uniqbase"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
@@ -195,6 +198,7 @@ void SleighBase::restoreXml(const Element *el)
         s >> ubase;
         setUniqueBase(ubase);
     }
+
     int4 numattr = el->getNumAttributes();
     for(int4 i = 0; i < numattr; ++i) {
         const string &attrname( el->getAttributeName(i) );

@@ -28,18 +28,18 @@
 ///   - Building and writing out SLEIGH specification files
 class SleighBase : public Translate
 {
-    static const int4 SLA_FORMAT_VERSION;	///< Current version of the .sla file read/written by SleighBash
-    vector<string> userop;		///< Names of user-define p-code ops for \b this Translate object
-    map<VarnodeData, string> varnode_xref;	///< A map from Varnodes in the \e register space to register names
+    static const int4 SLA_FORMAT_VERSION;         ///< Current version of the .sla file read/written by SleighBash
+    vector<string> userop;                        ///< Names of user-define p-code ops for \b this Translate object
+    map<VarnodeData, string> varnode_xref;        ///< A map from Varnodes in the \e register space to register names
 protected:
-    SubtableSymbol *root;		///< The root SLEIGH decoding symbol
-    SymbolTable symtab;		///< The SLEIGH symbol table
-    uint4 maxdelayslotbytes;	///< Maximum number of bytes in a delay-slot directive
-    uint4 unique_allocatemask;	///< Bits that are guaranteed to be zero in the unique allocation scheme
-    uint4 numSections;		///< Number of \e named sections
-    void buildXrefs(vector<string> &errorPairs);	///< Build register map. Collect user-ops and context-fields.
-    void reregisterContext(void);	///< Reregister context fields for a new executable
-    void restoreXml(const Element *el);	///< Read a SLEIGH specification from XML
+    SubtableSymbol* root;                         ///< The root SLEIGH decoding symbol
+    SymbolTable symtab;                           ///< The SLEIGH symbol table
+    uint4 maxdelayslotbytes;                      ///< Maximum number of bytes in a delay-slot directive
+    uint4 numSections;                            ///< Number of \e named sections
+    uint4 unique_allocatemask;                    ///< Bits that are guaranteed to be zero in the unique allocation scheme
+    void buildXrefs (vector<string>& errorPairs); ///< Build register map. Collect user-ops and context-fields.
+    void reregisterContext (void);                ///< Reregister context fields for a new executable
+    void restoreXml (const Element* el);          ///< Read a SLEIGH specification from XML
 public:
     SleighBase(void);		///< Construct an uninitialized translator
     bool isInitialized(void) const

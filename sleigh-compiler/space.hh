@@ -43,6 +43,7 @@ class Translate;
 
 /// \brief A region where processor data is stored
 ///
+
 /// An AddrSpace (Address Space) is an arbitrary sequence of
 /// bytes where a processor can store data. As is usual with
 /// most processors' concept of RAM, an integer offset
