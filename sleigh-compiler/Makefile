@@ -79,6 +79,8 @@ xml.cc: xml.y
 
 slghparse.cc: slghparse.y
 	$(YACC) -d -o $@ $<
+
+slghparse.tab.hh: slghparse.cc
 	mv slghparse.hh slghparse.tab.hh
 
 pcodeparse.cc: pcodeparse.y
@@ -86,7 +88,7 @@ pcodeparse.cc: pcodeparse.y
 
 slghscan.o: slghscan.cc
 
-slghscan.cc: slghscan.l
+slghscan.cc: slghscan.l slghparse.tab.hh
 	$(LEX) -o $@ $<
 
 clean:
