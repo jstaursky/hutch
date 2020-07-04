@@ -8,6 +8,9 @@ YACC = bison
 BIN_DIR := bin
 
 
+all: sleigh-compile libsla.a
+
+
 SLEIGH_COMPILE_OBJS := \
 address \
 context \
