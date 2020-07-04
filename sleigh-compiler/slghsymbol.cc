@@ -224,7 +224,7 @@ void SymbolTable::restoreXml(const Element *el, SleighBase *trans)
             s >> id;
         }
         sym = findSymbol(id);
-        sym->restoreXml(subel, trans); DOES NOTHING!
+        sym->restoreXml(subel, trans); // DOES NOTHING!
         ++iter;
     }
 }
