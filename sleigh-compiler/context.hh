@@ -273,36 +273,20 @@ public:
     }
 };
 
-class ParserWalkerChange : public ParserWalker   // Extension to walker that allows for on the fly modifications to tree
+// Extension to walker that allows for on the fly modifications to tree
+class ParserWalkerChange : public ParserWalker
 {
     friend class ParserContext;
-    ParserContext *context;
+    ParserContext* context;
 public:
-    ParserWalkerChange(ParserContext *c) : ParserWalker(c)
-    {
-        context = c;
-    }
-    ParserContext *getParserContext(void)
-    {
-        return context;
-    }
-    ConstructState *getPoint(void)
-    {
-        return point;
-    }
-    void setOffset(uint4 off)
-    {
-        point->offset = off;
-    }
-    void setConstructor(Constructor *c)
-    {
-        point->ct = c;
-    }
-    void setCurrentLength(int4 len)
-    {
-        point->length = len;
-    }
-    void calcCurrentLength(int4 length, int4 numopers);
+    ParserWalkerChange (ParserContext* c) : ParserWalker (c)
+    { context = c; }
+    ConstructState* getPoint (void) { return point; }
+    ParserContext*  getParserContext (void) { return context; }
+    void calcCurrentLength (int4 length, int4 numopers);
+    void setConstructor (Constructor* c) { point->ct = c; }
+    void setCurrentLength (int4 len) { point->length = len; }
+    void setOffset (uint4 off)       { point->offset = off; }
 };
 
 struct SleighError : public LowlevelError

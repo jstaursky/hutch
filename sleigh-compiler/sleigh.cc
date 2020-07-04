@@ -479,8 +479,8 @@ void Sleigh::initialize(DocumentStorage &store)
 ParserContext *Sleigh::obtainContext(const Address &addr, int4 state) const
 
 {
-    // Obtain a ParserContext for the instruction at the given -addr-.  This may be cached.
-    // Make sure parsing has proceeded to at least the given -state.
+    // Obtain a ParserContext for the instruction at the given -addr-. This may
+    // be cached. Make sure parsing has proceeded to at least the given -state.
     ParserContext *pos = discache->getParserContext(addr);
     int4 curstate = pos->getParserState();
     if (curstate >= state)
@@ -509,8 +509,8 @@ void Sleigh::resolve(ParserContext &pos) const
 
     pos.setDelaySlot(0);
     walker.setOffset(0);		// Initial offset
-    pos.clearCommits();		// Clear any old context commits
-    pos.loadContext();		// Get context for current address
+    pos.clearCommits();         // Clear any old context commits
+    pos.loadContext();          // Get context for current address
     ct = root->resolve(walker);	// Base constructor
     walker.setConstructor(ct);
     ct->applyContext(walker);

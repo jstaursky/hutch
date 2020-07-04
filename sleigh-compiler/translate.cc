@@ -232,8 +232,8 @@ void AddrSpaceManager::restoreXmlSpaces(const Element *el, const Translate *tran
 
     string defname(el->getAttributeValue("defaultspace"));
     const List &list(el->getChildren());
-    List::const_iterator iter;
-    iter = list.begin();
+    List::const_iterator iter = list.begin();
+
     while(iter != list.end()) {
         AddrSpace *spc = restoreXmlSpace(*iter, trans);
         insertSpace(spc);

@@ -317,15 +317,9 @@ class ContextInternal : public ContextDatabase
         return database.defaultValue().array;
     }
 public:
-    ContextInternal(void)
-    {
-        size = 0;
-    }
+    ContextInternal(void) { size = 0; }
     virtual ~ContextInternal(void) {}
-    virtual int4 getContextSize(void) const
-    {
-        return size;
-    }
+    virtual int4 getContextSize(void) const { return size; }
     virtual void registerVariable(const string &nm, int4 sbit, int4 ebit);
 
     virtual const uintm *getContext(const Address &addr) const
@@ -357,11 +351,11 @@ public:
 class ContextCache
 {
     ContextDatabase *database;		///< The encapsulated context database
-    bool allowset;			///< If set to \b false, and setContext() call is dropped
-    mutable AddrSpace *curspace;		///< Address space of the current valid range
+    bool allowset;                  ///< If set to \b false, and setContext() call is dropped
+    mutable AddrSpace *curspace;	///< Address space of the current valid range
     mutable uintb first;			///< Starting offset of the current valid range
-    mutable uintb last;			///< Ending offset of the current valid range
-    mutable const uintm *context;		///< The current cached context blob
+    mutable uintb last;			    ///< Ending offset of the current valid range
+    mutable const uintm *context;	///< The current cached context blob
 public:
     ContextCache(ContextDatabase *db);	///< Construct given a context database
     ContextDatabase *getDatabase(void) const

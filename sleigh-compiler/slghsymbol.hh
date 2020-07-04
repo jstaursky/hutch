@@ -37,29 +37,20 @@ private:
     uintm id;			// Unique id across all symbols
     uintm scopeid;		// Unique id of scope this symbol is in
 public:
-    SleighSymbol(void) {}		// For use with restoreXml
-    SleighSymbol(const string &nm)
+    SleighSymbol (void) {}		// For use with restoreXml
+    SleighSymbol (const string & nm)
     {
         name = nm;
         id = 0;
     }
-    virtual ~SleighSymbol(void) {}
-    const string &getName(void) const
-    {
-        return name;
-    }
-    uintm getId(void) const
-    {
-        return id;
-    }
-    virtual symbol_type getType(void) const
-    {
-        return dummy_symbol;
-    }
-    virtual void saveXmlHeader(ostream &s) const;
-    void restoreXmlHeader(const Element *el);
-    virtual void saveXml(ostream &s) const {}
-    virtual void restoreXml(const Element *el, SleighBase *trans) {}
+    virtual ~SleighSymbol (void) {}
+    const string & getName (void) const { return name; }
+    uintm getId (void) const { return id; }
+    virtual symbol_type getType (void) const { return dummy_symbol; }
+    virtual void restoreXml (const Element * el, SleighBase * trans) {}
+    virtual void saveXmlHeader (ostream & s) const;
+    virtual void saveXml (ostream & s) const {}
+    void restoreXmlHeader (const Element * el);
 };
 
 struct SymbolCompare
@@ -89,76 +80,46 @@ public:
     }
     SleighSymbol *addSymbol(SleighSymbol *a);
     SleighSymbol *findSymbol(const string &nm) const;
-    SymbolTree::const_iterator begin(void) const
-    {
-        return tree.begin();
-    }
-    SymbolTree::const_iterator end(void) const
-    {
-        return tree.end();
-    }
-    uintm getId(void) const
-    {
-        return id;
-    }
-    void removeSymbol(SleighSymbol *a)
-    {
-        tree.erase(a);
-    }
+    SymbolTree::const_iterator begin(void) const { return tree.begin(); }
+    SymbolTree::const_iterator end(void) const { return tree.end(); }
+    uintm getId(void) const { return id; }
+    void removeSymbol(SleighSymbol *a) { tree.erase(a); }
 };
 
 class SymbolTable
 {
-    vector<SleighSymbol *> symbollist;
-    vector<SymbolScope *> table;
-    SymbolScope *curscope;
-    SymbolScope *skipScope(int4 i) const;
-    SleighSymbol *findSymbolInternal(SymbolScope *scope, const string &nm) const;
-    void renumber(void);
+    SleighSymbol* findSymbolInternal (SymbolScope* scope, const string& nm) const;
+    SymbolScope* curscope;
+    SymbolScope* skipScope (int4 i) const;
+    vector<SleighSymbol*> symbollist;
+    vector<SymbolScope*> table;
+    void renumber (void);
 public:
-    SymbolTable(void)
-    {
-        curscope = (SymbolScope *)0;
-    }
-    ~SymbolTable(void);
-    SymbolScope *getCurrentScope(void)
-    {
-        return curscope;
-    }
-    SymbolScope *getGlobalScope(void)
-    {
-        return table[0];
-    }
+    SymbolTable (void) { curscope = (SymbolScope*)0; }
+    ~SymbolTable (void);
+    SymbolScope* getCurrentScope (void) { return curscope; }
+    SymbolScope* getGlobalScope (void) { return table[0]; }
 
-    void setCurrentScope(SymbolScope *scope)
-    {
-        curscope = scope;
-    }
-    void addScope(void);		// Add new scope off of current scope, make it current
-    void popScope(void);		// Make parent of current scope current
-    void addGlobalSymbol(SleighSymbol *a);
-    void addSymbol(SleighSymbol *a);
-    SleighSymbol *findSymbol(const string &nm) const
-    {
-        return findSymbolInternal(curscope, nm);
-    }
-    SleighSymbol *findSymbol(const string &nm, int4 skip) const
-    {
-        return findSymbolInternal(skipScope(skip), nm);
-    }
-    SleighSymbol *findGlobalSymbol(const string &nm) const
-    {
-        return findSymbolInternal(table[0], nm);
-    }
-    SleighSymbol *findSymbol(uintm id) const
-    {
-        return symbollist[id];
-    }
-    void replaceSymbol(SleighSymbol *a, SleighSymbol *b);
-    void saveXml(ostream &s) const;
-    void restoreXml(const Element *el, SleighBase *trans);
-    void restoreSymbolHeader(const Element *el);
-    void purge(void);
+    void addGlobalSymbol (SleighSymbol* a);
+    void addScope (void);		// Add new scope off of current scope, make it current
+    void addSymbol (SleighSymbol* a);
+    void popScope (void);		// Make parent of current scope current
+    void setCurrentScope (SymbolScope* scope) { curscope = scope; }
+
+    SleighSymbol* findGlobalSymbol (const string& nm) const
+    { return findSymbolInternal (table[0], nm); }
+    SleighSymbol* findSymbol (const string& nm) const
+    { return findSymbolInternal (curscope, nm); }
+    SleighSymbol* findSymbol (const string& nm, int4 skip) const
+    { return findSymbolInternal (skipScope (skip), nm); }
+    SleighSymbol* findSymbol (uintm id) const
+    { return symbollist[id]; }
+
+    void purge (void);
+    void replaceSymbol (SleighSymbol* a, SleighSymbol* b);
+    void restoreSymbolHeader (const Element* el);
+    void restoreXml (const Element* el, SleighBase* trans);
+    void saveXml (ostream& s) const;
 };
 
 class SpaceSymbol : public SleighSymbol
@@ -785,105 +746,65 @@ public:
 class SubtableSymbol;
 class Constructor  		// This is NOT a symbol
 {
-    TokenPattern *pattern;
-    SubtableSymbol *parent;
-    PatternEquation *pateq;
-    vector<OperandSymbol *> operands;
-    vector<string> printpiece;
-    vector<ContextChange *> context; // Context commands
-    ConstructTpl *templ;		// The main p-code section
-    vector<ConstructTpl *> namedtempl; // Other named p-code sections
-    int4 minimumlength;		// Minimum length taken up by this constructor in bytes
-    uintm id;			// Unique id of constructor within subtable
-    int4 firstwhitespace;		// Index of first whitespace piece in -printpiece-
-    int4 flowthruindex;		// if >=0 then print only a single operand no markup
+    mutable bool inerror;             // An error is associated with this Constructor
+    ConstructTpl* templ;              // The main p-code section
+    int4 firstwhitespace;             // Index of first whitespace piece in -printpiece-
+    int4 flowthruindex;               // if >=0 then print only a single operand no markup
     int4 lineno;
-    mutable bool inerror;                 // An error is associated with this Constructor
-    void orderOperands(void);
+    int4 minimumlength;               // Minimum length taken up by this constructor in bytes
+    PatternEquation* pateq;
+    SubtableSymbol* parent;
+    TokenPattern* pattern;
+    uintm id;                         // Unique id of constructor within subtable
+    vector<ConstructTpl*> namedtempl; // Other named p-code sections
+    vector<ContextChange*> context;   // Context commands
+    vector<OperandSymbol*> operands;
+    vector<string> printpiece;
+    void orderOperands (void);
 public:
     Constructor(void);		// For use with restoreXml
     Constructor(SubtableSymbol *p);
     ~Constructor(void);
-    TokenPattern *buildPattern(ostream &s);
-    TokenPattern *getPattern(void) const
-    {
-        return pattern;
-    }
-    void setMinimumLength(int4 l)
-    {
-        minimumlength = l;
-    }
-    int4 getMinimumLength(void) const
-    {
-        return minimumlength;
-    }
-    void setId(uintm i)
-    {
-        id = i;
-    }
-    uintm getId(void) const
-    {
-        return id;
-    }
-    void setLineno(int4 ln)
-    {
-        lineno = ln;
-    }
-    int4 getLineno(void) const
-    {
-        return lineno;
-    }
-    void addContext(const vector<ContextChange *> &vec)
-    {
-        context = vec;
-    }
-    void addOperand(OperandSymbol *sym);
-    void addInvisibleOperand(OperandSymbol *sym);
-    void addSyntax(const string &syn);
-    void addEquation(PatternEquation *pe);
-    void setMainSection(ConstructTpl *tpl)
-    {
-        templ = tpl;
-    }
-    void setNamedSection(ConstructTpl *tpl, int4 id);
-    SubtableSymbol *getParent(void) const
-    {
-        return parent;
-    }
-    int4 getNumOperands(void) const
-    {
-        return operands.size();
-    }
-    OperandSymbol *getOperand(int4 i) const
-    {
-        return operands[i];
-    }
-    PatternEquation *getPatternEquation(void) const
-    {
-        return pateq;
-    }
-    ConstructTpl *getTempl(void) const
-    {
-        return templ;
-    }
-    ConstructTpl *getNamedTempl(int4 secnum) const;
-    int4 getNumSections(void) const
-    {
-        return namedtempl.size();
-    }
-    void printInfo(ostream &s) const;
-    void print(ostream &s, ParserWalker &pos) const;
-    void printMnemonic(ostream &s, ParserWalker &walker) const;
-    void printBody(ostream &s, ParserWalker &walker) const;
-    void removeTrailingSpace(void);
+
+    bool isRecursive (void) const;
+    ConstructTpl* getNamedTempl (int4 secnum) const;
+    ConstructTpl* getTempl (void) const { return templ; }
+    int4 getLineno (void) const { return lineno; }
+    int4 getMinimumLength (void) const { return minimumlength;}
+    int4 getNumOperands (void) const   { return operands.size(); }
+    int4 getNumSections (void) const   { return namedtempl.size(); }
+    OperandSymbol*   getOperand (int4 i) const { return operands[i]; }
+    PatternEquation* getPatternEquation (void) const { return pateq; }
+    SubtableSymbol*  getParent (void) const { return parent; }
+    TokenPattern* buildPattern (ostream& s);
+    TokenPattern* getPattern (void) const { return pattern; }
+    uintm getId (void) const { return id; }
+    void addContext (const vector<ContextChange*>& vec) { context = vec; }
+    void addEquation (PatternEquation* pe);
+    void addInvisibleOperand (OperandSymbol* sym);
+    void addOperand (OperandSymbol* sym);
+    void addSyntax (const string& syn);
+    void collectLocalExports (vector<uintb>& results) const;
+    void markSubtableOperands (vector<int4>& check) const;
+    void printBody (ostream& s, ParserWalker& walker) const;
+    void printInfo (ostream& s) const;
+    void printMnemonic (ostream& s, ParserWalker& walker) const;
+    void print (ostream& s, ParserWalker& pos) const;
+    void removeTrailingSpace (void);
+    void restoreXml (const Element* el, SleighBase* trans);
+    void saveXml (ostream& s) const;
+    void setId (uintm i) { id = i; }
+    void setLineno (int4 ln) { lineno = ln; }
+    void setMainSection (ConstructTpl* tpl) { templ = tpl; }
+    void setMinimumLength (int4 l) { minimumlength = l;}
+    void setNamedSection (ConstructTpl* tpl, int4 id);
+
     void applyContext(ParserWalkerChange &walker) const
     {
         vector<ContextChange *>::const_iterator iter;
         for(iter = context.begin(); iter != context.end(); ++iter)
             (*iter)->apply(walker);
     }
-    void markSubtableOperands(vector<int4> &check) const;
-    void collectLocalExports(vector<uintb> &results) const;
     void setError(bool val) const
     {
         inerror = val;
@@ -892,9 +813,6 @@ public:
     {
         return inerror;
     }
-    bool isRecursive(void) const;
-    void saveXml(ostream &s) const;
-    void restoreXml(const Element *el, SleighBase *trans);
 };
 
 class DecisionProperties

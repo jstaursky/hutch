@@ -183,6 +183,7 @@ void SymbolTable::restoreXml(const Element *el, SleighBase *trans)
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
+    // Begin populating info
     for(int4 i = 0; i < table.size(); ++i) { // Restore the scopes
         Element *subel = *iter;
         if (subel->getName() != "scope")
@@ -199,7 +200,9 @@ void SymbolTable::restoreXml(const Element *el, SleighBase *trans)
             s.unsetf(ios::dec | ios::hex | ios::oct);
             s >> parent;
         }
-        SymbolScope *parscope = (parent == id) ? (SymbolScope *)0 : table[parent];
+        SymbolScope *parscope = (parent == id)
+            ? (SymbolScope *)0
+            : table[parent];
         table[id] = new SymbolScope( parscope, id );
         ++iter;
     }
@@ -221,7 +224,7 @@ void SymbolTable::restoreXml(const Element *el, SleighBase *trans)
             s >> id;
         }
         sym = findSymbol(id);
-        sym->restoreXml(subel, trans);
+        sym->restoreXml(subel, trans); DOES NOTHING!
         ++iter;
     }
 }
@@ -263,7 +266,10 @@ void SymbolTable::restoreSymbolHeader(const Element *el)
     else
         throw SleighError("Bad symbol xml");
     sym->restoreXmlHeader(el);	// Restore basic elements of symbol
+                                // ie. name, id, scopeid
     symbollist[sym->id] = sym;	// Put the basic symbol in the table
+    // this add symbol to tree var inside SymbolScope data type which is what
+    // the elements of 'table' are.
     table[sym->scopeid]->addSymbol(sym); // to allow recursion
 }
 
