@@ -1,3 +1,6 @@
+# UPDATE 7/4/20
+atm the makefile has an edge case that may prevent you from running `make -jN` (for some integer N%2) which means building in parallel may not work. In this case just run `make` to run make in a single thread.
+
 # hutch (a sleigh library derivative)
 Separate the sleigh compiler from Ghidra, a rewritten Makefile.
 
