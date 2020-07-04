@@ -1,18 +1,21 @@
 CXX      = g++
-CXXFLAGS = -O2 -Wall -Wno-sign-compare -std=c++17
+# CXX = -O2 -Wall -Wno-sign-compare -std=c++17
 
-DBG_CXXFLAGS=-ggdb -Wall -Wno-sign-compare -std=c++17
+CXXFLAGS=-ggdb -Wall -Wno-sign-compare -std=c++17
 
 LEX  = flex
 YACC = bison
 
 
 BIN_DIR := bin
+PROCESSORS := 8085
 
+all: sleigh-compile libsla.a $(PROCESSORS:%=%.sla)
+	$(CXX) -c $(CXXFLAGS) -I. sleighexample.cc
+	$(CXX) $(CXXFLAGS) -o sleighexample sleighexample.o libsla.a
 
-all: sleigh-compile libsla.a
-	$(CXX) -c $(DBG_CXXFLAGS) -I. sleighexample.cc
-	$(CXX) $(DBG_CXXFLAGS) -o sleighexample sleighexample.o libsla.a
+8085.sla: sleigh-compile
+	$(BIN_DIR)/$< -a ../processors/8085
 
 
 SLEIGH_COMPILE_OBJS := \
@@ -39,7 +42,7 @@ translate \
 xml
 
 sleigh-compile: $(SLEIGH_COMPILE_OBJS:%=%.o)
-	$(CXX) $(DBG_CXXFLAGS) -I. $^ -o $(BIN_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I. $^ -o $(BIN_DIR)/$@
 
 $(SLEIGH_COMPILE_OBJS:%=%.o): | $(BIN_DIR)
 
@@ -66,9 +69,8 @@ space \
 translate \
 xml
 
-
 libsla.a: $(LIBSLA_OBJS:%=%.o)
-	$(CXX) $(DBG_CXXFLAGS) -I. -c $^ -o $(BIN_DIR)/$@
+	$(CXX) $(CXXFLAGS) -I. -c $^ -o $(BIN_DIR)/$@
 	ar -rsv $@ $^
 
 $(LIBSLA_OBJS:%=%.o): | $(BIN_DIR)
@@ -107,6 +109,7 @@ clean:
 	rm -rf bin
 	rm -f libsla.a
 	rm -f sleighexample
+	rm -f ../processors/8085/8085.sla
 
 # FOR AUTOMATICALLY GENERATING DEPENDENCIES.
 SOURCES = $(SLEIGH_COMPILE_OBJS:%=%.cc)
