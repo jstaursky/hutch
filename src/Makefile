@@ -102,6 +102,7 @@ clean:
 	rm -f slghparse.tab.hh
 	rm -f pcodeparse.cc
 	rm -rf bin
+	rm -f libsla.a
 
 # FOR AUTOMATICALLY GENERATING DEPENDENCIES.
 SOURCES = $(SLEIGH_COMPILE_OBJS:%=%.cc)
