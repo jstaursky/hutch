@@ -1,6 +1,8 @@
 CXX      = g++
 CXXFLAGS = -O2 -Wall -Wno-sign-compare -std=c++17
 
+DBG_CXXFLAGS=-ggdb -Wall -Wno-sign-compare -std=c++17
+
 LEX  = flex
 YACC = bison
 
@@ -9,6 +11,8 @@ BIN_DIR := bin
 
 
 all: sleigh-compile libsla.a
+	$(CXX) -c $(DBG_CXXFLAGS) -I. sleighexample.cc
+	$(CXX) $(DBG_CXXFLAGS) -o sleighexample sleighexample.o libsla.a
 
 
 SLEIGH_COMPILE_OBJS := \
@@ -35,7 +39,7 @@ translate \
 xml
 
 sleigh-compile: $(SLEIGH_COMPILE_OBJS:%=%.o)
-	$(CXX) $(CXXFLAGS) -I. $^ -o $(BIN_DIR)/$@
+	$(CXX) $(DBG_CXXFLAGS) -I. $^ -o $(BIN_DIR)/$@
 
 $(SLEIGH_COMPILE_OBJS:%=%.o): | $(BIN_DIR)
 
@@ -64,11 +68,10 @@ xml
 
 
 libsla.a: $(LIBSLA_OBJS:%=%.o)
-	$(CXX) $(CXXFLAGS) -I. -c $^ -o $(BIN_DIR)/$@
+	$(CXX) $(DBG_CXXFLAGS) -I. -c $^ -o $(BIN_DIR)/$@
 	ar -rsv $@ $^
 
 $(LIBSLA_OBJS:%=%.o): | $(BIN_DIR)
-
 
 
 $(BIN_DIR):
@@ -103,6 +106,7 @@ clean:
 	rm -f pcodeparse.cc
 	rm -rf bin
 	rm -f libsla.a
+	rm -f sleighexample
 
 # FOR AUTOMATICALLY GENERATING DEPENDENCIES.
 SOURCES = $(SLEIGH_COMPILE_OBJS:%=%.cc)
