@@ -46,6 +46,7 @@ static uint1 myprog[] = { 0xC3, 0x03, 0x00, 0x00, 0x3E, 0x42, 0x4F, 0x3E, 0x19, 
 // 0x0009           MOV B,A             0x47
 // 0x000A           HLT                 0x76
 
+// *not that for GNUSim8085 hex numbers must be entered as 42h and 19h.
 
 // This is a tiny LoadImage class which feeds the executable bytes to the translator
 class MyLoadImage : public LoadImage
@@ -200,3 +201,16 @@ int main (int argc, char** argv)
     else
         cerr << "Unknown action: " + action << endl;
 }
+
+// This is the example program as written in GNUSim8085
+//
+// ;<example>
+// jmp start
+
+// start: nop
+// mvi a,42h
+//     mov c,a
+//     mvi a,19h
+//     mov b,a
+
+//     hlt
