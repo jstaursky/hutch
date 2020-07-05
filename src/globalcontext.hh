@@ -299,7 +299,7 @@ class ContextInternal : public ContextDatabase
 
     int4 size;			///< Number of words in a context blob (for this architecture)
     map<string, ContextBitRange> variables;		///< Map from context variable name to description object
-    partmap<Address, FreeArray> database;			///< Partition map of context blobs (FreeArray)
+    partmap<Address, FreeArray> database;       ///< Partition map of context blobs (FreeArray)
     partmap<Address, TrackedSet> trackbase;		///< Partition map of tracked register sets
     void saveContext(ostream &s, const Address &addr, const uintm *vec) const;
     void restoreContext(const Element *el, const Address &addr1, const Address &addr2);
@@ -343,11 +343,13 @@ public:
     virtual void restoreFromSpec(const Element *el, const AddrSpaceManager *manage);
 };
 
-/// \brief A helper class for caching the active context blob to minimize database lookups
+/// \brief A helper class for caching the active context blob to minimize
+/// database lookups
 ///
-/// This merely caches the last retrieved context blob ("array of words") and the range of
-/// addresses over which the blob is valid.  It encapsulates the ContextDatabase itself and
-/// exposes a minimal interface (getContext() and setContext()).
+/// This merely caches the last retrieved context blob ("array of words") and
+/// the range of addresses over which the blob is valid. It encapsulates the
+/// ContextDatabase itself and exposes a minimal interface (getContext() and
+/// setContext()).
 class ContextCache
 {
     ContextDatabase *database;		///< The encapsulated context database

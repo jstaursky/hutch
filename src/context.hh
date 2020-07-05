@@ -251,26 +251,19 @@ public:
         }
         return const_context->getDestAddr();
     }
-    int4 getLength(void) const
-    {
-        return const_context->getLength();
-    }
+    int4 getLength(void) const { return const_context->getLength(); }
     uintm getInstructionBytes(int4 byteoff, int4 numbytes) const
     {
         return const_context->getInstructionBytes(byteoff, numbytes, point->offset);
     }
     uintm getContextBytes(int4 byteoff, int4 numbytes) const
-    {
-        return const_context->getContextBytes(byteoff, numbytes);
-    }
+    { return const_context->getContextBytes(byteoff, numbytes); }
     uintm getInstructionBits(int4 startbit, int4 size) const
     {
         return const_context->getInstructionBits(startbit, size, point->offset);
     }
     uintm getContextBits(int4 startbit, int4 size) const
-    {
-        return const_context->getContextBits(startbit, size);
-    }
+    { return const_context->getContextBits(startbit, size); }
 };
 
 // Extension to walker that allows for on the fly modifications to tree

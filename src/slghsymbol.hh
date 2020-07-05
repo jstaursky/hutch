@@ -62,12 +62,13 @@ struct SymbolCompare
 };
 
 typedef set<SleighSymbol *, SymbolCompare> SymbolTree;
+// The elements of symtab.table are of this type.
 class SymbolScope
 {
     friend class SymbolTable;
-    SymbolScope *parent;
-    SymbolTree tree;
-    uintm id;
+    SymbolScope *parent;        // set by SymbolTable::restoreXml
+    SymbolTree tree;            // Actual holder of symbols
+    uintm id;                   // set by SymbolTable::restoreXml
 public:
     SymbolScope(SymbolScope *p, uintm i)
     {
@@ -91,8 +92,8 @@ class SymbolTable
     SleighSymbol* findSymbolInternal (SymbolScope* scope, const string& nm) const;
     SymbolScope* curscope;
     SymbolScope* skipScope (int4 i) const;
-    vector<SleighSymbol*> symbollist;
-    vector<SymbolScope*> table;
+    vector<SleighSymbol*> symbollist; // table of symbols
+    vector<SymbolScope*> table;       // table of scope tags
     void renumber (void);
 public:
     SymbolTable (void) { curscope = (SymbolScope*)0; }
@@ -750,7 +751,7 @@ class Constructor  		// This is NOT a symbol
     ConstructTpl* templ;              // The main p-code section
     int4 firstwhitespace;             // Index of first whitespace piece in -printpiece-
     int4 flowthruindex;               // if >=0 then print only a single operand no markup
-    int4 lineno;
+    int4 lineno;                      // lineno where ctor def can be found in slaspec.
     int4 minimumlength;               // Minimum length taken up by this constructor in bytes
     PatternEquation* pateq;
     SubtableSymbol* parent;
@@ -836,9 +837,9 @@ class DecisionNode
 {
     vector<pair<DisjointPattern *, Constructor *> > list;
     vector<DecisionNode *> children;
-    int4 num;			// Total number of patterns we distinguish
-    bool contextdecision;		// True if this is decision based on context
-    int4 startbit, bitsize;       // Bits in the stream on which to base the decision
+    int4 num;                // Total number of patterns we distinguish
+    bool contextdecision;    // True if this is decision based on context
+    int4 startbit, bitsize;  // Bits in the stream on which to base the decision
     DecisionNode *parent;
     void chooseOptimalField(void);
     double getScore(int4 low, int4 size, bool context);
@@ -871,14 +872,8 @@ public:
     }
     SubtableSymbol(const string &nm);
     virtual ~SubtableSymbol(void);
-    bool isBeingBuilt(void) const
-    {
-        return beingbuilt;
-    }
-    bool isError(void) const
-    {
-        return errors;
-    }
+    bool isBeingBuilt(void) const { return beingbuilt; }
+    bool isError(void) const { return errors; }
     void addConstructor(Constructor *ct)
     {
         ct->setId(construct.size());
@@ -886,43 +881,22 @@ public:
     }
     void buildDecisionTree(DecisionProperties &props);
     TokenPattern *buildPattern(ostream &s);
-    TokenPattern *getPattern(void) const
-    {
-        return pattern;
-    }
-    int4 getNumConstructors(void) const
-    {
-        return construct.size();
-    }
-    Constructor *getConstructor(uintm id) const
-    {
-        return construct[id];
-    }
+    TokenPattern *getPattern(void) const { return pattern; }
+    int4 getNumConstructors(void) const { return construct.size(); }
+    Constructor *getConstructor(uintm id) const { return construct[id]; }
+
     virtual Constructor *resolve(ParserWalker &walker)
-    {
-        return decisiontree->resolve(walker);
-    }
+            { return decisiontree->resolve(walker); }
+
     virtual PatternExpression *getPatternExpression(void) const
-    {
-        throw SleighError("Cannot use subtable in expression");
-    }
+            { throw SleighError("Cannot use subtable in expression"); }
     virtual void getFixedHandle(FixedHandle &hand, ParserWalker &walker) const
-    {
-        throw SleighError("Cannot use subtable in expression");
-    }
-    virtual int4 getSize(void) const
-    {
-        return -1;
-    }
+            { throw SleighError("Cannot use subtable in expression"); }
+    virtual int4 getSize(void) const { return -1; }
     virtual void print(ostream &s, ParserWalker &walker) const
-    {
-        throw SleighError("Cannot use subtable in expression");
-    }
+            { throw SleighError("Cannot use subtable in expression"); }
     virtual void collectLocalValues(vector<uintb> &results) const;
-    virtual symbol_type getType(void) const
-    {
-        return subtable_symbol;
-    }
+    virtual symbol_type getType(void) const { return subtable_symbol; }
     virtual void saveXml(ostream &s) const;
     virtual void saveXmlHeader(ostream &s) const;
     virtual void restoreXml(const Element *el, SleighBase *trans);

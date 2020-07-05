@@ -190,7 +190,7 @@ class Element
     vector<string> value;		///< a (corresponding) list of attribute values for \b this element
 protected:
     Element *parent;		///< The parent Element (or null)
-    List children;		///< A list of child Element objects
+    List children;          ///< A list of child Element objects
 public:
     Element(Element *par)
     {

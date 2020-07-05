@@ -127,7 +127,14 @@ static void print_vardata (ostream& s, VarnodeData& data)
 
 {
     s << '(' << data.space->getName() << ',';
-    data.space->printOffset (s, data.offset);
+
+    const Translate* trans = data.space->getTrans ();
+
+    if (data.space->getName () == "register") {
+        s << trans->getRegisterName (data.space, data.offset, data.size);
+    } else {
+        data.space->printOffset (s, data.offset);
+    }
     s << ',' << dec << data.size << ')';
 }
 

@@ -183,8 +183,8 @@ void SymbolTable::restoreXml(const Element *el, SleighBase *trans)
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    // Begin populating info
-    for(int4 i = 0; i < table.size(); ++i) { // Restore the scopes
+    // accounts for all \<scope\> tag element from xml file
+    for(int4 i = 0; i < table.size(); ++i) {
         Element *subel = *iter;
         if (subel->getName() != "scope")
             throw SleighError("Misnumbered symbol scopes");
@@ -223,8 +223,11 @@ void SymbolTable::restoreXml(const Element *el, SleighBase *trans)
             s.unsetf(ios::dec | ios::hex | ios::oct);
             s >> id;
         }
+        // 'findSymbol' returns the appropriate subclass of SleighSymbol so that
+        // following lines 'restoreXml' that is run adapts to the proper
+        // subclass method.
         sym = findSymbol(id);
-        sym->restoreXml(subel, trans); // DOES NOTHING!
+        sym->restoreXml(subel, trans); // runs SubtableSymbol::restoreXml, .., etc.
         ++iter;
     }
 }
@@ -1929,16 +1932,16 @@ void SubtableSymbol::saveXmlHeader(ostream &s) const
     SleighSymbol::saveXmlHeader(s);
     s << "/>\n";
 }
-
+// corresponds with tag \<subtable_sym\> in .sla file.
 void SubtableSymbol::restoreXml(const Element *el, SleighBase *trans)
 
 {
     {
         int4 numct;
-        istringstream s(el->getAttributeValue("numct"));
+        istringstream s(el->getAttributeValue("numct")); // Number of ctors.
         s.unsetf(ios::dec | ios::hex | ios::oct);
         s >> numct;
-        construct.reserve(numct);
+        construct.reserve(numct); // All the constructors in this table.
     }
     const List &list(el->getChildren());
     List::const_iterator iter;
