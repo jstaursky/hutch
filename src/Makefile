@@ -70,7 +70,6 @@ translate \
 xml
 
 libsla.a: $(LIBSLA_OBJS:%=%.o)
-	$(CXX) $(CXXFLAGS) -I. -c $^ -o $(BIN_DIR)/$@
 	ar -rsv $@ $^
 
 $(LIBSLA_OBJS:%=%.o): | $(BIN_DIR)
