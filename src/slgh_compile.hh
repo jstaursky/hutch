@@ -272,7 +272,7 @@ private:
     map<string, string> preproc_defines; // Defines for the preprocessor
     vector<FieldContext> contexttable;
     vector<ConstructTpl *> macrotable;
-    vector<Token *> tokentable;
+    vector<Token *> tokentable; // e.g. <opbyte, data8, data16>
     vector<SubtableSymbol *> tables;
     vector<SectionSymbol *> sections;
     list<WithBlock> withstack;

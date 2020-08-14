@@ -78,7 +78,7 @@ class DisassemblyCache
     int4 minimumreuse;         // Can call getParserContext this many times, before a ParserContext is reused
     int4 nextfree;             // Current end/beginning of circular list
     ParserContext **hashtable; // Hashtable for looking up ParserContext via Address
-    ParserContext **list;	   // (circular) array of currently cached ParserContext objects
+    ParserContext **list;	   // (circular) array of currently cached ParserContext objects, partly set up in DisassemblyCache::initialize
     uint4 mask;                // Size of the hashtable in form 2^n-1
     void initialize(int4 min, int4 hashsize);
     void free(void);

@@ -18,7 +18,7 @@
 uintm DisjointPattern::getMask(int4 startbit, int4 size, bool context) const
 
 {
-    PatternBlock *block = getBlock(context);
+    PatternBlock *block = getBlock(context); // InstructionPattern::getBlock
     if (block != (PatternBlock *)0)
         return block->getMask(startbit, size);
     return 0;
@@ -152,7 +152,7 @@ void PatternBlock::normalize(void)
 
 {
     if (nonzerosize <= 0) {		// Check if alwaystrue or alwaysfalse
-        offset = 0;			// in which case we don't need mask and value
+        offset = 0;			    // in which case we don't need mask and value
         maskvec.clear();
         valvec.clear();
         return;
@@ -172,7 +172,7 @@ void PatternBlock::normalize(void)
     if (!maskvec.empty()) {
         int4 suboff = 0;		// Cut off unaligned zeros from beginning of mask
         uintm tmp = maskvec[0];
-        while(tmp != 0) {
+        while(tmp != 0) {       // 0xff0000 becomes 0xff00 and so forth until 0x00
             suboff += 1;
             tmp >>= 8;
         }
@@ -235,11 +235,11 @@ PatternBlock::PatternBlock(int4 off, uintm msk, uintm val)
 PatternBlock::PatternBlock(bool tf)
 
 {
-    offset = 0;
-    if (tf)
-        nonzerosize = 0;
-    else
-        nonzerosize = -1;
+  offset = 0;
+  if (tf)
+    nonzerosize = 0;
+  else
+    nonzerosize = -1;
 }
 
 PatternBlock::PatternBlock(const PatternBlock *a, const PatternBlock *b)
@@ -413,14 +413,14 @@ uintm PatternBlock::getMask(int4 startbit, int4 size) const
     // if (unsigned size is same as sizeof int)
     // In either case, shift should come out between 0 and 8*sizeof(uintm)-1
     int4 wordnum1 = startbit / (8 * sizeof(uintm));
-    int4 shift = startbit % (8 * sizeof(uintm));
+    int4 shift = startbit % (8 * sizeof(uintm)); // mod 4 byte words
     int4 wordnum2 = (startbit + size - 1) / (8 * sizeof(uintm));
     uintm res;
 
     if ((wordnum1 < 0) || (wordnum1 >= maskvec.size()))
         res = 0;
     else
-        res = maskvec[wordnum1];
+        res = maskvec[wordnum1]; // 0x8000000
 
     res <<= shift;
     if (wordnum1 != wordnum2) {
@@ -431,7 +431,7 @@ uintm PatternBlock::getMask(int4 startbit, int4 size) const
             tmp = maskvec[wordnum2];
         res |= (tmp >> (8 * sizeof(uintm) - shift));
     }
-    res >>= (8 * sizeof(uintm) - size);
+    res >>= (8 * sizeof(uintm) - size); // shift to the right w/ 0's in byte size chunks less the amount of 'size' bits
 
     return res;
 }

@@ -24,7 +24,7 @@ class PatternBlock
     int4 offset;			// Offset to non-zero byte of mask
     int4 nonzerosize;		// Last byte(+1) containing nonzero mask
     vector<uintm> maskvec;	// Mask
-    vector<uintm> valvec;		// Value
+    vector<uintm> valvec;	// Value
     void normalize(void);
 public:
     PatternBlock(int4 off, uintm msk, uintm val);
@@ -142,6 +142,7 @@ public:
     virtual Pattern *doAnd(const Pattern *b, int4 sa) const;
     virtual Pattern *commonSubPattern(const Pattern *b, int4 sa) const;
     virtual bool isMatch(ParserWalker &walker) const
+    // InstructionPattern::isMatch
     {
         return maskvalue->isInstructionMatch(walker);
     }

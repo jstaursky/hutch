@@ -363,14 +363,14 @@ void SleighBuilder::appendCrossBuild(OpTpl *bld, int4 secnum)
 void DisassemblyCache::initialize(int4 min, int4 hashsize)
 
 {
-    minimumreuse = min;
-    mask = hashsize - 1;
+    minimumreuse = min;         // cachesize (defaults to 2)
+    mask = hashsize - 1;        // windowsize (defaults to 32)
     uintb masktest = coveringmask((uintb)mask);
     if (masktest != (uintb)mask)	// -hashsize- must be a power of 2
         throw LowlevelError("Bad windowsize for disassembly cache");
     list = new ParserContext *[minimumreuse];
     nextfree = 0;
-    hashtable = new ParserContext *[hashsize];
+    hashtable = new ParserContext *[hashsize]; // referenced in DisassemblyCache::getParserContext
     for(int4 i = 0; i < minimumreuse; ++i) {
         ParserContext *pos = new ParserContext(contextcache);
         pos->initialize(75, 20, constspace);
@@ -407,15 +407,18 @@ ParserContext *DisassemblyCache::getParserContext(const Address &addr)
     //    all the addresses are within the windowsize (=mask+1)
     // then the cacher guarantees that you get all different ParserContext objects
     int4 hashindex = ((int4) addr.getOffset()) & mask;
-    ParserContext *res = hashtable[ hashindex ];
-    if (res->getAddr() == addr)
+    ParserContext *res = hashtable[ hashindex ]; // set up in DisassemblyCache::initialize
+    if (res->getAddr() == addr)                  // Means we have been here before and can return the same parsercontext as before.
         return res;
+    // fresh setup.
     res = list[ nextfree ];
     nextfree += 1;		// Advance the circular index
     if (nextfree >= minimumreuse)
         nextfree = 0;
     res->setAddr(addr);
     res->setParserState(ParserContext::uninitialized);	// Need to start over with parsing
+
+    // hastable@hashindex now updated to reflect res = list[ nextfree ] & set Addr and parserstate.
     hashtable[ hashindex ] = res;	// Stick it into the hashtable
     return res;
 }
@@ -481,8 +484,9 @@ ParserContext *Sleigh::obtainContext(const Address &addr, int4 state) const
 {
     // Obtain a ParserContext for the instruction at the given -addr-. This may
     // be cached. Make sure parsing has proceeded to at least the given -state.
-    ParserContext *pos = discache->getParserContext(addr);
-    int4 curstate = pos->getParserState();
+    // sets-up for reparsing if necessary.
+    ParserContext *pos = discache->getParserContext(addr); // sets up ParserContext.state, base_state, const_space
+    int4 curstate = pos->getParserState();                 // initially ParserContext::uninitialized
     if (curstate >= state)
         return pos;
     if (curstate == ParserContext::uninitialized) {
@@ -502,41 +506,48 @@ void Sleigh::resolve(ParserContext &pos) const
     // instruction at this address
     loader->loadFill(pos.getBuffer(), 16, pos.getAddr());
     ParserWalkerChange walker(&pos);
-    pos.deallocateState(walker);	// Clear the previous resolve and initialize the walker
+    pos.deallocateState(walker);	// Clear the previous resolve and initialize
+                                    // the walker. sets *point* to
+                                    // const_context->base_state = pos.state[0] (see ParserContext::intialize).
+                                    // Also sets breadcrumb[0] = 0.
     Constructor *ct, *subct;
     uint4 off;
     int4 oper, numoper;
 
     pos.setDelaySlot(0);
-    walker.setOffset(0);		// Initial offset
+    walker.setOffset(0);		// Initial offset, sets point->offset = 0
     pos.clearCommits();         // Clear any old context commits
-    pos.loadContext();          // Get context for current address
-    ct = root->resolve(walker);	// Base constructor
+    pos.loadContext();          // Get context for current address, sets curspace.
+    ct = root->resolve(walker);	// Base constructor SubtableSymbol::resolve -> DecisionNode::resolve
     walker.setConstructor(ct);
     ct->applyContext(walker);
-    while(walker.isState()) {
+    while(walker.isState()) {   // test whether *point* is null. then begin to construct operands to the operator.
         ct = walker.getConstructor();
-        oper = walker.getOperand();
+        oper = walker.getOperand(); // breadcrumb[depth] (path of operands from root.)
         numoper = ct->getNumOperands();
-        while(oper < numoper) {
-            OperandSymbol *sym = ct->getOperand(oper);
-            off = walker.getOffset(sym->getOffsetBase()) + sym->getRelativeOffset();
-            pos.allocateOperand(oper, walker); // Descend into new operand and reserve space
+        while(oper < numoper) { // populate walker to remedy the difference between oper and numoper.
+            OperandSymbol *sym = ct->getOperand(oper); // use ctor, NOT walker this time.
+            off = walker.getOffset(sym->getOffsetBase()) + sym->getRelativeOffset(); // accesses
+                                                                                     // point->resolve[i]
+            pos.allocateOperand(oper, walker); // Descend into new operand and
+                                               // reserve space (sets up
+                                               // walker.breadcrumb, modifies
+                                               // walker.point)
             walker.setOffset(off);
-            TripleSymbol *tsym = sym->getDefiningSymbol();
+            TripleSymbol *tsym = sym->getDefiningSymbol(); // look into OperandSymbol::restoreXml
             if (tsym != (TripleSymbol *)0) {
-                subct = tsym->resolve(walker);
+                subct = tsym->resolve(walker); // call SubtableSymbol::resolve -> DecisionNode::resolve
                 if (subct != (Constructor *)0) {
                     walker.setConstructor(subct);
                     subct->applyContext(walker);
                     break;
                 }
             }
-            walker.setCurrentLength(sym->getMinimumLength());
-            walker.popOperand();
-            oper += 1;
+            walker.setCurrentLength(sym->getMinimumLength()); // at a leaf node.
+            walker.popOperand(); // move point back to parent
+            oper += 1;           // catch up to numoper until able to break out of loop
         }
-        if (oper >= numoper) { // Finished processing constructor
+        if (oper >= numoper) { // need to get back to operator node (break out of operand recursion)
             walker.calcCurrentLength(ct->getMinimumLength(), numoper);
             walker.popOperand();
             // Check for use of delayslot
@@ -561,11 +572,11 @@ void Sleigh::resolveHandles(ParserContext &pos) const
     walker.baseState();
     while(walker.isState()) {
         ct = walker.getConstructor();
-        oper = walker.getOperand();
+        oper = walker.getOperand(); // breadcrumb[depth] tell us the operand we are working with.
         numoper = ct->getNumOperands();
         while(oper < numoper) {
-            OperandSymbol *sym = ct->getOperand(oper);
-            walker.pushOperand(oper);	// Descend into node
+            OperandSymbol *sym = ct->getOperand(oper); // NOTE that walker.getOperand is used w/ ctor to return the correct operand.
+            walker.pushOperand(oper);	               // Descend into node
             triple = sym->getDefiningSymbol();
             if (triple != (TripleSymbol *)0) {
                 if (triple->getType() == SleighSymbol::subtable_symbol)
@@ -611,10 +622,10 @@ int4 Sleigh::printAssembly(AssemblyEmit &emit, const Address &baseaddr) const
 
 {
     int4 sz;
-
-    ParserContext *pos = obtainContext(baseaddr, ParserContext::disassembly);
+    // obtainContext performs the instruction decoding via 'resolve' func.
+    ParserContext *pos = obtainContext(baseaddr, ParserContext::disassembly); // <=
     ParserWalker walker(pos);
-    walker.baseState();
+    walker.baseState();         // initializes ParserWalker 'point' var to beginning.
 
     Constructor *ct = walker.getConstructor();
     ostringstream mons;

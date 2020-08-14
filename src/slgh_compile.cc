@@ -2194,7 +2194,7 @@ void SleighCompile::attachNames(vector<SleighSymbol *> *symlist, vector<string> 
 }
 
 void SleighCompile::attachVarnodes(vector<SleighSymbol *> *symlist, vector<SleighSymbol *> *varlist)
-
+// attach variables [ ValueSymbols ] [ VarnodeSymbols ] (symlist = ValueSymbols, varlist = VarnodeSymbols)
 {
     SleighSymbol *dupsym = dedupSymbolList(symlist);
     if (dupsym != (SleighSymbol *)0)

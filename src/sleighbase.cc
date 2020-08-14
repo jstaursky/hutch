@@ -179,7 +179,6 @@ void SleighBase::saveXml (ostream& s) const
 /// decoding tables
 /// - el is the root XML element
 void SleighBase::restoreXml (const Element* el)
-
 {
     maxdelayslotbytes   = 0;
     numSections         = 0;
@@ -238,8 +237,8 @@ void SleighBase::restoreXml (const Element* el)
 
     restoreXmlSpaces (*iter, this);
     iter++;
-    // // After this point symtab will be populated with ".._head" tag info from xml file.
-    symtab.restoreXml (*iter, this); 
+
+    symtab.restoreXml (*iter, this);
     root = (SubtableSymbol*)symtab.getGlobalScope()->findSymbol ("instruction");
     vector<string> errorPairs;
     buildXrefs (errorPairs);

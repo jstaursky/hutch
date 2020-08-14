@@ -108,7 +108,7 @@ private:
     int4 alloc;                   // Number of ConstructState's allocated
     int4 contextsize;             // Number of entries in context array
     int4 delayslot;               // delayslot depth
-    int4 parsestate;
+    int4 parsestate;              // can be uninitialized, disassembly, pcode according to enum at top.
     uint1 buf[16];                // Buffer of bytes in the instruction stream
     uintm* context;               // Pointer to local context
     vector<ConstructState> state; // Current resolved instruction
@@ -159,7 +159,7 @@ protected:
 public:
     ParserWalker(const ParserContext *c)
     {
-        const_context = c;
+        const_context = c;      // initially set to the ParserContext set in Sleigh::obtainContext via the ParserWalkerChange ctor.
         cross_context = (const ParserContext *)0;
     }
     ParserWalker(const ParserContext *c, const ParserContext *cross)
@@ -168,20 +168,16 @@ public:
         cross_context = cross;
     }
     const ParserContext *getParserContext(void) const
-    {
-        return const_context;
-    }
+    {   return const_context; }
     void baseState(void)
     {
-        point = const_context->base_state;
+        point = const_context->base_state; // point also pointing to &state[0] from initialization (see ParserContext::initialize).
         depth = 0;
         breadcrumb[0] = 0;
     }
     void setOutOfBandState(Constructor *ct, int4 index, ConstructState *tempstate, const ParserWalker &otherwalker);
     bool isState(void) const
-    {
-        return (point != (ConstructState *)0);
-    }
+    {   return (point != (ConstructState *)0); }
     void pushOperand(int4 i)
     {
         breadcrumb[depth++] = i + 1;
@@ -200,29 +196,17 @@ public:
         return op->offset + op->length;
     }
     Constructor *getConstructor(void) const
-    {
-        return point->ct;
-    }
+    {   return point->ct; }
     int4 getOperand(void) const
-    {
-        return breadcrumb[depth];
-    }
+    {   return breadcrumb[depth]; }
     FixedHandle &getParentHandle(void)
-    {
-        return point->hand;
-    }
+    {   return point->hand; }
     const FixedHandle &getFixedHandle(int4 i) const
-    {
-        return point->resolve[i]->hand;
-    }
+    {   return point->resolve[i]->hand; }
     AddrSpace *getCurSpace(void) const
-    {
-        return const_context->getCurSpace();
-    }
+    {   return const_context->getCurSpace(); }
     AddrSpace *getConstSpace(void) const
-    {
-        return const_context->getConstSpace();
-    }
+    {   return const_context->getConstSpace(); }
     const Address &getAddr(void) const
     {
         if (cross_context != (const ParserContext *)0) {
@@ -253,6 +237,7 @@ public:
     }
     int4 getLength(void) const { return const_context->getLength(); }
     uintm getInstructionBytes(int4 byteoff, int4 numbytes) const
+    // ParserWalker::getInstructionBytes
     {
         return const_context->getInstructionBytes(byteoff, numbytes, point->offset);
     }
@@ -291,14 +276,14 @@ inline void ParserContext::deallocateState(ParserWalkerChange &walker)
 {
     alloc = 1;
     walker.context = this;
-    walker.baseState();
+    walker.baseState();         // sets point to state[0]
 }
 
 inline void ParserContext::allocateOperand(int4 i, ParserWalkerChange &walker)
 {
-    ConstructState *opstate = &state[alloc++];
+    ConstructState *opstate = &state[alloc++]; // alloc initially 1 after deallocateState, state was originall allocated during initialization.
     opstate->parent = walker.point;
-    opstate->ct = (Constructor *)0;
+    opstate->ct = (Constructor *)0; // allocate space but let sleigh::resolve populate
     walker.point->resolve[i] = opstate;
     walker.breadcrumb[walker.depth++] += 1;
     walker.point = opstate;

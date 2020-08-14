@@ -30,16 +30,16 @@ ParserContext::ParserContext(ContextCache *ccache)
         context = (uintm *)0;
     }
 }
-
+// called inside DisassemblyCache::initialize to create the initial ParserContext objects.
 void ParserContext::initialize(int4 maxstate, int4 maxparam, AddrSpace *spc)
 
 {
     const_space = spc;
-    state.resize(maxstate);
+    state.resize(maxstate);                // maxstate defaults to 75
     state[0].parent = (ConstructState *)0;
     for(int4 i = 0; i < maxstate; ++i)
-        state[i].resolve.resize(maxparam);
-    base_state = &state[0];
+        state[i].resolve.resize(maxparam); // maxparam defaults to 20
+    base_state = &state[0];                // this eventually gets used/init'd inside Sleigh::resolve
 }
 
 uintm ParserContext::getInstructionBytes(int4 bytestart, int4 size, uint4 off) const
@@ -54,29 +54,30 @@ uintm ParserContext::getInstructionBytes(int4 bytestart, int4 size, uint4 off) c
     uintm res = 0;
     for(int4 i = 0; i < size; ++i) {
         res <<= 8;
-        res |= ptr[i];
+        res |= ptr[i];          // transfer 'size' amount of bytes from 'buf' to
+                                // res starting from bytestart + off.
     }
     return res;
 }
 
 uintm ParserContext::getInstructionBits(int4 startbit, int4 size, uint4 off) const
-
+// size = the size in bits
 {
     off += (startbit / 8);
     if (off >= 16)
         throw BadDataError("Instruction is using more than 16 bytes");
-    const uint1 *ptr = buf + off;
+    const uint1 *ptr = buf + off; // buf set by loadfill
     startbit = startbit % 8;
-    int4 bytesize = (startbit + size - 1) / 8 + 1;
+    int4 bytesize = (startbit + size - 1) / 8 + 1; // How many bytes does the token occupy?
     uintm res = 0;
     for(int4 i = 0; i < bytesize; ++i) {
-        res <<= 8;
-        res |= ptr[i];
+        res <<= 8;              // Clear out/move prev iteration results towards MSB
+        res |= ptr[i];          // Transfer next byte
     }
-    res <<= 8 * (sizeof(uintm) - bytesize) + startbit; // Move starting bit to highest position
-    res >>= 8 * sizeof(uintm) - size;	// Shift to bottom of intm
-    return res;
-}
+    res <<= 8 * (sizeof(uintm) - bytesize) + startbit; // 1) Crude way to narrow 'res' down to the bits of interest
+    res >>= 8 * sizeof(uintm) - size;                  // 2) 1st part trims bits from the left (MSB side) and 2nd part trims off the right (LSB).
+    return res;                                        // eg,  | 0x0e | 0x00 | 0x00 | 0x00 | => | 0x00 | 0x00 | 0x00 | 0x0e | after res <<= 24
+}                                                      // Addr |0x100 |0x101 |0x102 |0x103 | => |0x100 |0x101 |0x102 |0x103 | *recall little endianness*
 
 uintm ParserContext::getContextBytes(int4 bytestart, int4 size) const
 

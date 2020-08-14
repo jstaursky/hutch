@@ -627,7 +627,7 @@ void HandleTpl::saveXml(ostream &s) const
 }
 
 void HandleTpl::restoreXml(const Element *el, const AddrSpaceManager *manage)
-
+// when <construct_tpl><NOT null> (something other than <null> as the immediate child)
 {
     const List &list(el->getChildren());
     List::const_iterator iter;
@@ -721,7 +721,7 @@ void OpTpl::restoreXml(const Element *el, const AddrSpaceManager *manage)
     ++iter;
     while(iter != list.end()) {
         VarnodeTpl *vn = new VarnodeTpl();
-        vn->restoreXml(*iter, manage);
+        vn->restoreXml(*iter, manage); // this defines (space,offset,size)
         input.push_back(vn);
         ++iter;
     }
@@ -888,7 +888,7 @@ void ConstructTpl::saveXml(ostream &s, int4 sectionid) const
 }
 
 int4 ConstructTpl::restoreXml(const Element *el, const AddrSpaceManager *manage)
-
+// called from Constructor::restoreXml
 {
     int4 sectionid = -1;
     for(int4 i = 0; i < el->getNumAttributes(); ++i) {
@@ -905,20 +905,20 @@ int4 ConstructTpl::restoreXml(const Element *el, const AddrSpaceManager *manage)
             s.unsetf(ios::dec | ios::hex | ios::oct);
             s >> sectionid;
         }
-    }
+    } // ^^ if fallthrough, then we have just a plain <construct_tpl>
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
-    if ((*iter)->getName() == "null")
-        result = (HandleTpl *)0;
-    else {
+    if ((*iter)->getName() == "null") // For the _immediate_ child node.
+        result = (HandleTpl *)0; // Member to ConstructTpl
+    else { // skip for 8085.
         result = new HandleTpl();
         result->restoreXml(*iter, manage);
     }
     ++iter;
     while(iter != list.end()) {
-        OpTpl *op = new OpTpl();
-        op->restoreXml(*iter, manage);
+        OpTpl *op = new OpTpl(); // <op_tpl>
+        op->restoreXml(*iter, manage); // defines (OUPUT) = OPC (INPUT)
         vec.push_back(op);
         ++iter;
     }

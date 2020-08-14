@@ -16,7 +16,7 @@
 #include "slghsymbol.hh"
 #include "sleighbase.hh"
 #include <cmath>
-
+// called inside SymbolTable::restoreSymbolHeader
 SleighSymbol *SymbolScope::addSymbol(SleighSymbol *a)
 
 {
@@ -203,21 +203,24 @@ void SymbolTable::restoreXml(const Element *el, SleighBase *trans)
         SymbolScope *parscope = (parent == id)
             ? (SymbolScope *)0
             : table[parent];
-        table[id] = new SymbolScope( parscope, id );
+        table[id] = new SymbolScope( parscope, id ); // remember that SymbolScope contains:
+                                                     // parent, id, SymbolTree tree (set<SleighSymbol*,SymbolCompare>)
         ++iter;
     }
     curscope = table[0];		// Current scope is global
 
     // Now restore the symbol shells
+    // creates all the new StartSymbol(), etc. which get stored inside of SymbolTable::symbollist. Created from .._head tags
     for(int4 i = 0; i < symbollist.size(); ++i) {
-        restoreSymbolHeader(*iter);
+        restoreSymbolHeader(*iter); // sets up types (e.g. StartSymbol()) to be
+                                    // found and filled later (below w/ sym->restoreXml())
         ++iter;
     }
     // Now restore the symbol content
     while(iter != list.end()) {
         Element *subel = *iter;
         uintm id;
-        SleighSymbol *sym;
+        SleighSymbol *sym;      // NOTE sym is a ptr -- important b/c it will be holding the heap stored value returned by findSymbol
         {
             istringstream s(subel->getAttributeValue("id"));
             s.unsetf(ios::dec | ios::hex | ios::oct);
@@ -225,8 +228,8 @@ void SymbolTable::restoreXml(const Element *el, SleighBase *trans)
         }
         // 'findSymbol' returns the appropriate subclass of SleighSymbol so that
         // following lines 'restoreXml' that is run adapts to the proper
-        // subclass method.
-        sym = findSymbol(id);
+        // subclass method. findSymbol returns the data stored during restoreSymbolHeader()
+        sym = findSymbol(id);          // sym is ptr, so this does point at the SleighSymbol in symbollist
         sym->restoreXml(subel, trans); // runs SubtableSymbol::restoreXml, .., etc.
         ++iter;
     }
@@ -270,10 +273,13 @@ void SymbolTable::restoreSymbolHeader(const Element *el)
         throw SleighError("Bad symbol xml");
     sym->restoreXmlHeader(el);	// Restore basic elements of symbol
                                 // ie. name, id, scopeid
+                                // relates to tags that end in "._sym_head"
     symbollist[sym->id] = sym;	// Put the basic symbol in the table
-    // this add symbol to tree var inside SymbolScope data type which is what
+    // this add symbol to '*tree*' var inside SymbolScope data type which is what
     // the elements of 'table' are.
     table[sym->scopeid]->addSymbol(sym); // to allow recursion
+    // it should also be noted that 'sym' itself contains
+    // name, id, scope data.
 }
 
 void SymbolTable::purge(void)
@@ -1121,7 +1127,7 @@ void OperandSymbol::restoreXml(const Element *el, SleighBase *trans)
             istringstream s(el->getAttributeValue(i));
             s.unsetf(ios::dec | ios::hex | ios::oct);
             s >> id;
-            triple = (TripleSymbol *)trans->findSymbol(id);
+            triple = (TripleSymbol *)trans->findSymbol(id); // set triple (uses symbollist) using triplesymbol b/c we do not know whether we have a familysymbol or specific symbol (see class hierarchy)
         } else if (el->getAttributeName(i) == "code") {
             if (xml_readbool(el->getAttributeValue(i)))
                 flags |= code_address;
@@ -1636,36 +1642,36 @@ void Constructor::saveXml(ostream &s) const
 }
 
 void Constructor::restoreXml(const Element *el, SleighBase *trans)
-
+// <constructor parent= first= length= line= >
 {
     uintm id;
     {
         istringstream s(el->getAttributeValue("parent"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
         s >> id;
-        parent = (SubtableSymbol *)trans->findSymbol(id);
+        parent = (SubtableSymbol *)trans->findSymbol(id); // returns symbollist[id]
     }
     {
         istringstream s(el->getAttributeValue("first"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
-        s >> firstwhitespace;
+        s >> firstwhitespace;   // Index of first whitespace piece in 'printpiece'
     }
     {
         istringstream s(el->getAttributeValue("length"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
-        s >> minimumlength;
+        s >> minimumlength;     // num of bytes.
     }
     {
         istringstream s(el->getAttributeValue("line"));
         s.unsetf(ios::dec | ios::hex | ios::oct);
-        s >> lineno;
+        s >> lineno;            // line in the sleighspec that refers to this ctor
     }
     const List &list(el->getChildren());
     List::const_iterator iter;
     iter = list.begin();
     while(iter != list.end()) {
-        if ((*iter)->getName() == "oper") {
-            uintm id;
+        if ((*iter)->getName() == "oper") { // <oper id= /> This id gives the index into the symbollist that corresponds to this constructors operand.
+            uintm id;                       // e.g. A ctor might be :JMP Addr16 ... and this index gives the symbol index for the Addr16 symbol.
             {
                 istringstream s((*iter)->getAttributeValue("id"));
                 s.unsetf(ios::dec | ios::hex | ios::oct);
@@ -1673,16 +1679,16 @@ void Constructor::restoreXml(const Element *el, SleighBase *trans)
             }
             OperandSymbol *sym = (OperandSymbol *)trans->findSymbol(id);
             operands.push_back(sym);
-        } else if ((*iter)->getName() == "print")
+        } else if ((*iter)->getName() == "print")   // <print piece= />
             printpiece.push_back( (*iter)->getAttributeValue("piece"));
-        else if ((*iter)->getName() == "opprint") {
+        else if ((*iter)->getName() == "opprint") { // <opprint id= />
             int4 index;
             istringstream s((*iter)->getAttributeValue("id"));
             s.unsetf(ios::dec | ios::hex | ios::oct);
             s >> index;
             string operstring = "\n ";
-            operstring[1] = ('A' + index);
-            printpiece.push_back(operstring);
+            operstring[1] = ('A' + index); // "\nA" when index is 0, "\nB" when 1, etc.
+            printpiece.push_back(operstring); // character literals are used b/c they are of type "int" but also can be placed at a char position. this is a Hack to store the index inside the string variable 'printpiece'
         } else if ((*iter)->getName() == "context_op") {
             ContextOp *c_op = new ContextOp();
             c_op->restoreXml(*iter, trans);
@@ -1692,8 +1698,8 @@ void Constructor::restoreXml(const Element *el, SleighBase *trans)
             c_op->restoreXml(*iter, trans);
             context.push_back(c_op);
         } else {
-            ConstructTpl *cur = new ConstructTpl();
-            int4 sectionid = cur->restoreXml(*iter, trans);
+            ConstructTpl *cur = new ConstructTpl(); // getAttributeValue("construct_tpl")
+            int4 sectionid = cur->restoreXml(*iter, trans); // default is to return sectionid = -1
             if (sectionid < 0) {
                 if (templ != (ConstructTpl *)0)
                     throw LowlevelError("Duplicate main section");
@@ -1953,7 +1959,7 @@ void SubtableSymbol::restoreXml(const Element *el, SleighBase *trans)
             ct->restoreXml(*iter, trans);
         } else if ((*iter)->getName() == "decision") {
             decisiontree = new DecisionNode();
-            decisiontree->restoreXml(*iter, (DecisionNode *)0, this);
+            decisiontree->restoreXml(*iter, (DecisionNode *)0, this); // important as later decisiontree->resolve is used during disassembly.
         }
         ++iter;
     }
@@ -2011,10 +2017,10 @@ TokenPattern *SubtableSymbol::buildPattern(ostream &s)
             s << endl;
             errors = true;
         }
-        *pattern = construct[i]->getPattern()->commonSubPattern(*pattern);
+        *pattern = construct[i]->getPattern()->commonSubPattern(*pattern); // btw construct[i]->getPattern()->pattern->maskvalue->valvec is set by this point
     }
     beingbuilt = false;
-    return pattern;
+    return pattern;             // 0x3000000
 }
 
 void DecisionProperties::identicalPattern(Constructor *a, Constructor *b)
@@ -2115,10 +2121,10 @@ double DecisionNode::getScore(int4 low, int4 size, bool context)
 
     int4 total = 0;
     vector<int4> count(numBins, 0);
-
+    // iterate through decisionnodes and get a tally/count of which decision nodes match pattern bits and how many bits are matched.
     for(i = 0; i < list.size(); ++i) {
-        mask = list[i].first->getMask(low, size, context);
-        if ((mask & m) != m) continue;	// Skip if field not fully specified
+        mask = list[i].first->getMask(low, size, context); // return PatternBlock
+        if ((mask & m) != m) continue;                     // Skip if field not fully specified
         val = list[i].first->getValue(low, size, context);
         total += 1;
         count[val] += 1;
@@ -2151,7 +2157,7 @@ void DecisionNode::chooseOptimalField(void)
         maxlength = 8 * getMaximumLength(context);
         for(sbit = 0; sbit < maxlength; ++sbit) {
             numfixed = getNumFixed(sbit, 1, context); // How may patterns specify this bit
-            if (numfixed < maxfixed) continue; // Skip this bit, if we don't have maximum specification
+            if (numfixed < maxfixed) continue;        // Skip this bit, if we don't have maximum specification
             sc = getScore(sbit, 1, context);
 
 // if we got more patterns this time than previously, and a positive score, reset
@@ -2179,8 +2185,8 @@ void DecisionNode::chooseOptimalField(void)
     context = true;
     do {
         maxlength = 8 * getMaximumLength(context);
-        for(size = 2; size <= 8; ++size) {
-            for(sbit = 0; sbit < maxlength - size + 1; ++sbit) {
+        for(size = 2; size <= 8; ++size) {                          // slowly expand size?
+            for(sbit = 0; sbit < maxlength - size + 1; ++sbit) {    // So for a constraint needing to match only 1 bit, sbit never goes past that constrained bit.
                 if (getNumFixed(sbit, size, context) < maxfixed) continue; // Consider only maximal fields
                 sc = getScore(sbit, size, context);
                 if (sc > score) {
@@ -2232,14 +2238,14 @@ void DecisionNode::split(DecisionProperties &props)
     if ((parent != (DecisionNode *)0) && (list.size() >= parent->num))
         throw LowlevelError("Child has as many Patterns as parent");
 
-    int4 numChildren = 1 << bitsize;
+    int4 numChildren = 1 << bitsize; // number of children a power of two.
 
     for(int4 i = 0; i < numChildren; ++i) {
         DecisionNode *nd = new DecisionNode( this );
         children.push_back( nd );
     }
     for(int4 i = 0; i < list.size(); ++i) {
-        vector<uint4> vals;		// Bins this pattern belongs in
+        vector<uint4> vals;		// Bins this pattern belongs in (Bins = SubTrees?)
         // If the pattern does not care about some
         // bits in the field we are splitting on, that
         // pattern will get put into multiple bins
@@ -2356,7 +2362,7 @@ Constructor *DecisionNode::resolve(ParserWalker &walker) const
     if (contextdecision)
         val = walker.getContextBits(startbit, bitsize);
     else
-        val = walker.getInstructionBits(startbit, bitsize);
+        val = walker.getInstructionBits(startbit, bitsize); // performs the role of the bitpattern constraint section of ctor.
     return children[val]->resolve(walker);
 }
 
@@ -2415,13 +2421,13 @@ void DecisionNode::restoreXml(const Element *el, DecisionNode *par, SubtableSymb
             s.unsetf(ios::dec | ios::hex | ios::oct);
             s >> id;
             ct = sub->getConstructor(id);
-            pat = DisjointPattern::restoreDisjoint((*iter)->getChildren().front());
+            pat = DisjointPattern::restoreDisjoint((*iter)->getChildren().front()); // gets InstructionPattern
             //This increments num      addConstructorPair(pat,ct);
-            list.push_back(pair<DisjointPattern *, Constructor *>(pat, ct));
+            list.push_back(pair<DisjointPattern *, Constructor *>(pat, ct)); // <= very important later in DecsisionNode::resolve
             //delete pat;		// addConstructorPair makes its own copy
         } else if ((*iter)->getName() == "decision") {
             DecisionNode *subnode = new DecisionNode();
-            subnode->restoreXml(*iter, this, sub);
+            subnode->restoreXml(*iter, this, sub); // start creating tree.
             children.push_back(subnode);
         }
         ++iter;
