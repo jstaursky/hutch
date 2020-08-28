@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <algorithm>
 #include "hutch.hpp"
+#include <unistd.h>
+#include <cstring>
 
 // x86 insns
 //
@@ -51,9 +53,25 @@ int main(int argc, char *argv[])
     cout << "\n\n\n";
     cout << "will now output the raw binary valus for each insn" << endl;
 
+
+
     auto [length, mover] = pair{ 0, 0 };
     while (mover += length, length = hutch_h.disassemble_iter(mover, &insn)) {
-        cout << insn.current()->rawBytes ();
+        cout << insn.current()->rawBytes () << endl;
+
+        int tmp = strlen((char*)insn.current()->rawBytes ()) + 1 + strlen ("echo -n ") + strlen (" | xxd");
+        unsigned char* result = (unsigned char*)calloc(40, sizeof(unsigned char));
+
+        char* s = (char*)calloc(tmp, sizeof (char));
+        strcat(s, "echo -n ");
+        strcat(s, (char*)insn.current()->rawBytes());
+        strcat(s, " | xxd");
+
+        FILE *fp = popen (s, "r");
+        fgets ((char*)result, 40, fp);
+        puts ((char*)result);
+        printf ("\n");
+
     }
 
 
