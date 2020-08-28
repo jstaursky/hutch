@@ -1,7 +1,7 @@
 CXX      = g++ 
 # CXX = -O2 -Wall -Wno-sign-compare -std=c++17 -ggdb 
 
-CXXFLAGS=-ggdb3 -Wall -Wno-sign-compare -std=c++17 -D_GLIBCXX_DEBUG
+CXXFLAGS=-ggdb3 -m32 -Wall -Wno-sign-compare -std=c++17 -D_GLIBCXX_DEBUG
 
 LEX  = flex
 YACC = bison
