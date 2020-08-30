@@ -1,0 +1,267 @@
+<sleigh version="2" bigendian="true" align="1" uniqbase="0x60">
+    <spaces defaultspace="ram">
+        <space_other name="OTHER" index="1" bigendian="true" delay="0" size="8" physical="false"/>
+        <space_unique name="unique" index="2" bigendian="true" delay="0" size="4" physical="true"/>
+        <space name="ram" index="3" bigendian="true" delay="1" size="4" physical="true"/>
+        <space name="register" index="4" bigendian="true" delay="0" size="4" physical="true"/>
+    </spaces>
+    <symbol_table scopesize="7" symbolsize="26">
+        <scope id="0x0" parent="0x0"/>
+        <scope id="0x1" parent="0x0"/>
+        <scope id="0x2" parent="0x0"/>
+        <scope id="0x3" parent="0x0"/>
+        <scope id="0x4" parent="0x0"/>
+        <scope id="0x5" parent="0x0"/>
+        <scope id="0x6" parent="0x0"/>
+        <subtable_sym_head name="instruction" id="0x0" scope="0x0"/>
+        <start_sym_head name="inst_start" id="0x1" scope="0x0"/>
+        <end_sym_head name="inst_next" id="0x2" scope="0x0"/>
+        <varnode_sym_head name="r0" id="0x3" scope="0x0"/>
+        <varnode_sym_head name="r1" id="0x4" scope="0x0"/>
+        <varnode_sym_head name="r2" id="0x5" scope="0x0"/>
+        <varnode_sym_head name="r3" id="0x6" scope="0x0"/>
+        <varnode_sym_head name="r4" id="0x7" scope="0x0"/>
+        <varnode_sym_head name="r5" id="0x8" scope="0x0"/>
+        <varnode_sym_head name="r6" id="0x9" scope="0x0"/>
+        <varnode_sym_head name="r7" id="0xa" scope="0x0"/>
+        <value_sym_head name="op" id="0xb" scope="0x0"/>
+        <value_sym_head name="mode" id="0xc" scope="0x0"/>
+        <varlist_sym_head name="reg1" id="0xd" scope="0x0"/>
+        <varlist_sym_head name="reg2" id="0xe" scope="0x0"/>
+        <value_sym_head name="imm" id="0xf" scope="0x0"/>
+        <subtable_sym_head name="op2" id="0x10" scope="0x0"/>
+        <operand_sym_head name="reg2" id="0x11" scope="0x1"/>
+        <operand_sym_head name="imm" id="0x12" scope="0x2"/>
+        <operand_sym_head name="reg2" id="0x13" scope="0x3"/>
+        <operand_sym_head name="reg1" id="0x14" scope="0x4"/>
+        <operand_sym_head name="op2" id="0x15" scope="0x4"/>
+        <operand_sym_head name="reg1" id="0x16" scope="0x5"/>
+        <operand_sym_head name="op2" id="0x17" scope="0x5"/>
+        <operand_sym_head name="reg1" id="0x18" scope="0x6"/>
+        <operand_sym_head name="op2" id="0x19" scope="0x6"/>
+        <subtable_sym name="instruction" id="0x0" scope="0x0" numct="3">
+            <constructor parent="0x0" first="1" length="2" line="15">
+                <oper id="0x14"/>
+                <oper id="0x15"/>
+                <print piece="and"/>
+                <print piece=" "/>
+                <opprint id="0"/>
+                <print piece=","/>
+                <opprint id="1"/>
+                <construct_tpl>
+                    <null/><op_tpl code="BUILD"><null/>
+                        <varnode_tpl><const_tpl type="spaceid" name="const"/><const_tpl type="real" val="0x1"/><const_tpl type="real" val="0x4"/></varnode_tpl>
+                    </op_tpl>
+                    <op_tpl code="INT_AND"><varnode_tpl><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="handle" val="0" s="size"/></varnode_tpl>
+                        <varnode_tpl><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="handle" val="0" s="size"/></varnode_tpl>
+                        <varnode_tpl><const_tpl type="handle" val="1" s="space"/><const_tpl type="handle" val="1" s="offset"/><const_tpl type="handle" val="1" s="size"/></varnode_tpl>
+                    </op_tpl>
+                </construct_tpl>
+            </constructor>
+            <constructor parent="0x0" first="1" length="2" line="16">
+                <oper id="0x16"/>
+                <oper id="0x17"/>
+                <print piece="xor"/>
+                <print piece=" "/>
+                <opprint id="0"/>
+                <print piece=","/>
+                <opprint id="1"/>
+                <construct_tpl>
+                    <null/><op_tpl code="BUILD"><null/>
+                        <varnode_tpl><const_tpl type="spaceid" name="const"/><const_tpl type="real" val="0x1"/><const_tpl type="real" val="0x4"/></varnode_tpl>
+                    </op_tpl>
+                    <op_tpl code="INT_XOR"><varnode_tpl><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="handle" val="0" s="size"/></varnode_tpl>
+                        <varnode_tpl><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="handle" val="0" s="size"/></varnode_tpl>
+                        <varnode_tpl><const_tpl type="handle" val="1" s="space"/><const_tpl type="handle" val="1" s="offset"/><const_tpl type="handle" val="1" s="size"/></varnode_tpl>
+                    </op_tpl>
+                </construct_tpl>
+            </constructor>
+            <constructor parent="0x0" first="1" length="2" line="17">
+                <oper id="0x18"/>
+                <oper id="0x19"/>
+                <print piece="or"/>
+                <print piece=" "/>
+                <opprint id="0"/>
+                <print piece=","/>
+                <opprint id="1"/>
+                <construct_tpl>
+                    <null/><op_tpl code="BUILD"><null/>
+                        <varnode_tpl><const_tpl type="spaceid" name="const"/><const_tpl type="real" val="0x1"/><const_tpl type="real" val="0x4"/></varnode_tpl>
+                    </op_tpl>
+                    <op_tpl code="INT_OR"><varnode_tpl><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="handle" val="0" s="size"/></varnode_tpl>
+                        <varnode_tpl><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="handle" val="0" s="size"/></varnode_tpl>
+                        <varnode_tpl><const_tpl type="handle" val="1" s="space"/><const_tpl type="handle" val="1" s="offset"/><const_tpl type="handle" val="1" s="size"/></varnode_tpl>
+                    </op_tpl>
+                </construct_tpl>
+            </constructor>
+            <decision number="3" context="false" start="4" size="2">
+                <decision number="1" context="false" start="0" size="0">
+                    <pair id="0">
+                        <instruct_pat>
+                            <pat_block offset="0" nonzero="1">
+                                <mask_word mask="0xff000000" val="0x40000000"/>
+                            </pat_block>
+                        </instruct_pat>
+                    </pair>
+                </decision>
+                <decision number="1" context="false" start="0" size="0">
+                    <pair id="1">
+                        <instruct_pat>
+                            <pat_block offset="0" nonzero="1">
+                                <mask_word mask="0xff000000" val="0x44000000"/>
+                            </pat_block>
+                        </instruct_pat>
+                    </pair>
+                </decision>
+                <decision number="1" context="false" start="0" size="0">
+                    <pair id="2">
+                        <instruct_pat>
+                            <pat_block offset="0" nonzero="1">
+                                <mask_word mask="0xff000000" val="0x48000000"/>
+                            </pat_block>
+                        </instruct_pat>
+                    </pair>
+                </decision>
+                <decision number="0" context="false" start="0" size="0">
+                </decision>
+            </decision>
+        </subtable_sym>
+        <start_sym name="inst_start" id="0x1" scope="0x0"/>
+        <end_sym name="inst_next" id="0x2" scope="0x0"/>
+        <varnode_sym name="r0" id="0x3" scope="0x0" space="register" offset="0x0" size="4">
+        </varnode_sym>
+        <varnode_sym name="r1" id="0x4" scope="0x0" space="register" offset="0x4" size="4">
+        </varnode_sym>
+        <varnode_sym name="r2" id="0x5" scope="0x0" space="register" offset="0x8" size="4">
+        </varnode_sym>
+        <varnode_sym name="r3" id="0x6" scope="0x0" space="register" offset="0xc" size="4">
+        </varnode_sym>
+        <varnode_sym name="r4" id="0x7" scope="0x0" space="register" offset="0x10" size="4">
+        </varnode_sym>
+        <varnode_sym name="r5" id="0x8" scope="0x0" space="register" offset="0x14" size="4">
+        </varnode_sym>
+        <varnode_sym name="r6" id="0x9" scope="0x0" space="register" offset="0x18" size="4">
+        </varnode_sym>
+        <varnode_sym name="r7" id="0xa" scope="0x0" space="register" offset="0x1c" size="4">
+        </varnode_sym>
+        <value_sym name="op" id="0xb" scope="0x0">
+            <tokenfield bigendian="true" signbit="false" bitstart="10" bitend="15" bytestart="0" byteend="0" shift="2"/>
+        </value_sym>
+        <value_sym name="mode" id="0xc" scope="0x0">
+            <tokenfield bigendian="true" signbit="false" bitstart="6" bitend="9" bytestart="0" byteend="1" shift="6"/>
+        </value_sym>
+        <varlist_sym name="reg1" id="0xd" scope="0x0">
+            <tokenfield bigendian="true" signbit="false" bitstart="3" bitend="5" bytestart="1" byteend="1" shift="3"/>
+            <var id="0x3"/>
+            <var id="0x4"/>
+            <var id="0x5"/>
+            <var id="0x6"/>
+            <var id="0x7"/>
+            <var id="0x8"/>
+            <var id="0x9"/>
+            <var id="0xa"/>
+        </varlist_sym>
+        <varlist_sym name="reg2" id="0xe" scope="0x0">
+            <tokenfield bigendian="true" signbit="false" bitstart="0" bitend="2" bytestart="1" byteend="1" shift="0"/>
+            <var id="0x3"/>
+            <var id="0x4"/>
+            <var id="0x5"/>
+            <var id="0x6"/>
+            <var id="0x7"/>
+            <var id="0x8"/>
+            <var id="0x9"/>
+            <var id="0xa"/>
+        </varlist_sym>
+        <value_sym name="imm" id="0xf" scope="0x0">
+            <tokenfield bigendian="true" signbit="false" bitstart="0" bitend="2" bytestart="1" byteend="1" shift="0"/>
+        </value_sym>
+        <subtable_sym name="op2" id="0x10" scope="0x0" numct="3">
+            <constructor parent="0x10" first="1" length="2" line="11">
+                <oper id="0x11"/>
+                <opprint id="0"/>
+                <construct_tpl>
+                    <handle_tpl><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="size"/><const_tpl type="real" val="0x0"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="real" val="0x0"/><const_tpl type="real" val="0x0"/><const_tpl type="real" val="0x0"/></handle_tpl>
+                </construct_tpl>
+            </constructor>
+            <constructor parent="0x10" first="1" length="2" line="12">
+                <oper id="0x12"/>
+                <opprint id="0"/>
+                <construct_tpl>
+                    <handle_tpl><const_tpl type="spaceid" name="const"/><const_tpl type="real" val="0x4"/><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="real" val="0x0"/><const_tpl type="spaceid" name="unique"/><const_tpl type="real" val="0x0"/></handle_tpl>
+                </construct_tpl>
+            </constructor>
+            <constructor parent="0x10" first="3" length="2" line="13">
+                <oper id="0x13"/>
+                <print piece="["/>
+                <opprint id="0"/>
+                <print piece="]"/>
+                <construct_tpl>
+                    <handle_tpl><const_tpl type="spaceid" name="unique"/><const_tpl type="real" val="0x4"/><const_tpl type="real" val="0x0"/><const_tpl type="real" val="0x20"/><const_tpl type="real" val="0x0"/><const_tpl type="real" val="0x0"/><const_tpl type="real" val="0x0"/></handle_tpl>
+                    <op_tpl code="LOAD"><varnode_tpl><const_tpl type="spaceid" name="unique"/><const_tpl type="real" val="0x20"/><const_tpl type="real" val="0x4"/></varnode_tpl>
+                        <varnode_tpl><const_tpl type="spaceid" name="const"/><const_tpl type="spaceid" name="ram"/><const_tpl type="real" val="0x8"/></varnode_tpl>
+                        <varnode_tpl><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="handle" val="0" s="size"/></varnode_tpl>
+                    </op_tpl>
+                </construct_tpl>
+            </constructor>
+            <decision number="3" context="false" start="8" size="2">
+                <decision number="1" context="false" start="0" size="0">
+                    <pair id="0">
+                        <instruct_pat>
+                            <pat_block offset="0" nonzero="2">
+                                <mask_word mask="0x3c00000" val="0x0"/>
+                            </pat_block>
+                        </instruct_pat>
+                    </pair>
+                </decision>
+                <decision number="1" context="false" start="0" size="0">
+                    <pair id="1">
+                        <instruct_pat>
+                            <pat_block offset="0" nonzero="2">
+                                <mask_word mask="0x3c00000" val="0x400000"/>
+                            </pat_block>
+                        </instruct_pat>
+                    </pair>
+                </decision>
+                <decision number="1" context="false" start="0" size="0">
+                    <pair id="2">
+                        <instruct_pat>
+                            <pat_block offset="0" nonzero="2">
+                                <mask_word mask="0x3c00000" val="0x800000"/>
+                            </pat_block>
+                        </instruct_pat>
+                    </pair>
+                </decision>
+                <decision number="0" context="false" start="0" size="0">
+                </decision>
+            </decision>
+        </subtable_sym>
+        <operand_sym name="reg2" id="0x11" scope="0x1" subsym="0xe" off="0" base="-1" minlen="2" index="0">
+            <operand_exp index="0" table="0x10" ct="0x0"/>
+        </operand_sym>
+        <operand_sym name="imm" id="0x12" scope="0x2" off="0" base="-1" minlen="2" index="0">
+            <operand_exp index="0" table="0x10" ct="0x1"/>
+            <tokenfield bigendian="true" signbit="false" bitstart="0" bitend="2" bytestart="1" byteend="1" shift="0"/>
+        </operand_sym>
+        <operand_sym name="reg2" id="0x13" scope="0x3" subsym="0xe" off="0" base="-1" minlen="2" index="0">
+            <operand_exp index="0" table="0x10" ct="0x2"/>
+        </operand_sym>
+        <operand_sym name="reg1" id="0x14" scope="0x4" subsym="0xd" off="0" base="-1" minlen="2" index="0">
+            <operand_exp index="0" table="0x0" ct="0x0"/>
+        </operand_sym>
+        <operand_sym name="op2" id="0x15" scope="0x4" subsym="0x10" off="0" base="-1" minlen="2" index="1">
+            <operand_exp index="1" table="0x0" ct="0x0"/>
+        </operand_sym>
+        <operand_sym name="reg1" id="0x16" scope="0x5" subsym="0xd" off="0" base="-1" minlen="2" index="0">
+            <operand_exp index="0" table="0x0" ct="0x1"/>
+        </operand_sym>
+        <operand_sym name="op2" id="0x17" scope="0x5" subsym="0x10" off="0" base="-1" minlen="2" index="1">
+            <operand_exp index="1" table="0x0" ct="0x1"/>
+        </operand_sym>
+        <operand_sym name="reg1" id="0x18" scope="0x6" subsym="0xd" off="0" base="-1" minlen="2" index="0">
+            <operand_exp index="0" table="0x0" ct="0x2"/>
+        </operand_sym>
+        <operand_sym name="op2" id="0x19" scope="0x6" subsym="0x10" off="0" base="-1" minlen="2" index="1">
+            <operand_exp index="1" table="0x0" ct="0x2"/>
+        </operand_sym>
+    </symbol_table>
+</sleigh>
