@@ -85,19 +85,24 @@
                 <print piece=","/>
                 <opprint id="1"/>
                 <construct_tpl>
-                    <null/><op_tpl code="BUILD"><null/>
-                        <varnode_tpl><const_tpl type="spaceid" name="const"/><const_tpl type="real" val="0x1"/><const_tpl type="real" val="0x4"/></varnode_tpl>
-                    </op_tpl>
-                    <op_tpl code="INT_OR"><varnode_tpl><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="handle" val="0" s="size"/></varnode_tpl>
+                  <null/>
+                  <op_tpl code="BUILD"><null/>
+                  <varnode_tpl>
+                    <const_tpl type="spaceid" name="const"/>
+                    <const_tpl type="real" val="0x1"/>
+                  <const_tpl type="real" val="0x4"/></varnode_tpl>
+                  </op_tpl>
+                  <op_tpl code="INT_OR"><varnode_tpl><const_tpl type="handle" val="0" s="space"/><const_tpl type="handle" val="0" s="offset"/><const_tpl type="handle" val="0" s="size"/></varnode_tpl>
                         <varnode_tpl>
                             <const_tpl type="handle" val="0" s="space"/>
                             <const_tpl type="handle" val="0" s="offset"/>
-                            <const_tpl type="handle" val="0" s="size"/></varnode_tpl>
-                            <varnode_tpl>
-                                <const_tpl type="handle" val="1" s="space"/>
-                                <const_tpl type="handle" val="1" s="offset"/>
-                                <const_tpl type="handle" val="1" s="size"/>
-                            </varnode_tpl>
+                            <const_tpl type="handle" val="0" s="size"/>
+                        </varnode_tpl>
+                        <varnode_tpl>
+                            <const_tpl type="handle" val="1" s="space"/>
+                            <const_tpl type="handle" val="1" s="offset"/>
+                            <const_tpl type="handle" val="1" s="size"/>
+                        </varnode_tpl>
                     </op_tpl>
                 </construct_tpl>
             </constructor>
@@ -109,9 +114,10 @@
                         <instruct_pat>
                             <pat_block offset="0" nonzero="1">
                               <!--
-                                  big endian
-                                   mask = 11111111 00000000 00000000 00000000
-                                   val  = 01000000 00000000 00000000 00000000
+                                  big endian                     imm
+                                            op   |  mode | reg1| reg2|
+                                   mask = 111111 | 11 00 | 000 | 000 | 00000000 00000000
+                                   val  = 010000 | 00 00 | 000 | 000 | 00000000 00000000
 
                                   little endian
                                    mask = 00000000 00000000 00000000 11111111
@@ -129,9 +135,10 @@
                         <instruct_pat>
                             <pat_block offset="0" nonzero="1">
                               <!--
-                                  big endian
-                                   mask = 11111111 00000000 00000000 00000000
-                                   val  = 01000100 00000000 00000000 00000000
+                                  big endian                     imm
+                                            op   |  mode | reg1| reg2|
+                                   mask = 111111 | 11 00 | 000 | 000 | 00000000 00000000
+                                   val  = 010001 | 00 00 | 000 | 000 | 00000000 00000000
 
                                   little endian
                                    mask = 00000000 00000000 00000000 11111111
@@ -149,9 +156,10 @@
                         <instruct_pat>
                             <pat_block offset="0" nonzero="1">
                               <!--
-                                  big endian
-                                   mask = 11111111 00000000 00000000 00000000
-                                   val  = 01001000 00000000 00000000 00000000
+                                  big endian                     imm
+                                            op   |  mode | reg1| reg2|
+                                   mask = 111111 | 11 00 | 000 | 000 | 00000000 00000000
+                                   val  = 010010 | 00 00 | 000 | 000 | 00000000 00000000
 
                                   little endian
                                    mask = 00000000 00000000 00000000 11111111
@@ -251,9 +259,10 @@
                         <instruct_pat>
                             <pat_block offset="0" nonzero="2">
                               <!--
-                                  big endian
-                                   mask = 00000011 11000000 00000000 00000000
-                                   val  = 00000000 00000000 00000000 00000000
+                                  big endian                     imm
+                                            op   |  mode | reg1| reg2|
+                                   mask = 000000 | 11 11 | 000 | 000 | 00000000 00000000
+                                   val  = 000000 | 00 00 | 000 | 000 | 00000000 00000000
 
                                   little endian
                                    mask = 00000000 00000000 11000000 00000011 
@@ -272,9 +281,9 @@
                             <pat_block offset="0" nonzero="2">
                               <!--
                                   big endian                       imm
-                                          |   op   |  mode | reg1| reg2|
-                                   mask = | 000000 | 11 11 | 000 | 000 | 00000000 00000000
-                                   val  = | 000000 | 00 01 | 000 | 000 | 00000000 00000000
+                                             op   |  mode | reg1| reg2|
+                                   mask =  000000 | 11 11 | 000 | 000 | 00000000 00000000
+                                   val  =  000000 | 00 01 | 000 | 000 | 00000000 00000000
 
                                   little endian
                                    mask = 00000000 00000000 11000000 00000011 
@@ -292,9 +301,10 @@
                         <instruct_pat>
                             <pat_block offset="0" nonzero="2">
                               <!--
-                                  big endian
-                                   mask = 00000011 11000000 00000000 00000000
-                                   val  = 00000000 10000000 00000000 00000000
+                                  big endian                     immg
+                                            op   |  mode | reg1| reg2 |
+                                   mask = 000000 | 11 11 | 000 | 000  | 00000000 00000000
+                                   val  = 000000 | 00 10 | 000 | 000  | 00000000 00000000
 
                                   little endian
                                    mask = 00000000 00000000 11000000 00000011 
