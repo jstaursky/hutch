@@ -1,9 +1,5 @@
-# UPDATE 2/19/21
-This was all written a while ago, I recently tested the NSA
-example again and it works fine. I will likely return
-to rewrite all this someday but I will keep it up in the meantime
-I still believe there is value to keeping the intermediate lang and
-disassembler separate from the rest of ghidra.
+# UPDATE 4/22/21
+Currently in works of big update. Working on a deep yet discoverable API. 
 
 # UPDATE 7/4/20
 atm the makefile has an edge case that may prevent you from running `make -jN` (for some integer N%2) which means building in parallel may not work. In this case just run `make` to run make in a single thread.
