@@ -36,10 +36,10 @@ $(ALL): | $(BUILD_DIR) $(BUILD_SHARED_DIR)
 examples: all
 	$(MAKE) -C examples/example-one
 
-x86.sla: x86.slaspec
+x86.sla: sleigh-compile x86.slaspec
 	./bin/sleigh-compile -a processors/x86/languages
 
-8085.sla: 8085.slaspec
+8085.sla: sleigh-compile 8085.slaspec
 	./bin/sleigh-compile -a processors/8085/languages
 
 # SLEIGH COMPILER ##############################################################
@@ -69,7 +69,7 @@ slghparse.o: slghparse.cc
 
 slghparse.cc: slghparse.y
 	$(YACC) -d -o $(BUILD_DIR)/$@ $<
-	mv $(BUILD_DIR)/slghparse.hh $(BUILD_DIR)/slghparse.tab.hh
+	cp $(BUILD_DIR)/slghparse.hh $(BUILD_DIR)/slghparse.tab.hh
 
 pcodeparse.o: pcodeparse.cc
 	$(CXX) $(CXXFLAGS) -I$(SLGH_INCLUDE_DIR) -c $(BUILD_DIR)/$< -o $(BUILD_DIR)/$@
