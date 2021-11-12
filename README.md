@@ -1,3 +1,6 @@
+# UPATE
+All work has been moved to https://github.com/jstaursky/coronium. There the usage + install of the library have been greatly simplified.
+
 # UPDATE 4/22/21
 Currently in works of big update. Working on a deep yet discoverable API. 
 
